@@ -7,12 +7,12 @@ castellano pensada para quien está aprendiendo el protocolo.
 
 ## Requirements
 
-### Requirement: El log muestra los mensajes que entran, salvo el reloj
+### Requirement: El log muestra los mensajes que entran, salvo el reloj y el Sensor Activo
 
 Mientras haya una conexión activa, el log SHALL agregar una fila por cada
 mensaje que llega por el puerto de entrada, con la única excepción del reloj
-MIDI (`F8`), que no SHALL mostrarse nunca. Los mensajes que la aplicación envía
-a la salida no SHALL aparecer en el log.
+MIDI (`F8`) y del Sensor Activo (`FE`), que no SHALL mostrarse nunca. Los
+mensajes que la aplicación envía a la salida no SHALL aparecer en el log.
 
 #### Scenario: Nota tocada
 
@@ -25,6 +25,13 @@ a la salida no SHALL aparecer en el log.
 - **GIVEN** hay una conexión activa
 - **WHEN** llegan mensajes de reloj intercalados con un "Inicio" (`FA`)
 - **THEN** el log muestra solo la fila del "Inicio"
+
+#### Scenario: Sensor Activo con otros mensajes
+
+- **GIVEN** hay una conexión activa
+- **WHEN** llegan mensajes de Sensor Activo intercalados con un "Detener"
+  (`FC`)
+- **THEN** el log muestra solo la fila del "Detener"
 
 ### Requirement: Cada fila muestra hora, bytes y descripción
 
@@ -92,11 +99,11 @@ paréntesis, el nombre en inglés con el que figuran en la documentación de MID
 | `FA` | Inicio (Start) |
 | `FB` | Continuar (Continue) |
 | `FC` | Detener (Stop) |
-| `FE` | Sensor Activo (Active Sensing) |
 | `FF` | Reset del Sistema |
 
 Cualquier otro mensaje de sistema SHALL describirse como "Mensaje de sistema
-sin reconocer" seguido de su status en hexadecimal.
+sin reconocer" seguido de su status en hexadecimal. El reloj (`F8`) y el Sensor
+Activo (`FE`) no figuran porque nunca llegan al log.
 
 #### Scenario: Mensaje de sistema conocido
 
