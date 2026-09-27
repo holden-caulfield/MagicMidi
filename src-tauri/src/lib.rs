@@ -9,7 +9,8 @@ use tauri::{AppHandle, Emitter, Manager, State};
 /// Estado compartido de la aplicación: mantiene vivas las conexiones MIDI
 /// mientras dure la sesión. La conexión de salida se comparte mediante un
 /// `Arc` porque también la necesita el callback de la conexión de entrada,
-/// que reenvía directo los mensajes de reloj sin pasarlos por el workflow.
+/// que reenvía directo el reloj y el Sensor Activo sin pasarlos por el
+/// workflow.
 ///
 /// `numero_de_conexion` cambia cada vez que se cierran las conexiones, y su
 /// lock se toma durante todo el cierre y la apertura: así el hilo que vigila
@@ -90,12 +91,16 @@ fn describir_mensaje(datos: &[u8]) -> String {
     }
 }
 
-/// Los mensajes de reloj MIDI (Timing Clock) se envían constantemente
-/// (24 por negra) y solo sirven para sincronización: se reenvían directo a la
-/// salida, sin pasar por el workflow (el ida y vuelta al frontend les sumaría
-/// jitter), y se excluyen del log para no saturar la pantalla.
-fn es_mensaje_de_reloj(datos: &[u8]) -> bool {
-    datos.first() == Some(&0xF8)
+/// Mensajes que se reenvían directo a la salida, sin pasar por el workflow, y
+/// se excluyen del log para no saturar la pantalla:
+/// - Reloj MIDI (Timing Clock, `F8`): llega 24 veces por negra y solo sirve
+///   para sincronizar; el ida y vuelta al frontend le sumaría jitter.
+/// - Sensor Activo (Active Sensing, `FE`): llega unas tres veces por segundo.
+///   Tiene que llegar sí o sí a la salida: un receptor que ya recibió uno y
+///   deja de recibirlos da la conexión por perdida y apaga las notas, así que
+///   no puede quedar a merced de un flujo que no lo emita.
+fn se_reenvia_directo(datos: &[u8]) -> bool {
+    matches!(datos.first(), Some(0xF8 | 0xFE))
 }
 
 #[tauri::command]
@@ -151,8 +156,9 @@ fn conectar(
     cerrar_conexiones(&estado, &mut numero_de_conexion);
 
     // La salida se abre y se guarda antes que la entrada, porque el callback
-    // de la entrada la necesita para reenviar el reloj. Si algo falla después,
-    // hay que cerrarla: un intento fallido no puede dejar ningún puerto abierto.
+    // de la entrada la necesita para reenviar el reloj y el Sensor Activo. Si
+    // algo falla después, hay que cerrarla: un intento fallido no puede dejar
+    // ningún puerto abierto.
     abrir_conexiones(app.clone(), &estado, puerto_entrada.clone(), puerto_salida.clone())
         .inspect_err(|_| cerrar_conexiones(&estado, &mut numero_de_conexion))?;
 
@@ -254,7 +260,7 @@ fn abrir_conexiones(
             &puerto_entrada_encontrado,
             "tauri-midi-conexion-entrada",
             move |_marca_temporal_us, mensaje, _contexto| {
-                if es_mensaje_de_reloj(mensaje) {
+                if se_reenvia_directo(mensaje) {
                     if let Ok(mut salida) = conexion_salida_compartida.lock() {
                         if let Some(conexion) = salida.as_mut() {
                             let _ = conexion.send(mensaje);
