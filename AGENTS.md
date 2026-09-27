@@ -31,9 +31,9 @@ mergear).
   viven en `tauri::State`, protegidas con `Mutex` (la conexión de salida
   además está detrás de un `Arc` porque el callback de la conexión de
   entrada —que corre en su propio hilo— también necesita escribir en ella
-  para reenviar el reloj MIDI). El backend no procesa mensajes: manda cada
-  uno al frontend (evento `mensaje-midi`) y envía a la salida lo que el
-  frontend le pida con el comando `enviar_mensaje`.
+  para reenviar el reloj MIDI y el Sensor Activo). El backend no procesa
+  mensajes: manda cada uno al frontend (evento `mensaje-midi`) y envía a la
+  salida lo que el frontend le pida con el comando `enviar_mensaje`.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
   puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
@@ -110,14 +110,15 @@ mergear).
   `snake_case` del lado de Rust; Tauri los mapea automáticamente a
   `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en
   ambos lados en vez de forzar un nombre igual en los dos.
-- **Mensajes de reloj MIDI**: por diseño, los mensajes de *Timing Clock*
-  (`0xF8`) no pasan por el workflow: el backend los reenvía directo a la
-  salida (el ida y vuelta al frontend les sumaría jitter) y no los manda al
-  frontend, así que tampoco aparecen en el log (ver `es_mensaje_de_reloj` en
-  `src-tauri/src/lib.rs`). Si se
-  agregan otros mensajes de alta frecuencia (por ejemplo Active Sensing,
-  `0xFE`), evaluar si corresponde el mismo tratamiento — no asumirlo
-  automáticamente, confirmarlo con la persona usuaria.
+- **Reloj MIDI y Sensor Activo**: por diseño, los mensajes de *Timing Clock*
+  (`0xF8`) y *Active Sensing* (`0xFE`) no pasan por el workflow: el backend
+  los reenvía directo a la salida y no los manda al frontend, así que
+  tampoco aparecen en el log (ver `se_reenvia_directo` en
+  `src-tauri/src/lib.rs`). Al reloj, el ida y vuelta al frontend le sumaría
+  jitter. El Sensor Activo tiene que llegar sí o sí: un receptor que deja de
+  recibirlo apaga las notas. Si aparece otro mensaje de alta frecuencia,
+  evaluar si corresponde el mismo tratamiento: no asumirlo, confirmarlo con
+  la persona usuaria.
 
 ## Toolchain
 
