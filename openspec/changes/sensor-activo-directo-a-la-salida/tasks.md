@@ -23,5 +23,5 @@ Bus 1 y escucha el Bus 2.
       por el Bus 2 salen el `FE` y el `F8`, en orden, y la nota no
 - [x] 2.3 Correr la verificación de AGENTS.md: `cargo check` desde
       `src-tauri/` y `npx tsc --noEmit` desde la raíz
-- [ ] 2.4 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
+- [x] 2.4 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
       creado
