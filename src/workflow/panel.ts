@@ -2,7 +2,7 @@ import { html } from "lit-html";
 import { live } from "lit-html/directives/live.js";
 
 import { actualizar, estado, type NodoDelFlujo } from "../estado";
-import { TIPOS_DE_NODO, TRIGGER, type IdDeTipo } from "./catalogo";
+import { papelDelTipo, TIPOS_DE_NODO, TRIGGER, type IdDeTipo } from "./catalogo";
 import { dibujarIcono } from "./iconos";
 import { agregarNodo, eliminarNodo, posicionDesdeEvento } from "./lienzo";
 import type { Parametro, ValorDeParametro } from "./tipos";
@@ -36,11 +36,14 @@ function barraDeHerramientas() {
         return html`
           <button
             type="button"
+            class="caja-${papelDelTipo(tipo)}"
+            aria-label=${tipo.nombre}
             draggable="true"
             @dragstart=${(evento: DragEvent) => evento.dataTransfer?.setData(FORMATO_ARRASTRE, id)}
             @click=${() => agregarNodo(id)}
           >
-            ${dibujarIcono(tipo.icono)} ${tipo.nombre}
+            ${dibujarIcono(tipo.icono)}
+            <span class="globo" aria-hidden="true">${tipo.nombre}</span>
           </button>
         `;
       })}

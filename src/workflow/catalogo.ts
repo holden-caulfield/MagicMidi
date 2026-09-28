@@ -28,3 +28,10 @@ export const TRIGGER = {
 export function tieneSalida(tipo: TipoDeNodo): boolean {
   return tipo.tieneSalida ?? true;
 }
+
+// El trigger es siempre "inicio": no es un tipo del catálogo.
+export type Papel = "inicio" | "intermedia" | "fin";
+
+export function papelDelTipo(tipo: TipoDeNodo): Papel {
+  return tieneSalida(tipo) ? "intermedia" : "fin";
+}

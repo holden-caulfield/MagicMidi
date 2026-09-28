@@ -46,14 +46,19 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
 
 Un tipo de nodo es un objeto con estos campos:
 
-- **`nombre`**: el texto que se ve en la barra y en la caja.
-- **`icono`**: un ícono de [Lucide](https://lucide.dev/icons/). Buscá uno en
+- **`nombre`**: el texto que aparece en un globo al pasar el puntero por la
+  caja, en la barra o en el lienzo, y como título en el panel de configuración.
+- **`icono`**: lo único que se ve dentro de la caja, así que conviene uno que
+  se reconozca solo, sin leer el nombre. Es un ícono de
+  [Lucide](https://lucide.dev/icons/). Buscá uno en
   esa página, copiá su nombre tal como aparece en el código de ejemplo (en
   *PascalCase*, por ejemplo `ArrowUpDown` o `Filter`) e importalo arriba del
   archivo: `import { Filter } from "lucide";`. Si escribís mal el nombre, el
   editor de código te lo marca.
 - **`tieneSalida`**: solo hace falta escribirlo, con `false`, si la caja
   *termina* el flujo, como Emitir. Si no lo escribís, la caja tiene salida.
+  Las cajas sin salida se ven naranjas, como Emitir, sin que tengas que
+  declarar ningún color.
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
   parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
   (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
