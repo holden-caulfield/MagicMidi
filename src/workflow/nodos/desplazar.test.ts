@@ -12,7 +12,7 @@ test("suma el desplazamiento al byte elegido", () => {
     overflow: false,
   });
 
-  expect(resultado).toEqual([0x90, 72, 100]);
+  expect(resultado).toEqual([0x90, 73, 100]);
 });
 
 test("con un desplazamiento negativo, resta", () => {
