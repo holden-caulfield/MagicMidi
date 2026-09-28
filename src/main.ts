@@ -57,7 +57,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   suscribir(dibujar);
   dibujar();
 
-  await inicializarLog();
+  inicializarLog();
   await inicializarWorkflow();
   await inicializarConexion();
 });

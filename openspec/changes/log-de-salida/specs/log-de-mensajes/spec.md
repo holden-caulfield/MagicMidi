@@ -136,6 +136,46 @@ descartados no SHALL poder recuperarse.
 - **WHEN** llegan 500 mensajes
 - **THEN** el log muestra los 500 grupos, cada uno con sus tres sub-filas
 
+### Requirement: La lista de mensajes ocupa el espacio disponible
+
+La lista de mensajes del tab Log SHALL ocupar todo el alto que queda en el
+panel debajo del encabezado del log, y todo el ancho del panel hasta un
+máximo: el que hace falta para que la fila más ancha que puede producir un
+mensaje de canal ("Cambio de Control · canal 16 · controlador 127 · valor
+127") entre en una sola línea, con su marca. Con más ancho disponible, la
+lista y el encabezado del log (el título y el botón "Limpiar") SHALL quedar
+centrados en el panel, con el mismo ancho. La lista SHALL acompañar los
+cambios de tamaño de la ventana. Cuando las filas no entran, la que se
+desplaza SHALL ser la lista: ni el panel ni la ventana.
+
+#### Scenario: Ventana grande
+
+- **GIVEN** la ventana está en pantalla completa y el tab activo es "Log"
+- **WHEN** la persona usuaria mira el log
+- **THEN** la lista de mensajes llega hasta el pie del panel, tiene el ancho
+  máximo y queda centrada en el panel, con el encabezado del log alineado con
+  ella, y las marcas de "salió sin cambios" y "descartado" quedan cerca de la
+  descripción de su fila
+
+#### Scenario: Ventana angosta
+
+- **GIVEN** el panel es más angosto que el ancho máximo de la lista
+- **WHEN** la persona usuaria mira el log
+- **THEN** la lista ocupa todo el ancho del panel
+
+#### Scenario: Más mensajes a la vista
+
+- **GIVEN** el log tiene más filas de las que entran en la lista
+- **WHEN** la persona usuaria agranda la ventana
+- **THEN** se ven más filas a la vez que antes de agrandarla
+
+#### Scenario: Muchas filas
+
+- **GIVEN** el log tiene más filas de las que entran en la lista
+- **WHEN** la persona usuaria las recorre
+- **THEN** se desplaza la lista, y el encabezado del log y la barra de tabs
+  quedan quietos
+
 ## ADDED Requirements
 
 ### Requirement: Las salidas van en sub-filas

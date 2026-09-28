@@ -124,8 +124,9 @@ se lleva sus sub-filas sin contarlas. Se va el rayado alternado de las filas
 (se confundiría con el fondo gris de las entradas, ver "Colores"): los grupos
 se separan con una línea fina.
 
-Todas las filas comparten la grilla de columnas (`7.5em 11em 1fr auto`) para
-que bytes y descripción de las sub-filas queden alineados con los de la
+Todas las filas comparten la grilla de columnas (`7.5em 11em 1fr 1.5em`, la
+última de ancho fijo para que la marca no corra las demás) para que bytes y
+descripción de las sub-filas queden alineados con los de la
 entrada. En la columna de la hora, la sub-fila lleva un ícono de flecha
 (Lucide `CornerDownRight`) con un texto oculto "Salida" para lectores de
 pantalla. La cuarta columna lleva la marca: Lucide `Equal` para "salió sin
@@ -137,6 +138,26 @@ entrada | salida en la misma fila, que deja la mitad del ancho a cada
 descripción, y salidas como filas propias alineadas a la derecha e
 intercaladas, donde la relación con la entrada se deduce solo por la
 posición.
+
+### Ancho máximo del log: 816 px, con el encabezado adentro
+
+El encabezado y la lista van dentro de un `div.contenido-log`, igual que el
+contenido de Conexión va en `.formulario-conexion`: `max-width` y
+`margin-inline: auto` para centrarlo, y el resto del layout de columna (con
+`flex: 1; min-height: 0`) para que la lista siga llenando el alto. El panel
+sigue siendo el mismo que el de los otros tabs.
+
+El tope sale de medir la fila más ancha de un mensaje de canal en la fuente
+del log (13,6 px): la descripción "Cambio de Control · canal 16 · controlador
+127 · valor 127" mide 475 px, las otras tres columnas 272 px, los tres huecos
+36 px y el relleno 24 px, en total 807 px. Se redondea a `51rem` (816 px). Las
+descripciones más largas que esa (un mensaje sin reconocer con muchos bytes)
+bajan de línea, como hasta ahora.
+
+Alternativa descartada: los mismos 804 px de Conexión, para que el contenido
+de los dos tabs tenga exactamente el mismo ancho. Esa fila de Cambio de
+Control no entraría por 3 px y bajaría de línea; con 12 px de diferencia no
+se nota el cambio de ancho al pasar de un tab al otro.
 
 ### Colores: letra violeta para lo que salió, fondo gris para lo que no salió tal cual
 
@@ -159,7 +180,7 @@ descartado tiene la letra atenuada, el ícono `Ban` y ninguna sub-fila.
 | Letra de una fila de salida | `#3C3489` (sub-fila), `#534AB7` (sin cambios) | `#CECBF6` (sub-fila), `#AFA9EC` (sin cambios) |
 | Fondo de una sub-fila | `#EEEDFE` | `#26215C` |
 | Fondo de una entrada transformada o descartada | `rgba(127, 127, 127, 0.13)` | `rgba(127, 127, 127, 0.13)` |
-| Letra de una entrada descartada | `#888780` | `#6B6B6B` |
+| Letra de una entrada descartada | `#888780` | `#8F8F8F` |
 
 Van como variables de CSS en `:root` (con sus valores de modo oscuro), igual
 que las de las etapas del lienzo. Se quita el rayado alternado de las filas,

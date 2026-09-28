@@ -1,12 +1,10 @@
 import { listen } from "@tauri-apps/api/event";
 
 import { estado } from "../estado";
+import { agregarAlLog, type EventoMidi } from "../log";
 import { tieneSalida, TIPOS_DE_NODO } from "./catalogo";
+import { recolectarEnvios } from "./salida";
 import type { MensajeMidi } from "./tipos";
-
-interface EventoMidi {
-  datos: MensajeMidi;
-}
 
 function esMensajeValido(resultado: unknown): resultado is MensajeMidi {
   return (
@@ -49,12 +47,15 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi) {
   entregar(nodoId, resultado);
 }
 
-export function procesarMensaje(mensaje: MensajeMidi) {
-  entregar("trigger", mensaje);
+/** Pasa el mensaje por el flujo y devuelve, en orden, lo que se emitió. */
+export function procesarMensaje(mensaje: MensajeMidi): MensajeMidi[] {
+  return recolectarEnvios(() => entregar("trigger", mensaje));
 }
 
 export async function inicializarWorkflow() {
+  // Primero se procesa y después se dibuja, así el envío no espera al DOM.
   await listen<EventoMidi>("mensaje-midi", (evento) => {
-    procesarMensaje(evento.payload.datos);
+    const salidas = procesarMensaje(evento.payload.datos);
+    agregarAlLog(evento.payload, salidas);
   });
 }

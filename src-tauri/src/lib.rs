@@ -46,7 +46,6 @@ struct MensajeMidi {
     puerto: String,
     marca_temporal_ms: u64,
     datos: Vec<u8>,
-    descripcion: String,
 }
 
 fn marca_temporal_actual_ms() -> u64 {
@@ -54,51 +53,6 @@ fn marca_temporal_actual_ms() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|duracion| duracion.as_millis() as u64)
         .unwrap_or(0)
-}
-
-/// Traduce los bytes crudos de un mensaje MIDI a una descripción legible,
-/// pensada para usuarios que están aprendiendo el protocolo.
-fn describir_mensaje(datos: &[u8]) -> String {
-    if datos.is_empty() {
-        return "Mensaje vacío".to_string();
-    }
-
-    if datos[0] >= 0xF0 {
-        return match datos[0] {
-            0xF0 => "Mensaje de Sistema Exclusivo (SysEx)".to_string(),
-            0xF1 => "Cuadro de Tiempo MIDI (MTC Quarter Frame)".to_string(),
-            0xF2 => "Puntero de Posición de Canción (Song Position Pointer)".to_string(),
-            0xF3 => "Selección de Canción (Song Select)".to_string(),
-            0xF6 => "Solicitud de Afinación (Tune Request)".to_string(),
-            0xF8 => "Reloj MIDI (Timing Clock)".to_string(),
-            0xFA => "Inicio (Start)".to_string(),
-            0xFB => "Continuar (Continue)".to_string(),
-            0xFC => "Detener (Stop)".to_string(),
-            0xFE => "Sensor Activo (Active Sensing)".to_string(),
-            0xFF => "Reset del Sistema".to_string(),
-            otro => format!("Mensaje de sistema sin reconocer (0x{otro:02X})"),
-        };
-    }
-
-    let tipo = datos[0] & 0xF0;
-    let canal = (datos[0] & 0x0F) + 1;
-    let dato1 = datos.get(1).copied().unwrap_or(0);
-    let dato2 = datos.get(2).copied().unwrap_or(0);
-
-    match tipo {
-        0x80 => format!("Nota Off · canal {canal} · nota {dato1} · velocidad {dato2}"),
-        0x90 if dato2 == 0 => format!("Nota Off · canal {canal} · nota {dato1} · velocidad 0"),
-        0x90 => format!("Nota On · canal {canal} · nota {dato1} · velocidad {dato2}"),
-        0xA0 => format!("Presión Polifónica · canal {canal} · nota {dato1} · presión {dato2}"),
-        0xB0 => format!("Cambio de Control · canal {canal} · controlador {dato1} · valor {dato2}"),
-        0xC0 => format!("Cambio de Programa · canal {canal} · programa {dato1}"),
-        0xD0 => format!("Presión de Canal · canal {canal} · presión {dato1}"),
-        0xE0 => {
-            let valor = ((dato2 as u16) << 7) | dato1 as u16;
-            format!("Pitch Bend · canal {canal} · valor {valor}")
-        }
-        _ => format!("Mensaje MIDI sin reconocer: {datos:02X?}"),
-    }
 }
 
 /// Mensajes que se reenvían directo a la salida, sin pasar por el workflow, y
@@ -284,7 +238,6 @@ fn abrir_conexiones(
                     puerto: nombre_puerto_entrada.clone(),
                     marca_temporal_ms: marca_temporal_actual_ms(),
                     datos: mensaje.to_vec(),
-                    descripcion: describir_mensaje(mensaje),
                 };
                 let _ = app_para_eventos.emit("mensaje-midi", evento);
             },
@@ -336,116 +289,6 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn describe_los_mensajes_de_canal() {
-        let casos: &[(&[u8], &str)] = &[
-            (
-                &[0x80, 60, 64],
-                "Nota Off · canal 1 · nota 60 · velocidad 64",
-            ),
-            (
-                &[0x90, 60, 100],
-                "Nota On · canal 1 · nota 60 · velocidad 100",
-            ),
-            (
-                &[0x9F, 60, 100],
-                "Nota On · canal 16 · nota 60 · velocidad 100",
-            ),
-            (
-                &[0xA2, 60, 30],
-                "Presión Polifónica · canal 3 · nota 60 · presión 30",
-            ),
-            (
-                &[0xB0, 7, 127],
-                "Cambio de Control · canal 1 · controlador 7 · valor 127",
-            ),
-            (&[0xC5, 12], "Cambio de Programa · canal 6 · programa 12"),
-            (&[0xD0, 90], "Presión de Canal · canal 1 · presión 90"),
-        ];
-        for (datos, esperado) in casos {
-            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
-        }
-    }
-
-    #[test]
-    fn un_nota_on_con_velocidad_cero_es_un_nota_off() {
-        assert_eq!(
-            describir_mensaje(&[0x90, 60, 0]),
-            "Nota Off · canal 1 · nota 60 · velocidad 0"
-        );
-    }
-
-    #[test]
-    fn el_pitch_bend_arma_el_valor_con_los_dos_bytes_de_datos() {
-        let casos: &[(&[u8], &str)] = &[
-            (&[0xE0, 0x00, 0x00], "Pitch Bend · canal 1 · valor 0"),
-            (&[0xE0, 0x00, 0x40], "Pitch Bend · canal 1 · valor 8192"),
-            (&[0xE0, 0x7F, 0x7F], "Pitch Bend · canal 1 · valor 16383"),
-        ];
-        for (datos, esperado) in casos {
-            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
-        }
-    }
-
-    #[test]
-    fn describe_los_mensajes_de_sistema() {
-        let casos: &[(u8, &str)] = &[
-            (0xF0, "Mensaje de Sistema Exclusivo (SysEx)"),
-            (0xF1, "Cuadro de Tiempo MIDI (MTC Quarter Frame)"),
-            (
-                0xF2,
-                "Puntero de Posición de Canción (Song Position Pointer)",
-            ),
-            (0xF3, "Selección de Canción (Song Select)"),
-            (0xF6, "Solicitud de Afinación (Tune Request)"),
-            (0xF8, "Reloj MIDI (Timing Clock)"),
-            (0xFA, "Inicio (Start)"),
-            (0xFB, "Continuar (Continue)"),
-            (0xFC, "Detener (Stop)"),
-            (0xFE, "Sensor Activo (Active Sensing)"),
-            (0xFF, "Reset del Sistema"),
-        ];
-        for (status, esperado) in casos {
-            assert_eq!(
-                describir_mensaje(&[*status]),
-                *esperado,
-                "status {status:02X}"
-            );
-        }
-    }
-
-    #[test]
-    fn avisa_cuando_no_reconoce_el_mensaje() {
-        let casos: &[(&[u8], &str)] = &[
-            (&[0xF4], "Mensaje de sistema sin reconocer (0xF4)"),
-            (&[0xF7], "Mensaje de sistema sin reconocer (0xF7)"),
-            (&[0xFD], "Mensaje de sistema sin reconocer (0xFD)"),
-            (&[0x3C, 0x40], "Mensaje MIDI sin reconocer: [3C, 40]"),
-            (&[], "Mensaje vacío"),
-        ];
-        for (datos, esperado) in casos {
-            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
-        }
-    }
-
-    // Un mensaje incompleto no tiene que hacer fallar la descripción: los
-    // bytes que faltan cuentan como 0.
-    #[test]
-    fn describe_los_mensajes_truncados_sin_fallar() {
-        let casos: &[(&[u8], &str)] = &[
-            (
-                &[0xB0],
-                "Cambio de Control · canal 1 · controlador 0 · valor 0",
-            ),
-            (&[0xC0], "Cambio de Programa · canal 1 · programa 0"),
-            (&[0xE0, 0x10], "Pitch Bend · canal 1 · valor 16"),
-            (&[0x90, 60], "Nota Off · canal 1 · nota 60 · velocidad 0"),
-        ];
-        for (datos, esperado) in casos {
-            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
-        }
-    }
 
     #[test]
     fn se_reenvian_directo_solo_el_reloj_y_el_sensor_activo() {

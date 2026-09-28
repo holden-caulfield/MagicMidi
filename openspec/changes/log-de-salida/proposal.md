@@ -30,6 +30,10 @@ arma, y para aprender qué hace cada caja.
   atención), y **fondo gris** para la entrada que se transformó o se descartó
   (la descartada, además, con la letra atenuada). Así, leer la letra violeta
   es leer todo lo que salió.
+- El log deja de estirarse a todo el ancho del panel: su encabezado y la lista
+  llegan hasta un ancho máximo (el de la fila más ancha de un mensaje de
+  canal) y quedan centrados, para que las marcas no queden lejos de la
+  descripción en una pantalla grande.
 - El máximo de 500 pasa a contar **mensajes de entrada** (grupos), no filas.
 - La descripción legible de los mensajes pasa del backend al frontend, porque
   ahora también hay que describir lo que produce el flujo, y eso nunca pasa por
@@ -51,7 +55,8 @@ arma, y para aprender qué hace cada caja.
 - `log-de-mensajes`: el log deja de mostrar solo la entrada; se modifican
   "El log muestra los mensajes que entran…", "Cada fila muestra hora, bytes y
   descripción", "Los mensajes más nuevos van arriba" y "El log conserva los
-  últimos 500 mensajes", y se agregan requisitos para las sub-filas de salida,
+  últimos 500 mensajes" y "La lista de mensajes ocupa el espacio disponible"
+  (ahora con un ancho máximo, centrada), y se agregan requisitos para las sub-filas de salida,
   la marca de "salió sin cambios", la de "descartado" y los colores que
   separan lo que salió de lo que solo entró.
 - `ejecucion-de-workflow`: "El log sigue mostrando lo que entra" pasa a decir

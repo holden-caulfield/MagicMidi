@@ -32,8 +32,11 @@ mergear).
   además está detrás de un `Arc` porque el callback de la conexión de
   entrada —que corre en su propio hilo— también necesita escribir en ella
   para reenviar el reloj MIDI y el Sensor Activo). El backend no procesa
-  mensajes: manda cada uno al frontend (evento `mensaje-midi`) y envía a la
-  salida lo que el frontend le pida con el comando `enviar_mensaje`.
+  mensajes: manda cada uno al frontend (evento `mensaje-midi`, solo con los
+  bytes y la marca temporal) y envía a la salida lo que el frontend le pida
+  con el comando `enviar_mensaje`. La descripción legible de un mensaje la
+  arma el frontend (`src/describir.ts`), porque también describe lo que sale
+  del flujo, que nunca vuelve del backend.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
   puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
@@ -95,7 +98,12 @@ mergear).
 - **Excepción del log**: las filas de mensajes se agregan al DOM a mano, no
   por plantilla, porque redibujar la lista entera con cada mensaje MIDI no
   escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
-  filas), y lo hace después del primer dibujado.
+  filas), y lo hace después del primer dibujado. El log no escucha
+  `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa el
+  mensaje por el flujo y le da a `agregarAlLog` la entrada y lo que se
+  emitió. Lo emitido lo junta `recolectarEnvios` (`salida.ts`), y eso
+  depende de que el recorrido del flujo sea sincrónico: si un nodo llegara a
+  necesitar ser asincrónico, hay que revisarlo, igual que el orden de salida.
 - **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
   - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
     el trigger y solo sale lo que llega a una caja Emitir. El pass-through ya
@@ -191,7 +199,7 @@ mergear).
   necesitando la ventana real es la activación con teclado y el flujo MIDI
   completo.
 - En el navegador, el arranque se corta en el primer `listen` (el de
-  `inicializarLog`), así que los `inicializar<X>()` que vienen después nunca
+  `inicializarWorkflow`), así que los `inicializar<X>()` que vienen después nunca
   corren. Para probar uno, o para simular respuestas del backend (por ejemplo
   un comando que falla, un caso que en la aplicación real no se puede
   provocar), se reemplaza el puente desde la consola y se llama a la función
