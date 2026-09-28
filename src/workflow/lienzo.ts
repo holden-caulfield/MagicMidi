@@ -10,12 +10,12 @@ import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-
 
 import { actualizar, estado, type Conexion, type NodoDelFlujo } from "../estado";
 import {
-  papelDelTipo,
+  etapaDelTipo,
   tieneSalida,
   TIPOS_DE_NODO,
   TRIGGER,
   type IdDeTipo,
-  type Papel,
+  type Etapa,
 } from "./catalogo";
 import { dibujarIcono } from "./iconos";
 
@@ -28,7 +28,7 @@ class Caja extends ClassicPreset.Node {
     id: string,
     public nombre: string,
     public icono: IconNode,
-    public papel: Papel,
+    public etapa: Etapa,
     conEntrada: boolean,
     conSalida: boolean,
   ) {
@@ -57,7 +57,7 @@ function crearCaja(nodo: NodoDelFlujo): Caja {
     return new Caja(nodo.id, TRIGGER.nombre, TRIGGER.icono, "inicio", false, true);
   }
   const tipo = TIPOS_DE_NODO[nodo.tipo];
-  return new Caja(nodo.id, tipo.nombre, tipo.icono, papelDelTipo(tipo), true, tieneSalida(tipo));
+  return new Caja(nodo.id, tipo.nombre, tipo.icono, etapaDelTipo(tipo), true, tieneSalida(tipo));
 }
 
 function dibujarCaja(caja: Caja, emit: (senal: Senales) => void) {
@@ -70,7 +70,7 @@ function dibujarCaja(caja: Caja, emit: (senal: Senales) => void) {
   `;
   return html`
     <div
-      class="caja caja-${caja.papel}"
+      class="caja caja-${caja.etapa}"
       style="width: ${LADO_CAJA}px; height: ${LADO_CAJA}px"
     >
       ${caja.inputs.entrada ? conector("input", "entrada", caja.inputs.entrada.socket) : null}

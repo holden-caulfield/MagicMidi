@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { papelDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
+import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import type { ValorDeParametro } from "./tipos";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
@@ -56,10 +56,10 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => 
 });
 
 test("Emitir cierra el flujo y Desplazar queda en el medio", () => {
-  expect(papelDelTipo(TIPOS_DE_NODO.emitir)).toBe("fin");
-  expect(papelDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
+  expect(etapaDelTipo(TIPOS_DE_NODO.emitir)).toBe("fin");
+  expect(etapaDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
 });
 
-test.each(Object.entries(TIPOS_DE_NODO))("el papel de %s coincide con su salida", (_, tipo) => {
-  expect(papelDelTipo(tipo)).toBe(tieneSalida(tipo) ? "intermedia" : "fin");
+test.each(Object.entries(TIPOS_DE_NODO))("la etapa de %s coincide con su salida", (_, tipo) => {
+  expect(etapaDelTipo(tipo)).toBe(tieneSalida(tipo) ? "intermedia" : "fin");
 });

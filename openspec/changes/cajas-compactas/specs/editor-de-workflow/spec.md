@@ -58,7 +58,7 @@ SHALL mantener la altura que tenían cuando mostraban el nombre.
 
 ### Requirement: Las cajas de inicio y de fin del flujo se distinguen por color
 
-Cada caja del lienzo SHALL mostrarse con el color que corresponde a su papel
+Cada caja del lienzo SHALL mostrarse con el color que corresponde a su etapa
 en el flujo:
 
 - **inicio**: el trigger, con fondo verde claro y borde verde;
@@ -66,7 +66,7 @@ en el flujo:
   naranja;
 - **intermedia**: el resto, con el fondo y el borde neutros de siempre.
 
-El papel SHALL deducirse de los conectores de la caja, sin que el tipo de nodo
+La etapa SHALL deducirse de los conectores de la caja, sin que el tipo de nodo
 declare un color. Los controles de la barra SHALL usar el mismo color que
 tendrá la caja en el lienzo. Ninguno de los dos colores SHALL confundirse con
 el que señala la caja seleccionada: una caja de inicio o de fin seleccionada

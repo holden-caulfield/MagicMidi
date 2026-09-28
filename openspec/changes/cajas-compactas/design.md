@@ -21,7 +21,7 @@ marcan el diseño:
 
 **Goals:**
 
-- Que el papel de la caja (inicio, intermedia, fin) quede resuelto con lo que
+- Que la etapa de la caja (inicio, intermedia, fin) quede resuelto con lo que
   el catálogo ya sabe, sin campos nuevos en `TipoDeNodo`.
 - Que el globo de ayuda funcione igual en la barra y en el lienzo, y que en la
   barra también aparezca con el teclado.
@@ -30,7 +30,7 @@ marcan el diseño:
 
 - Conectar desde cualquier borde de la caja (ver la última decisión).
 - Cambiar el color de las cajas del lienzo en modo oscuro: hoy son blancas en
-  los dos modos, y lo siguen siendo, con los colores de papel encima.
+  los dos modos, y lo siguen siendo, con los colores de etapa encima.
 - Colores por familia de tipos (filtros, transformaciones, etc.).
 
 ## Decisions
@@ -57,15 +57,15 @@ Para que el globo de una caja no quede tapado por otra caja que viene después
 en el DOM, el contenedor que Rete le da a la caja sube su `z-index` mientras
 el puntero está encima (`:has(.caja:hover)`). No se toca `lienzo.ts` para eso.
 
-### El papel sale del catálogo, no de un campo de color
+### La etapa sale del catálogo, no de un campo de color
 
-`catalogo.ts` exporta, al lado de `tieneSalida`, una función que da el papel de
+`catalogo.ts` exporta, al lado de `tieneSalida`, una función que da la etapa de
 un tipo: `"fin"` si no tiene salida, `"intermedia"` si tiene. El trigger es
 siempre `"inicio"`, y eso lo resuelve `crearCaja` como hoy resuelve su nombre y
 su ícono. La plantilla de la caja y el botón de la barra ponen la clase
-`caja-inicio` o `caja-fin` (las intermedias no llevan clase). Como el papel no
-cambia mientras la caja existe, alcanza con ponerlo al crear la plantilla y no
-choca con la restricción de Rete.
+`caja-inicio`, `caja-intermedia` o `caja-fin` (la intermedia no tiene estilo
+propio). Como la etapa no cambia mientras la caja existe, alcanza con ponerla
+al crear la plantilla y no choca con la restricción de Rete.
 
 Se evaluó, como se pidió, **permitir que cada tipo declare su color** (un campo
 `color` opcional en `TipoDeNodo`), y se descarta por ahora:
@@ -76,25 +76,25 @@ Se evaluó, como se pidió, **permitir que cada tipo declare su color** (un camp
   no llegaron.
 - Si cada tipo elige su color, el color deja de significar algo: un tipo
   intermedio pintado de naranja se confundiría con un fin, y uno azul, con la
-  selección. Con el color atado al papel, un tipo nuevo sin salida queda bien
+  selección. Con el color atado a la etapa, un tipo nuevo sin salida queda bien
   marcado sin que quien lo escribe tenga que pensarlo, que es lo que busca el
   contrato de `tipos-de-nodo` para alguien que recién empieza.
 - Si más adelante aparece la necesidad (por ejemplo, agrupar filtros y
-  transformaciones), sumar el campo es chico: las clases por papel ya dejan el
+  transformaciones), sumar el campo es chico: las clases por etapa ya dejan el
   CSS preparado para una variante más.
 
 ### Colores
 
 Como variables CSS en `:root`, para que los usen la caja y el botón:
 
-| Papel  | Fondo     | Borde     | Por qué                                         |
+| Etapa  | Fondo     | Borde     | Por qué                                         |
 |--------|-----------|-----------|-------------------------------------------------|
 | inicio | `#dcf5e4` | `#2e9d5a` | Verde: "arranca acá", como un semáforo.         |
 | fin    | `#fde6d6` | `#dd6b20` | Naranja: cierre, bien lejos del verde y del azul.|
 
 El azul (`#396cd8`) queda reservado para la selección. Seleccionar una caja de
 color cambia el borde al azul y suma el halo, como hoy, pero conserva el fondo
-del papel. El ícono sigue en `#0f0f0f`, con contraste de sobra sobre los dos
+de la etapa. El ícono sigue en `#0f0f0f`, con contraste de sobra sobre los dos
 fondos claros.
 
 En modo oscuro, los botones de la barra son oscuros. Ahí el botón de fin usa un

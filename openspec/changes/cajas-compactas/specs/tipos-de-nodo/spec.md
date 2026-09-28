@@ -17,7 +17,7 @@ El archivo de un tipo de nodo SHALL declarar:
   una un valor y un texto visible;
 - una única **función de procesamiento**.
 
-Un tipo de nodo no SHALL declarar su color: el color sale del papel de la caja
+Un tipo de nodo no SHALL declarar su color: el color sale de la etapa de la caja
 en el flujo.
 
 El panel de configuración SHALL armarse solo a partir de la lista de parámetros

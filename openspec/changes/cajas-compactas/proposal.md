@@ -18,7 +18,7 @@ el flujo y dónde sale lo que se emite.
 - Las cajas del lienzo pasan a ser **cuadradas y un poco más grandes** que la
   altura actual, con un ícono más grande. Los botones de la barra mantienen el
   tamaño de ahora, sin el texto.
-- Las cajas se colorean según su **papel en el flujo**, sin que cada tipo de
+- Las cajas se colorean según su **etapa en el flujo**, sin que cada tipo de
   nodo declare nada nuevo:
   - **inicio** (el trigger): fondo verde claro con borde verde;
   - **fin** (todo tipo sin salida, hoy Emitir): fondo naranja claro con borde
@@ -56,12 +56,12 @@ el flujo y dónde sale lo que se emite.
 ## Impact
 
 - `src/workflow/lienzo.ts`: la plantilla de la caja (sin el nombre escrito,
-  con globo de ayuda y clase según su papel), el tamaño de la caja y la
+  con globo de ayuda y clase según su etapa), el tamaño de la caja y la
   separación inicial entre el trigger y el Emitir.
 - `src/workflow/panel.ts`: los botones de la barra, con solo el ícono, nombre
   accesible y globo de ayuda.
 - `src/workflow/iconos.ts`: el tamaño del ícono pasa a ser un parámetro.
-- `src/workflow/catalogo.ts`: una función que dice el papel de un tipo en el
+- `src/workflow/catalogo.ts`: una función que dice la etapa de un tipo en el
   flujo, al lado de `tieneSalida`, con su test en `catalogo.test.ts`.
 - `src/styles.css`: la caja cuadrada, la ubicación de los conectores, el globo
   de ayuda y los colores de inicio y fin, en modo claro y oscuro.

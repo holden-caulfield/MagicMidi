@@ -6,14 +6,14 @@ tarea"). Lo que el navegador no muestra, como el globo al llegar con Tab y lo
 que anuncia un lector de pantalla, se prueba en la ventana real con
 `npm run tauri dev` y VoiceOver.
 
-## 1. Papel de la caja en el catálogo
+## 1. Etapa de la caja en el catálogo
 
 - [x] 1.1 En `src/workflow/catalogo.ts`, agregar al lado de `tieneSalida` la
-      función que da el papel de un tipo (`"fin"` sin salida, `"intermedia"`
-      con salida) (design.md, "El papel sale del catálogo, no de un campo de
+      función que da la etapa de un tipo (`"fin"` sin salida, `"intermedia"`
+      con salida) (design.md, "La etapa sale del catálogo, no de un campo de
       color"); verificar con `npx tsc --noEmit`
 - [x] 1.2 En `src/workflow/catalogo.test.ts`, agregar un test que revise que
-      Emitir da `"fin"` y Desplazar da `"intermedia"`, y que el papel coincide
+      Emitir da `"fin"` y Desplazar da `"intermedia"`, y que la etapa coincide
       con `tieneSalida` en todos los tipos del catálogo; verificar con
       `npm test`
 
@@ -23,10 +23,10 @@ que anuncia un lector de pantalla, se prueba en la ventana real con
       tamaño, con 18 por defecto; verificar con `npx tsc --noEmit` que la barra
       y el lienzo siguen compilando sin cambios
 - [x] 2.2 En `src/workflow/lienzo.ts`, reemplazar `ANCHO_CAJA`/`ALTO_CAJA` por
-      `LADO_CAJA = 72`, bajar `SEPARACION_INICIAL` a 180, guardar el papel en
+      `LADO_CAJA = 72`, bajar `SEPARACION_INICIAL` a 180, guardar la etapa en
       `Caja` (el trigger siempre `"inicio"`) y cambiar la plantilla: ícono de
       36 px, sin el nombre escrito, globo con el nombre y clase
-      `caja-inicio`/`caja-fin` según el papel (design.md, "Tamaños" y "Globo de
+      `caja-inicio`/`caja-fin` según la etapa (design.md, "Tamaños" y "Globo de
       ayuda propio"); verificar con `npx tsc --noEmit`
 - [x] 2.3 En `src/styles.css`, hacer la caja cuadrada con el ícono centrado,
       pasar los conectores a `position: absolute` con `top`/`left`/`right` (sin
@@ -39,7 +39,7 @@ que anuncia un lector de pantalla, se prueba en la ventana real con
 
 - [x] 3.1 En `src/workflow/panel.ts`, dejar en cada botón de la barra solo el
       ícono, con `aria-label` con el nombre, el globo con `aria-hidden="true"`
-      y la clase de papel; verificar con `npx tsc --noEmit` y, en el navegador,
+      y la clase de etapa; verificar con `npx tsc --noEmit` y, en el navegador,
       con el árbol de accesibilidad, que los botones se llaman "Desplazar" y
       "Emitir"
 - [x] 3.2 En `src/styles.css`, hacer los botones de la barra cuadrados, con la

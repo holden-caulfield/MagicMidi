@@ -30,8 +30,8 @@ export function tieneSalida(tipo: TipoDeNodo): boolean {
 }
 
 // El trigger es siempre "inicio": no es un tipo del catálogo.
-export type Papel = "inicio" | "intermedia" | "fin";
+export type Etapa = "inicio" | "intermedia" | "fin";
 
-export function papelDelTipo(tipo: TipoDeNodo): Papel {
+export function etapaDelTipo(tipo: TipoDeNodo): Etapa {
   return tieneSalida(tipo) ? "intermedia" : "fin";
 }
