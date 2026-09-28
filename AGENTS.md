@@ -43,6 +43,12 @@ mergear).
   durante todo el cierre y la apertura (en `conectar`, `desconectar` y el
   vigilante), y por eso `cerrar_conexiones` lo recibe ya tomado: cualquier
   camino nuevo que cierre o abra conexiones tiene que tomarlo igual.
+  Los puertos se identifican siempre por el `id` que da el sistema
+  (`Puerto { id, nombre }`, `find_port_by_id`), nunca por el nombre: dos
+  puertos pueden llamarse igual. El nombre es solo para mostrar, y el
+  " (2)" de los repetidos lo arma el frontend (`conNombresAMostrar`). En
+  macOS el `id` no cambia al desenchufar y volver a enchufar; en Linux
+  (ALSA) sí puede cambiar.
 - **Frontend**: TypeScript con Vite y [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
   para las plantillas. Se comunica con el backend mediante comandos
   (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar un framework

@@ -9,14 +9,18 @@ conexión está activa. Lo que la pantalla muestra en cada caso está en
 
 ## Requirements
 
-### Requirement: Los puertos se ofrecen por nombre
+### Requirement: Los puertos se identifican por el sistema y se muestran por nombre
 
 La aplicación SHALL ofrecer por separado los puertos MIDI de entrada y los de
-salida que informa el sistema, cada uno identificado por el nombre que le da el
+salida que informa el sistema. Cada puerto SHALL identificarse por el
+identificador que le asigna el sistema, y mostrarse con el nombre que le da el
 sistema. Si el sistema no informa el nombre de un puerto, SHALL mostrarse como
-"Puerto desconocido". La lista SHALL leerse al abrir la aplicación y cada vez
-que la persona usuaria presiona "Actualizar puertos"; no SHALL actualizarse
-sola cuando se conecta o desconecta un dispositivo.
+"Puerto desconocido". Si dos o más puertos del mismo lado tienen el mismo
+nombre, el primero SHALL mostrarse con el nombre tal cual y los siguientes con
+" (2)", " (3)", …, en el orden en que los informa el sistema, y cada uno SHALL
+poder elegirse y conectarse por separado. La lista SHALL leerse al abrir la
+aplicación y cada vez que la persona usuaria presiona "Actualizar puertos"; no
+SHALL actualizarse sola cuando se conecta o desconecta un dispositivo.
 
 #### Scenario: Entradas y salidas separadas
 
@@ -33,14 +37,23 @@ sola cuando se conecta o desconecta un dispositivo.
 - **THEN** sus puertos no aparecen en los selectores hasta que presiona
   "Actualizar puertos"
 
+#### Scenario: Dos puertos con el mismo nombre
+
+- **GIVEN** el sistema informa dos puertos de entrada llamados "Teclado"
+- **WHEN** se abre la aplicación
+- **THEN** el selector de entrada ofrece "Teclado" y "Teclado (2)", y al
+  conectar "Teclado (2)" solo se reciben los mensajes de ese puerto
+
 ### Requirement: Una conexión es siempre un par entrada/salida
 
 Conectar SHALL abrir a la vez un puerto de entrada y uno de salida, los que la
 persona usuaria eligió. La aplicación SHALL tener como máximo una conexión
 activa: no hay forma de conectar solo una entrada, solo una salida, ni más de
-un par. El puerto elegido SHALL buscarse por su nombre en el momento de
-conectar; si ya no existe un puerto con ese nombre, la conexión SHALL fallar
-con un mensaje que lo nombra.
+un par. El puerto elegido SHALL buscarse por su identificador en el momento de
+conectar; si ya no existe un puerto con ese identificador, la conexión SHALL
+fallar con un mensaje que lo nombra. Los mensajes que nombran un puerto, al
+conectar o al perderlo, SHALL usar el nombre con el que se muestra en el
+selector, incluido el " (2)" si lo tiene.
 
 #### Scenario: Conexión exitosa
 
@@ -57,6 +70,14 @@ con un mensaje que lo nombra.
 - **WHEN** presiona "Conectar"
 - **THEN** la conexión falla con el mensaje "No se encontró el puerto de salida
   'Sintetizador'"
+
+#### Scenario: Queda otro puerto con el mismo nombre
+
+- **GIVEN** la persona usuaria eligió la entrada "Teclado (2)" y después ese
+  puerto desapareció, pero sigue el otro "Teclado"
+- **WHEN** presiona "Conectar" sin actualizar la lista
+- **THEN** la conexión falla con "No se encontró el puerto de entrada 'Teclado
+  (2)'" en lugar de conectarse al otro "Teclado"
 
 ### Requirement: Conectar reemplaza cualquier conexión anterior
 
@@ -148,11 +169,11 @@ salida fallan.
 
 Mientras haya una conexión activa, la aplicación SHALL comprobar al menos una
 vez por segundo que el puerto de entrada y el de salida siguen existiendo,
-buscándolos por nombre igual que al conectar. Si alguno de los dos ya no está,
-SHALL cerrar los dos puertos y quedar desconectada, y el panel de conexión
-SHALL mostrar un mensaje que nombra cada puerto perdido y dice si era el de
-entrada o el de salida. La aplicación no SHALL volver a conectarse sola: los
-puertos elegidos se conservan, y para seguir la persona usuaria vuelve a
+buscándolos por su identificador igual que al conectar. Si alguno de los dos ya
+no está, SHALL cerrar los dos puertos y quedar desconectada, y el panel de
+conexión SHALL mostrar un mensaje que nombra cada puerto perdido y dice si era
+el de entrada o el de salida. La aplicación no SHALL volver a conectarse sola:
+los puertos elegidos se conservan, y para seguir la persona usuaria vuelve a
 presionar "Conectar". La comprobación SHALL terminar al desconectar o al abrir
 una conexión nueva, de modo que nunca afecte a una conexión distinta de la que
 estaba vigilando.
@@ -183,6 +204,14 @@ estaba vigilando.
 - **WHEN** se desenchufa ese dispositivo
 - **THEN** la aplicación queda desconectada y el mensaje nombra los dos
   puertos, el de entrada y el de salida
+
+#### Scenario: Se pierde un puerto que tiene otro con el mismo nombre
+
+- **GIVEN** hay una conexión activa con la entrada "Teclado (2)" y el sistema
+  tiene además otro puerto de entrada "Teclado"
+- **WHEN** desaparece el puerto conectado y el otro "Teclado" sigue
+- **THEN** en menos de dos segundos la aplicación queda desconectada y muestra
+  "Se perdió la conexión con el puerto de entrada 'Teclado (2)'"
 
 #### Scenario: Con otro tab a la vista
 
