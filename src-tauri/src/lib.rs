@@ -3,7 +3,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use midir::{Ignore, MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnection};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 /// Estado compartido de la aplicación: mantiene vivas las conexiones MIDI
@@ -29,6 +29,16 @@ impl Default for EstadoMidi {
             numero_de_conexion: Mutex::new(0),
         }
     }
+}
+
+/// Un puerto se identifica por el `id` que le asigna el sistema: dos puertos
+/// pueden llamarse igual. `nombre` es solo para mostrar; en lo que manda el
+/// frontend a `conectar` es el nombre tal como se ve en el selector, " (2)"
+/// incluido, para que los mensajes coincidan con lo que se eligió.
+#[derive(Clone, Serialize, Deserialize)]
+struct Puerto {
+    id: String,
+    nombre: String,
 }
 
 #[derive(Clone, Serialize)]
@@ -104,29 +114,31 @@ fn se_reenvia_directo(datos: &[u8]) -> bool {
 }
 
 #[tauri::command]
-fn listar_puertos_entrada() -> Result<Vec<String>, String> {
+fn listar_puertos_entrada() -> Result<Vec<Puerto>, String> {
     let midi_in = MidiInput::new("tauri-midi-listado-entrada").map_err(|error| error.to_string())?;
     Ok(midi_in
         .ports()
         .iter()
-        .map(|puerto| {
-            midi_in
+        .map(|puerto| Puerto {
+            id: puerto.id(),
+            nombre: midi_in
                 .port_name(puerto)
-                .unwrap_or_else(|_| "Puerto desconocido".to_string())
+                .unwrap_or_else(|_| "Puerto desconocido".to_string()),
         })
         .collect())
 }
 
 #[tauri::command]
-fn listar_puertos_salida() -> Result<Vec<String>, String> {
+fn listar_puertos_salida() -> Result<Vec<Puerto>, String> {
     let midi_out = MidiOutput::new("tauri-midi-listado-salida").map_err(|error| error.to_string())?;
     Ok(midi_out
         .ports()
         .iter()
-        .map(|puerto| {
-            midi_out
+        .map(|puerto| Puerto {
+            id: puerto.id(),
+            nombre: midi_out
                 .port_name(puerto)
-                .unwrap_or_else(|_| "Puerto desconocido".to_string())
+                .unwrap_or_else(|_| "Puerto desconocido".to_string()),
         })
         .collect())
 }
@@ -149,8 +161,8 @@ fn cerrar_conexiones(estado: &EstadoMidi, numero_de_conexion: &mut u64) {
 fn conectar(
     app: AppHandle,
     estado: State<EstadoMidi>,
-    puerto_entrada: String,
-    puerto_salida: String,
+    puerto_entrada: Puerto,
+    puerto_salida: Puerto,
 ) -> Result<(), String> {
     let mut numero_de_conexion = estado.numero_de_conexion.lock().unwrap();
     cerrar_conexiones(&estado, &mut numero_de_conexion);
@@ -169,7 +181,7 @@ fn conectar(
 /// `midir` no avisa cuando un puerto desaparece: la conexión simplemente deja
 /// de recibir. Por eso se revisa periódicamente que los dos puertos sigan en
 /// la lista del sistema, y si falta alguno se cierra todo y se avisa.
-fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: String, puerto_salida: String) {
+fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: Puerto, puerto_salida: Puerto) {
     thread::spawn(move || {
         let (Ok(midi_in), Ok(midi_out)) = (
             MidiInput::new("tauri-midi-vigilancia-entrada"),
@@ -181,14 +193,8 @@ fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: String, puerto_
         loop {
             thread::sleep(INTERVALO_DE_VIGILANCIA);
 
-            let falta_entrada = !midi_in
-                .ports()
-                .iter()
-                .any(|puerto| midi_in.port_name(puerto).is_ok_and(|nombre| nombre == puerto_entrada));
-            let falta_salida = !midi_out
-                .ports()
-                .iter()
-                .any(|puerto| midi_out.port_name(puerto).is_ok_and(|nombre| nombre == puerto_salida));
+            let falta_entrada = midi_in.find_port_by_id(&puerto_entrada.id).is_none();
+            let falta_salida = midi_out.find_port_by_id(&puerto_salida.id).is_none();
 
             let estado = app.state::<EstadoMidi>();
             let mut numero_de_conexion = estado.numero_de_conexion.lock().unwrap();
@@ -196,16 +202,17 @@ fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: String, puerto_
                 return;
             }
 
+            let (entrada, salida) = (&puerto_entrada.nombre, &puerto_salida.nombre);
             let mensaje = match (falta_entrada, falta_salida) {
                 (false, false) => continue,
-                (true, false) => format!(
-                    "Se perdió la conexión con el puerto de entrada '{puerto_entrada}'"
-                ),
-                (false, true) => format!(
-                    "Se perdió la conexión con el puerto de salida '{puerto_salida}'"
-                ),
+                (true, false) => {
+                    format!("Se perdió la conexión con el puerto de entrada '{entrada}'")
+                }
+                (false, true) => {
+                    format!("Se perdió la conexión con el puerto de salida '{salida}'")
+                }
                 (true, true) => format!(
-                    "Se perdió la conexión con el puerto de entrada '{puerto_entrada}' y el de salida '{puerto_salida}'"
+                    "Se perdió la conexión con el puerto de entrada '{entrada}' y el de salida '{salida}'"
                 ),
             };
 
@@ -219,20 +226,13 @@ fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: String, puerto_
 fn abrir_conexiones(
     app: AppHandle,
     estado: &EstadoMidi,
-    puerto_entrada: String,
-    puerto_salida: String,
+    puerto_entrada: Puerto,
+    puerto_salida: Puerto,
 ) -> Result<(), String> {
     let midi_out = MidiOutput::new("tauri-midi-salida").map_err(|error| error.to_string())?;
     let puerto_salida_encontrado = midi_out
-        .ports()
-        .into_iter()
-        .find(|puerto| {
-            midi_out
-                .port_name(puerto)
-                .map(|nombre| nombre == puerto_salida)
-                .unwrap_or(false)
-        })
-        .ok_or_else(|| format!("No se encontró el puerto de salida '{puerto_salida}'"))?;
+        .find_port_by_id(&puerto_salida.id)
+        .ok_or_else(|| format!("No se encontró el puerto de salida '{}'", puerto_salida.nombre))?;
     let conexion_salida = midi_out
         .connect(&puerto_salida_encontrado, "tauri-midi-conexion-salida")
         .map_err(|error| error.to_string())?;
@@ -241,17 +241,10 @@ fn abrir_conexiones(
     let mut midi_in = MidiInput::new("tauri-midi-entrada").map_err(|error| error.to_string())?;
     midi_in.ignore(Ignore::None);
     let puerto_entrada_encontrado = midi_in
-        .ports()
-        .into_iter()
-        .find(|puerto| {
-            midi_in
-                .port_name(puerto)
-                .map(|nombre| nombre == puerto_entrada)
-                .unwrap_or(false)
-        })
-        .ok_or_else(|| format!("No se encontró el puerto de entrada '{puerto_entrada}'"))?;
+        .find_port_by_id(&puerto_entrada.id)
+        .ok_or_else(|| format!("No se encontró el puerto de entrada '{}'", puerto_entrada.nombre))?;
 
-    let nombre_puerto_entrada = puerto_entrada.clone();
+    let nombre_puerto_entrada = puerto_entrada.nombre;
     let conexion_salida_compartida = estado.conexion_salida.clone();
     let app_para_eventos = app.clone();
 

@@ -2,10 +2,30 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { html } from "lit-html";
 
-import { actualizar, estado } from "./estado";
+import { actualizar, estado, type Puerto } from "./estado";
 
-function puertoVigente(elegido: string, puertos: string[]): string {
-  return puertos.includes(elegido) ? elegido : "";
+function puertoVigente(elegido: string, puertos: Puerto[]): string {
+  return puertos.some((puerto) => puerto.id === elegido) ? elegido : "";
+}
+
+/**
+ * Los puertos con el nombre con que se muestran: si varios se llaman igual,
+ * del segundo en adelante se les agrega " (2)", " (3)", … en el orden de la
+ * lista. Es también el nombre que se manda a `conectar` para los mensajes.
+ */
+function conNombresAMostrar(puertos: Puerto[]): Puerto[] {
+  const vecesPorNombre = new Map<string, number>();
+
+  return puertos.map((puerto) => {
+    const veces = (vecesPorNombre.get(puerto.nombre) ?? 0) + 1;
+    vecesPorNombre.set(puerto.nombre, veces);
+    const nombre = veces === 1 ? puerto.nombre : `${puerto.nombre} (${veces})`;
+    return { id: puerto.id, nombre };
+  });
+}
+
+function puertoElegido(elegido: string, puertos: Puerto[]): Puerto | undefined {
+  return conNombresAMostrar(puertos).find((puerto) => puerto.id === elegido);
 }
 
 async function actualizarListaDePuertos() {
@@ -13,8 +33,8 @@ async function actualizarListaDePuertos() {
 
   try {
     const [puertosEntrada, puertosSalida] = await Promise.all([
-      invoke<string[]>("listar_puertos_entrada"),
-      invoke<string[]>("listar_puertos_salida"),
+      invoke<Puerto[]>("listar_puertos_entrada"),
+      invoke<Puerto[]>("listar_puertos_salida"),
     ]);
 
     actualizar({
@@ -31,8 +51,8 @@ async function actualizarListaDePuertos() {
 async function conectar() {
   actualizar({ mensajeConexion: "" });
 
-  const puertoEntrada = estado.puertoEntradaElegido;
-  const puertoSalida = estado.puertoSalidaElegido;
+  const puertoEntrada = puertoElegido(estado.puertoEntradaElegido, estado.puertosEntrada);
+  const puertoSalida = puertoElegido(estado.puertoSalidaElegido, estado.puertosSalida);
 
   if (!puertoEntrada || !puertoSalida) {
     actualizar({ mensajeConexion: "Elegí un puerto de entrada y uno de salida" });
@@ -60,9 +80,9 @@ async function desconectar() {
 function selectorDePuerto(
   id: string,
   etiqueta: string,
-  puertos: string[],
+  puertos: Puerto[],
   elegido: string,
-  alElegir: (puerto: string) => void,
+  alElegir: (idDelPuerto: string) => void,
 ) {
   return html`
     <div class="campo">
@@ -79,9 +99,9 @@ function selectorDePuerto(
               <option value="" disabled .selected=${elegido === ""}>
                 Elegí un puerto
               </option>
-              ${puertos.map(
+              ${conNombresAMostrar(puertos).map(
                 (puerto) =>
-                  html`<option value=${puerto} .selected=${puerto === elegido}>${puerto}</option>`,
+                  html`<option value=${puerto.id} .selected=${puerto.id === elegido}>${puerto.nombre}</option>`,
               )}
             `}
       </select>
@@ -114,14 +134,14 @@ export function panelConexion() {
       "Puerto de entrada",
       estado.puertosEntrada,
       estado.puertoEntradaElegido,
-      (puerto) => actualizar({ puertoEntradaElegido: puerto }),
+      (idDelPuerto) => actualizar({ puertoEntradaElegido: idDelPuerto }),
     )}
     ${selectorDePuerto(
       "select-puerto-salida",
       "Puerto de salida",
       estado.puertosSalida,
       estado.puertoSalidaElegido,
-      (puerto) => actualizar({ puertoSalidaElegido: puerto }),
+      (idDelPuerto) => actualizar({ puertoSalidaElegido: idDelPuerto }),
     )}
 
     <div class="fila-botones">

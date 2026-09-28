@@ -12,6 +12,15 @@ export interface Conexion {
   hacia: string;
 }
 
+/**
+ * `id` es el identificador que le da el sistema: dos puertos pueden llamarse
+ * igual, así que se eligen, se conectan y se vigilan por `id`.
+ */
+export interface Puerto {
+  id: string;
+  nombre: string;
+}
+
 export interface Flujo {
   nodos: NodoDelFlujo[];
   conexiones: Conexion[];
@@ -23,8 +32,9 @@ export interface Flujo {
  */
 export interface Estado {
   conectado: boolean;
-  puertosEntrada: string[];
-  puertosSalida: string[];
+  puertosEntrada: Puerto[];
+  puertosSalida: Puerto[];
+  /** El `id` del puerto elegido, o "" si no hay ninguno. */
   puertoEntradaElegido: string;
   puertoSalidaElegido: string;
   mensajeConexion: string;

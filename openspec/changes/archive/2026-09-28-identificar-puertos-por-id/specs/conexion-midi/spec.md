@@ -1,13 +1,11 @@
-# conexion-midi Specification
+# Spec Delta
 
-## Purpose
-Define cómo la aplicación se conecta a los puertos MIDI del sistema: qué
-puertos ofrece, cómo abre y cierra la conexión, y qué garantiza mientras la
-conexión está activa. Lo que la pantalla muestra en cada caso está en
-`estado-de-la-interfaz`, y qué se hace con cada mensaje que entra, en
-`ejecucion-de-workflow`.
+## RENAMED Requirements
 
-## Requirements
+- FROM: `### Requirement: Los puertos se ofrecen por nombre`
+- TO: `### Requirement: Los puertos se identifican por el sistema y se muestran por nombre`
+
+## MODIFIED Requirements
 
 ### Requirement: Los puertos se identifican por el sistema y se muestran por nombre
 
@@ -78,92 +76,6 @@ selector, incluido el " (2)" si lo tiene.
 - **WHEN** presiona "Conectar" sin actualizar la lista
 - **THEN** la conexión falla con "No se encontró el puerto de entrada 'Teclado
   (2)'" en lugar de conectarse al otro "Teclado"
-
-### Requirement: Conectar reemplaza cualquier conexión anterior
-
-Antes de abrir una conexión nueva, la aplicación SHALL cerrar la que hubiera
-abierta, de modo que nunca queden dos entradas recibiendo mensajes a la vez.
-
-#### Scenario: Conectar de nuevo
-
-- **GIVEN** hay una conexión activa
-- **WHEN** se abre una conexión nueva
-- **THEN** los puertos anteriores quedan cerrados antes de abrir los nuevos, y
-  solo se reciben mensajes del puerto de entrada nuevo
-
-### Requirement: Desconectar cierra los dos puertos
-
-Desconectar SHALL cerrar el puerto de entrada y el de salida. Después de
-desconectar no SHALL recibirse ningún mensaje ni enviarse nada a la salida, y la
-interfaz SHALL quedar desconectada aunque el cierre falle.
-
-#### Scenario: Desconectar con mensajes llegando
-
-- **GIVEN** hay una conexión activa y el dispositivo de entrada está mandando
-  mensajes
-- **WHEN** la persona usuaria presiona "Desconectar"
-- **THEN** dejan de llegar mensajes al log y no sale nada más por el puerto de
-  salida, incluido el reloj MIDI
-
-### Requirement: Se reciben todos los tipos de mensaje
-
-Mientras haya una conexión activa, la aplicación SHALL recibir todos los
-mensajes que lleguen por el puerto de entrada, sin filtrar ninguno por tipo:
-mensajes de canal, Sistema Exclusivo (SysEx), código de tiempo, reloj y Sensor
-Activo incluidos. Qué se hace con cada uno está en `ejecucion-de-workflow` y
-`log-de-mensajes`.
-
-#### Scenario: SysEx y Sensor Activo
-
-- **GIVEN** hay una conexión activa
-- **WHEN** el dispositivo de entrada manda un mensaje SysEx y mensajes de Sensor
-  Activo (`FE`)
-- **THEN** la aplicación recibe los dos: el SysEx aparece en el log y pasa por
-  el flujo, y el Sensor Activo sale directo por el puerto de salida
-
-### Requirement: Enviar a la salida requiere una conexión activa
-
-La aplicación SHALL enviar al puerto de salida los mensajes que se le pidan,
-sin modificarlos y en el orden en que se piden. Si no hay un puerto de salida
-abierto, el envío SHALL fallar con el error "No hay una conexión de salida
-activa" en lugar de descartarse en silencio.
-
-#### Scenario: Envío con conexión
-
-- **GIVEN** hay una conexión activa
-- **WHEN** se pide enviar `90 3C 64` y después `80 3C 00`
-- **THEN** salen por el puerto de salida exactamente esos bytes, en ese orden
-
-#### Scenario: Envío sin conexión
-
-- **GIVEN** la aplicación está desconectada
-- **WHEN** se pide enviar un mensaje
-- **THEN** el envío falla con "No hay una conexión de salida activa" y no sale
-  nada
-
-### Requirement: Un intento fallido no deja puertos abiertos
-
-Si conectar falla en cualquier paso (no se encuentra alguno de los dos puertos,
-o el sistema rechaza abrir alguno), la aplicación SHALL terminar con los dos
-puertos cerrados: tanto los de la conexión anterior, si la había, como el que
-el intento haya llegado a abrir. Después de un intento fallido la aplicación
-SHALL comportarse igual que desconectada: no recibe mensajes y los envíos a la
-salida fallan.
-
-#### Scenario: Falla la entrada después de abrir la salida
-
-- **GIVEN** la persona usuaria eligió la salida "IAC Driver Bus 2" y una
-  entrada que desenchufó sin actualizar la lista
-- **WHEN** presiona "Conectar"
-- **THEN** la conexión falla con "No se encontró el puerto de entrada …", y el
-  puerto "IAC Driver Bus 2" queda cerrado
-
-#### Scenario: Envío después de un intento fallido
-
-- **GIVEN** un intento de conexión acaba de fallar
-- **WHEN** se pide enviar un mensaje a la salida
-- **THEN** el envío falla con "No hay una conexión de salida activa" y no sale
-  nada por ningún puerto
 
 ### Requirement: Perder un puerto cierra la conexión
 
