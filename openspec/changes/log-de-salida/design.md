@@ -27,8 +27,8 @@ comportamiento esperado. Lo que condiciona el diseño:
 - Que el log dibuje entrada y salidas de un mensaje juntas y de una sola vez,
   con lo que efectivamente se mandó a la salida, sin tener que correlacionar
   eventos después.
-- No cambiar el contrato de los tipos de nodo (`TipoDeNodo`, `nodos/LEEME.md`):
-  quien crea un nodo no tiene que saber nada del log.
+- Que quien crea un nodo no tenga que saber nada del log, y que el contrato de
+  los tipos de nodo diga explícitamente qué sale por el puerto.
 - Una sola implementación de la descripción de mensajes.
 - Mantener el costo por mensaje del log: un `prepend` y, como mucho, un borrado.
 
@@ -59,32 +59,55 @@ Alternativas descartadas:
 - **Que `enviar_mensaje` devuelva la descripción**: mezcla el envío con la
   presentación, y el log tendría que esperar a los envíos.
 
-### `procesarMensaje` devuelve lo que se emitió
+### Las cajas describen lo que sale y el envío pasa en un solo lugar
 
-`procesarMensaje(mensaje)` pasa a devolver `MensajeMidi[]`: los mensajes que
-llegaron a un Emitir, en el orden en que se enviaron. Para saberlos sin tocar
-la caja Emitir, `salida.ts` suma `recolectarEnvios(procesar)`: corre
-`procesar` y devuelve la lista de lo que se pasó a `enviarMensaje` mientras
-corría. Como el recorrido del flujo es sincrónico, todo lo que se envía
-durante esa llamada es de ese mensaje de entrada. `enviarMensaje` sigue
-encolando el `invoke` igual que hoy.
+El recorrido del flujo pasa a ser una función pura que devuelve lo que hay que
+emitir, y el efecto (el envío) queda en el borde, en el listener. Es la idea de
+una mónada *Writer*, pero sin la maquinaria: una lista que se pasa como
+parámetro.
 
-Los tests de `ejecutar.test.ts` pasan a revisar el valor que devuelve
-`procesarMensaje` en vez de las llamadas a un `enviarMensaje` falso, y el mock
-se corre a `invoke` de `@tauri-apps/api/core`. Queda más cerca de lo que se
-quiere probar: qué sale del flujo.
+- **Emitir es pura**: `procesar(mensaje) { return mensaje; }`, sin importar
+  `salida.ts`. El contrato queda escrito en `TipoDeNodo`: lo que devuelve una
+  caja sin salida es lo que sale por el puerto (spec `tipos-de-nodo`).
+- **El ejecutor acumula en un parámetro**: `entregar` y `procesarEn` reciben la
+  lista `salidas`. El resultado de una caja con salida sigue hacia las
+  siguientes; el de una caja sin salida, validado con `esMensajeValido` como
+  cualquier otro, se agrega a `salidas`. `procesarMensaje(mensaje)` crea la
+  lista, recorre el flujo y la devuelve.
+- **El listener hace el efecto**: `procesarMensaje`, después `enviarMensaje`
+  por cada salida, en orden, y después `agregarAlLog`. `salida.ts` queda como
+  estaba antes de este cambio: solo la cola de `invoke`.
+
+El orden de salida no cambia: antes el `invoke` de cada Emitir también quedaba
+encolado hasta que terminaba el listener. El ejecutor y Emitir se testean sin
+mocks: se llaman y se mira qué devuelven. Y el log deja de depender de que el
+recorrido sea sincrónico: lo que se muestra es lo que devolvió el ejecutor.
+
+La contra: "sin salida" pasa a querer decir "lo que devuelve sale por el
+puerto". Si aparece una caja final con otro efecto (mandar a otro puerto,
+mostrar algo), el valor de retorno tendría que crecer a algo como
+`{ destino, mensaje }`. Hoy hay una sola caja final, así que no se anticipa.
 
 Alternativas descartadas:
 
+- **Anotar los envíos desde `salida.ts`** (`recolectarEnvios`, la primera
+  versión de este cambio): funcionaba sin tocar los nodos, pero con una
+  colección mutable a nivel de módulo, abierta mientras dura el recorrido, y un
+  contrato que no figura en ningún lado: Emitir importa `enviarMensaje` por su
+  cuenta y `salida.ts` lo espía. Además dependía de que el recorrido fuera
+  sincrónico.
+- **Pasarle una función `enviar` a `procesar`**: hace explícita la dependencia,
+  pero sigue siendo un efecto en medio del recorrido. Todos los nodos cargan un
+  parámetro que solo usa Emitir, su test sigue necesitando un espía, y el
+  ejecutor tiene que envolver `enviar` para anotar lo que sale.
 - **Que el ejecutor trate a Emitir aparte** (`if (nodo.tipo === "emitir")`):
   rompe que todos los tipos de nodo se ejecuten igual.
-- **Pasarle a `procesar` una función `emitir`**: cambia el contrato de los
-  tipos de nodo y la guía de `LEEME.md` por algo que solo le importa al log.
 
 ### Un solo listener de `mensaje-midi`, en el ejecutor
 
 `inicializarWorkflow` es el único que escucha `mensaje-midi`: procesa el
-mensaje y después llama a `agregarAlLog(evento, salidas)` de `log.ts`.
+mensaje, envía cada salida con `enviarMensaje` y después llama a
+`agregarAlLog(evento, salidas)` de `log.ts`.
 `inicializarLog` deja de escuchar y solo busca su contenedor de filas después
 del primer dibujado. Primero se procesa y después se dibuja, así el envío a la
 salida no espera al DOM.
@@ -217,9 +240,6 @@ Alternativas descartadas con la persona usuaria:
 - [Dibujar sub-filas suma trabajo por mensaje] → Sigue siendo un solo
   `prepend` por mensaje de entrada, con unos pocos nodos más; el reloj y el
   Sensor Activo siguen sin llegar al frontend.
-- [`recolectarEnvios` depende de que el recorrido sea sincrónico] → Si algún
-  día un nodo necesitara ser asincrónico, esto habría que revisarlo junto con
-  el orden de salida, que ya depende de lo mismo.
 
 ## Migration Plan
 

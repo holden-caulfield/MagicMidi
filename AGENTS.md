@@ -100,14 +100,17 @@ mergear).
   escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
   filas), y lo hace después del primer dibujado. El log no escucha
   `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa el
-  mensaje por el flujo y le da a `agregarAlLog` la entrada y lo que se
-  emitió. Lo emitido lo junta `recolectarEnvios` (`salida.ts`), y eso
-  depende de que el recorrido del flujo sea sincrónico: si un nodo llegara a
-  necesitar ser asincrónico, hay que revisarlo, igual que el orden de salida.
+  mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la entrada
+  y lo que se emitió.
 - **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
   - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
     el trigger y solo sale lo que llega a una caja Emitir. El pass-through ya
     no es un comportamiento fijo: es el flujo por defecto (trigger → Emitir).
+  - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
+    Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
+    puro y devuelve la lista de lo emitido; el listener de `mensaje-midi` lo
+    envía con `enviarMensaje` y se lo pasa al log. Ningún tipo de nodo importa
+    `salida.ts`.
   - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
     `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
     Rete: es la segunda excepción a la regla de `estado.ts`, junto con el log.

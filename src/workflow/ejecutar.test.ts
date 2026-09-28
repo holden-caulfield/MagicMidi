@@ -4,9 +4,8 @@ import { actualizar, type Flujo } from "../estado";
 import { TIPOS_DE_NODO } from "./catalogo";
 import { procesarMensaje } from "./ejecutar";
 
-// En el test no hay backend: `invoke` es una función falsa que no hace nada.
-// Lo que sale del flujo se revisa en lo que devuelve `procesarMensaje`.
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => {}) }));
+// `procesarMensaje` no envía nada: devuelve lo que tiene que salir por el
+// puerto, así que no hace falta ningún backend falso.
 
 function flujo(nodos: Flujo["nodos"], conexiones: Flujo["conexiones"]): Flujo {
   return {
@@ -198,4 +197,17 @@ test("lo que se emite para un mensaje no se mezcla con el siguiente", () => {
   procesarMensaje([0x90, 60, 100]);
 
   expect(procesarMensaje([0x80, 60, 0])).toEqual([[0x80, 60, 0]]);
+});
+
+test("lo inválido que devuelve una caja sin salida no sale", () => {
+  vi.spyOn(TIPOS_DE_NODO.emitir, "procesar").mockReturnValue([0x90, 300, 100]);
+  actualizar({
+    flujo: flujo(
+      [{ id: "emitir", tipo: "emitir", parametros: {} }],
+      [{ desde: "trigger", hacia: "emitir" }],
+    ),
+  });
+
+  expect(procesarMensaje([0x90, 60, 100])).toEqual([]);
+  expect(console.warn).toHaveBeenCalled();
 });

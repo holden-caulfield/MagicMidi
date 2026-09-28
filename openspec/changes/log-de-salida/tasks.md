@@ -21,17 +21,29 @@ completo se prueba con `npm run tauri dev` y dos buses del IAC Driver.
 
 ## 2. Saber qué emitió el flujo
 
-- [x] 2.1 En `src/workflow/salida.ts`, sumar `recolectarEnvios(procesar)`,
-      que devuelve lo que se pasó a `enviarMensaje` mientras corría
-      `procesar`, sin cambiar cómo se encola el `invoke` (design.md,
-      "`procesarMensaje` devuelve lo que se emitió"); verificar con
-      `npx tsc --noEmit`
-- [x] 2.2 Hacer que `procesarMensaje` devuelva `MensajeMidi[]` usando
-      `recolectarEnvios`, y pasar `ejecutar.test.ts` a revisar el valor
-      devuelto, con el mock en `invoke` de `@tauri-apps/api/core`; sumar
-      tests para los escenarios "Acorde que incluye la nota original", "Sale
-      igual dos veces" y "Lo que falla no figura como salida"; verificar con
-      `npm test` que pasan todos, también los que ya estaban
+- [x] 2.1 Hacer que Emitir devuelva el mensaje en vez de enviarlo (sin
+      importar `../salida`), y pasar `emitir.test.ts` a revisar lo que
+      devuelve, sin mocks; sacar el mock de `salida` de `catalogo.test.ts`
+      (design.md, "Las cajas describen lo que sale y el envío pasa en un solo
+      lugar"); verificar con `npm test`
+- [x] 2.2 En `src/workflow/ejecutar.ts`, que `entregar` y `procesarEn` reciban
+      la lista `salidas` y le agreguen, validado, lo que devuelve una caja sin
+      salida, y que `procesarMensaje` devuelva esa lista; pasar
+      `ejecutar.test.ts` a revisar el valor devuelto sin ningún mock, con
+      tests para "Acorde que incluye la nota original", "Sale igual dos
+      veces", "Lo que falla no figura como salida" y una caja sin salida que
+      devuelve un mensaje inválido; verificar con `npm test` que pasan todos,
+      también los que ya estaban
+- [x] 2.3 Dejar `src/workflow/salida.ts` solo con la cola de `invoke`, sin
+      `recolectarEnvios`, y que el listener de `inicializarWorkflow` envíe
+      cada salida con `enviarMensaje` antes de `agregarAlLog`; verificar con
+      `npx tsc --noEmit` y con un `grep` que ningún archivo de
+      `src/workflow/nodos/` importe `../salida`
+- [x] 2.4 En `src/workflow/nodos/LEEME.md`, explicar en `tieneSalida` y en lo
+      que devuelve `procesar` que lo que devuelve una caja sin salida es lo que
+      sale por el puerto, y sacar `../salida` de lo que un nodo puede
+      importar; verificar releyendo la guía que alcance para crear una caja
+      final sin saber nada más del proyecto
 
 ## 3. Grupos en el log
 

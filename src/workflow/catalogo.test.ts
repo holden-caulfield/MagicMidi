@@ -1,12 +1,10 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import type { ValorDeParametro } from "./tipos";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
-
-vi.mock("./salida", () => ({ enviarMensaje: vi.fn() }));
 
 const MENSAJES_TIPICOS = [
   [0x90, 60, 100],

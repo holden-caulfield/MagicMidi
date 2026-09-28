@@ -39,6 +39,9 @@ arma, y para aprender qué hace cada caja.
   ahora también hay que describir lo que produce el flujo, y eso nunca pasa por
   el backend antes de dibujarse. Las descripciones no cambian. **BREAKING**
   (interno): el evento `mensaje-midi` deja de traer `descripcion`.
+- Las cajas dejan de enviar mensajes por su cuenta: lo que devuelve una caja
+  sin salida, como Emitir, es lo que sale por el puerto, y el envío lo hace la
+  aplicación. Así el log sabe qué salió sin espiar los envíos.
 - Queda **fuera**: mostrar lo que el backend reenvía directo (reloj y Sensor
   Activo), señalar en el log que una caja falló, confirmar en el log que el
   envío a la salida tuvo éxito, filtrar el log, y señalar en el lienzo por qué
@@ -56,19 +59,27 @@ arma, y para aprender qué hace cada caja.
   "El log muestra los mensajes que entran…", "Cada fila muestra hora, bytes y
   descripción", "Los mensajes más nuevos van arriba" y "El log conserva los
   últimos 500 mensajes" y "La lista de mensajes ocupa el espacio disponible"
-  (ahora con un ancho máximo, centrada), y se agregan requisitos para las sub-filas de salida,
-  la marca de "salió sin cambios", la de "descartado" y los colores que
+  (ahora con un ancho máximo, centrada), y se agregan requisitos para las
+  sub-filas de salida, la marca de "salió sin cambios", la de "descartado" y los colores que
   separan lo que salió de lo que solo entró.
 - `ejecucion-de-workflow`: "El log sigue mostrando lo que entra" pasa a decir
   que el log muestra lo que entra y lo que el flujo emitió a partir de eso.
+- `tipos-de-nodo`: en "La función de procesamiento", lo que devuelve un tipo
+  sin salida pasa a ser lo que sale por el puerto, en vez de ignorarse, y la
+  función deja de enviar por su cuenta; "Los tipos de nodo no dependen del
+  editor" deja de dar el envío al puerto como ejemplo de lo que un tipo puede
+  importar.
 
 ## Impact
 
 - `src/log.ts`: las filas pasan a ser grupos (entrada, marca y sub-filas), se
   siguen agregando a mano. Deja de escuchar `mensaje-midi` por su cuenta.
-- `src/workflow/ejecutar.ts` y `src/workflow/salida.ts`: procesar un mensaje
-  devuelve lo que se emitió, y un solo listener de `mensaje-midi` procesa y
-  después le pasa al log la entrada y sus salidas.
+- `src/workflow/ejecutar.ts`: procesar un mensaje pasa a ser puro y devuelve
+  lo que se emitió; un solo listener de `mensaje-midi` procesa, envía lo
+  emitido y le pasa al log la entrada y sus salidas.
+- `src/workflow/nodos/emitir.ts`, su test y `nodos/LEEME.md`: Emitir devuelve
+  el mensaje en vez de enviarlo, y la guía explica que lo que devuelve una
+  caja sin salida es lo que sale por el puerto.
 - Nuevo módulo de descripción en TypeScript (`src/describir.ts`, con su
   `.test.ts`), con los tests que hoy tiene `describir_mensaje` en Rust.
 - `src-tauri/src/lib.rs`: se va `describir_mensaje` y sus tests; el evento
