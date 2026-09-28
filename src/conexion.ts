@@ -13,7 +13,7 @@ function puertoVigente(elegido: string, puertos: Puerto[]): string {
  * del segundo en adelante se les agrega " (2)", " (3)", … en el orden de la
  * lista. Es también el nombre que se manda a `conectar` para los mensajes.
  */
-function conNombresAMostrar(puertos: Puerto[]): Puerto[] {
+export function conNombresAMostrar(puertos: Puerto[]): Puerto[] {
   const vecesPorNombre = new Map<string, number>();
 
   return puertos.map((puerto) => {

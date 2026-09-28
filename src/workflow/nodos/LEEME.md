@@ -3,7 +3,7 @@
 Cada caja que aparece en la barra del tab **Workflow** es un *tipo de nodo*, y
 cada tipo de nodo vive en un archivo de esta carpeta. Para crear uno nuevo no
 hace falta saber nada del editor ni del lienzo: alcanza con escribir un archivo
-y agregar una línea en el catálogo.
+con la caja, otro con su test, y agregar una línea en el catálogo.
 
 ## Los pasos
 
@@ -28,8 +28,19 @@ y agregar una línea en el catálogo.
 
    Si te olvidás de este paso, no aparece ningún error: la caja simplemente no
    aparece en la barra. Es lo primero que conviene revisar cuando "no anda".
-3. **Probalo.** Levantá la aplicación, andá al tab Workflow y usá tu caja como
-   cualquier otra.
+3. **Escribí el test.** Cada caja trae su test al lado, con el mismo nombre y
+   terminado en `.test.ts`: para `sin-nota-off.ts`, `sin-nota-off.test.ts`. Lo
+   más fácil es copiar `desplazar.test.ts` y cambiar los casos. Después corré,
+   desde la raíz del proyecto:
+
+   ```bash
+   npm test
+   ```
+
+   Tiene que terminar diciendo que pasaron todos. Cómo pensar los casos está
+   en [Cómo escribir el test](#cómo-escribir-el-test).
+4. **Probalo en la aplicación.** Levantá la aplicación, andá al tab Workflow y
+   usá tu caja como cualquier otra.
 
 ## Qué va en el archivo
 
@@ -113,6 +124,67 @@ export default {
 
 No escribe `tieneSalida` porque la caja deja pasar los mensajes hacia las
 siguientes.
+
+Y su test, en `sin-nota-off.test.ts`. Los dos casos del Nota Off van por
+separado, y también se prueba el borde: un Nota On con velocidad 1 no es un Nota
+Off.
+
+```ts
+import { expect, test } from "vitest";
+
+import sinNotaOff from "./sin-nota-off";
+
+test("deja pasar los Nota On", () => {
+  expect(sinNotaOff.procesar([0x90, 60, 100])).toEqual([0x90, 60, 100]);
+});
+
+test("descarta los Nota Off", () => {
+  expect(sinNotaOff.procesar([0x80, 60, 64])).toBeUndefined();
+});
+
+test("descarta los Nota On con velocidad 0, que también son Nota Off", () => {
+  expect(sinNotaOff.procesar([0x90, 60, 0])).toBeUndefined();
+});
+
+test("deja pasar un Nota On con velocidad 1", () => {
+  expect(sinNotaOff.procesar([0x90, 60, 1])).toEqual([0x90, 60, 1]);
+});
+
+test("deja pasar los mensajes que no son de notas", () => {
+  expect(sinNotaOff.procesar([0xb0, 7, 127])).toEqual([0xb0, 7, 127]);
+});
+```
+
+## Cómo escribir el test
+
+Un test es un programa chiquito que usa tu caja y revisa que haga lo que tiene
+que hacer. Sirve para darte cuenta enseguida si algo se rompe, ahora o cuando
+alguien cambie el código dentro de un año. Como `procesar` recibe un mensaje y
+devuelve otro, probarla es fácil: se la llama con un mensaje conocido y se mira
+qué devuelve.
+
+- **`test("qué se espera", () => { ... })`** define un caso. El texto es lo que
+  vas a leer si falla, así que escribilo como una frase que diga qué tiene que
+  pasar: "sin overflow, pasarse de 127 se queda en 127".
+- **`expect(resultado).toEqual([0x90, 72, 100])`** es la revisión: si
+  `resultado` no es esa lista, el test falla y te muestra las dos, la que
+  esperabas y la que salió. Para "no devuelve nada" se usa `.toBeUndefined()`.
+
+Un `test` por comportamiento, aunque se repita un poco: es más fácil de leer y,
+cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
+
+- **El caso normal**: un mensaje típico con parámetros típicos.
+- **Los bordes**: qué pasa cerca de 0 y de 127, con números negativos, o con la
+  opción marcada y desmarcada. Es donde más fácil se equivoca uno.
+- **Los mensajes que no son para tu caja**: si tu caja trabaja con notas, qué
+  hace con un Cambio de Control, o con un mensaje de un solo byte.
+
+Además de tu test, hay uno que revisa **todas** las cajas del catálogo
+(`src/workflow/catalogo.test.ts`). Si falla con el nombre de tu caja, quiere
+decir que algo no cumple lo que toda caja tiene que cumplir: un valor `inicial`
+que no coincide con su `tipo` (o que no está entre las `opciones`), dos
+parámetros con la misma `clave`, o un `procesar` que tira un error o devuelve
+bytes fuera de 0 a 255 con un mensaje común.
 
 ## Si necesitás código compartido
 

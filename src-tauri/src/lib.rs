@@ -115,7 +115,8 @@ fn se_reenvia_directo(datos: &[u8]) -> bool {
 
 #[tauri::command]
 fn listar_puertos_entrada() -> Result<Vec<Puerto>, String> {
-    let midi_in = MidiInput::new("tauri-midi-listado-entrada").map_err(|error| error.to_string())?;
+    let midi_in =
+        MidiInput::new("tauri-midi-listado-entrada").map_err(|error| error.to_string())?;
     Ok(midi_in
         .ports()
         .iter()
@@ -130,7 +131,8 @@ fn listar_puertos_entrada() -> Result<Vec<Puerto>, String> {
 
 #[tauri::command]
 fn listar_puertos_salida() -> Result<Vec<Puerto>, String> {
-    let midi_out = MidiOutput::new("tauri-midi-listado-salida").map_err(|error| error.to_string())?;
+    let midi_out =
+        MidiOutput::new("tauri-midi-listado-salida").map_err(|error| error.to_string())?;
     Ok(midi_out
         .ports()
         .iter()
@@ -171,8 +173,13 @@ fn conectar(
     // de la entrada la necesita para reenviar el reloj y el Sensor Activo. Si
     // algo falla después, hay que cerrarla: un intento fallido no puede dejar
     // ningún puerto abierto.
-    abrir_conexiones(app.clone(), &estado, puerto_entrada.clone(), puerto_salida.clone())
-        .inspect_err(|_| cerrar_conexiones(&estado, &mut numero_de_conexion))?;
+    abrir_conexiones(
+        app.clone(),
+        &estado,
+        puerto_entrada.clone(),
+        puerto_salida.clone(),
+    )
+    .inspect_err(|_| cerrar_conexiones(&estado, &mut numero_de_conexion))?;
 
     vigilar_conexion(app, *numero_de_conexion, puerto_entrada, puerto_salida);
     Ok(())
@@ -230,9 +237,13 @@ fn abrir_conexiones(
     puerto_salida: Puerto,
 ) -> Result<(), String> {
     let midi_out = MidiOutput::new("tauri-midi-salida").map_err(|error| error.to_string())?;
-    let puerto_salida_encontrado = midi_out
-        .find_port_by_id(&puerto_salida.id)
-        .ok_or_else(|| format!("No se encontró el puerto de salida '{}'", puerto_salida.nombre))?;
+    let puerto_salida_encontrado =
+        midi_out.find_port_by_id(&puerto_salida.id).ok_or_else(|| {
+            format!(
+                "No se encontró el puerto de salida '{}'",
+                puerto_salida.nombre
+            )
+        })?;
     let conexion_salida = midi_out
         .connect(&puerto_salida_encontrado, "tauri-midi-conexion-salida")
         .map_err(|error| error.to_string())?;
@@ -240,9 +251,13 @@ fn abrir_conexiones(
 
     let mut midi_in = MidiInput::new("tauri-midi-entrada").map_err(|error| error.to_string())?;
     midi_in.ignore(Ignore::None);
-    let puerto_entrada_encontrado = midi_in
-        .find_port_by_id(&puerto_entrada.id)
-        .ok_or_else(|| format!("No se encontró el puerto de entrada '{}'", puerto_entrada.nombre))?;
+    let puerto_entrada_encontrado =
+        midi_in.find_port_by_id(&puerto_entrada.id).ok_or_else(|| {
+            format!(
+                "No se encontró el puerto de entrada '{}'",
+                puerto_entrada.nombre
+            )
+        })?;
 
     let nombre_puerto_entrada = puerto_entrada.nombre;
     let conexion_salida_compartida = estado.conexion_salida.clone();
@@ -292,7 +307,10 @@ fn desconectar(estado: State<EstadoMidi>) {
 // principal, de a uno, y eso ayuda a que los mensajes salgan en orden.
 #[tauri::command]
 fn enviar_mensaje(estado: State<EstadoMidi>, datos: Vec<u8>) -> Result<(), String> {
-    let mut salida = estado.conexion_salida.lock().map_err(|error| error.to_string())?;
+    let mut salida = estado
+        .conexion_salida
+        .lock()
+        .map_err(|error| error.to_string())?;
     let conexion = salida
         .as_mut()
         .ok_or_else(|| "No hay una conexión de salida activa".to_string())?;
@@ -313,4 +331,130 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn describe_los_mensajes_de_canal() {
+        let casos: &[(&[u8], &str)] = &[
+            (
+                &[0x80, 60, 64],
+                "Nota Off · canal 1 · nota 60 · velocidad 64",
+            ),
+            (
+                &[0x90, 60, 100],
+                "Nota On · canal 1 · nota 60 · velocidad 100",
+            ),
+            (
+                &[0x9F, 60, 100],
+                "Nota On · canal 16 · nota 60 · velocidad 100",
+            ),
+            (
+                &[0xA2, 60, 30],
+                "Presión Polifónica · canal 3 · nota 60 · presión 30",
+            ),
+            (
+                &[0xB0, 7, 127],
+                "Cambio de Control · canal 1 · controlador 7 · valor 127",
+            ),
+            (&[0xC5, 12], "Cambio de Programa · canal 6 · programa 12"),
+            (&[0xD0, 90], "Presión de Canal · canal 1 · presión 90"),
+        ];
+        for (datos, esperado) in casos {
+            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
+        }
+    }
+
+    #[test]
+    fn un_nota_on_con_velocidad_cero_es_un_nota_off() {
+        assert_eq!(
+            describir_mensaje(&[0x90, 60, 0]),
+            "Nota Off · canal 1 · nota 60 · velocidad 0"
+        );
+    }
+
+    #[test]
+    fn el_pitch_bend_arma_el_valor_con_los_dos_bytes_de_datos() {
+        let casos: &[(&[u8], &str)] = &[
+            (&[0xE0, 0x00, 0x00], "Pitch Bend · canal 1 · valor 0"),
+            (&[0xE0, 0x00, 0x40], "Pitch Bend · canal 1 · valor 8192"),
+            (&[0xE0, 0x7F, 0x7F], "Pitch Bend · canal 1 · valor 16383"),
+        ];
+        for (datos, esperado) in casos {
+            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
+        }
+    }
+
+    #[test]
+    fn describe_los_mensajes_de_sistema() {
+        let casos: &[(u8, &str)] = &[
+            (0xF0, "Mensaje de Sistema Exclusivo (SysEx)"),
+            (0xF1, "Cuadro de Tiempo MIDI (MTC Quarter Frame)"),
+            (
+                0xF2,
+                "Puntero de Posición de Canción (Song Position Pointer)",
+            ),
+            (0xF3, "Selección de Canción (Song Select)"),
+            (0xF6, "Solicitud de Afinación (Tune Request)"),
+            (0xF8, "Reloj MIDI (Timing Clock)"),
+            (0xFA, "Inicio (Start)"),
+            (0xFB, "Continuar (Continue)"),
+            (0xFC, "Detener (Stop)"),
+            (0xFE, "Sensor Activo (Active Sensing)"),
+            (0xFF, "Reset del Sistema"),
+        ];
+        for (status, esperado) in casos {
+            assert_eq!(
+                describir_mensaje(&[*status]),
+                *esperado,
+                "status {status:02X}"
+            );
+        }
+    }
+
+    #[test]
+    fn avisa_cuando_no_reconoce_el_mensaje() {
+        let casos: &[(&[u8], &str)] = &[
+            (&[0xF4], "Mensaje de sistema sin reconocer (0xF4)"),
+            (&[0xF7], "Mensaje de sistema sin reconocer (0xF7)"),
+            (&[0xFD], "Mensaje de sistema sin reconocer (0xFD)"),
+            (&[0x3C, 0x40], "Mensaje MIDI sin reconocer: [3C, 40]"),
+            (&[], "Mensaje vacío"),
+        ];
+        for (datos, esperado) in casos {
+            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
+        }
+    }
+
+    // Un mensaje incompleto no tiene que hacer fallar la descripción: los
+    // bytes que faltan cuentan como 0.
+    #[test]
+    fn describe_los_mensajes_truncados_sin_fallar() {
+        let casos: &[(&[u8], &str)] = &[
+            (
+                &[0xB0],
+                "Cambio de Control · canal 1 · controlador 0 · valor 0",
+            ),
+            (&[0xC0], "Cambio de Programa · canal 1 · programa 0"),
+            (&[0xE0, 0x10], "Pitch Bend · canal 1 · valor 16"),
+            (&[0x90, 60], "Nota Off · canal 1 · nota 60 · velocidad 0"),
+        ];
+        for (datos, esperado) in casos {
+            assert_eq!(describir_mensaje(datos), *esperado, "bytes {datos:02X?}");
+        }
+    }
+
+    #[test]
+    fn se_reenvian_directo_solo_el_reloj_y_el_sensor_activo() {
+        assert!(se_reenvia_directo(&[0xF8]));
+        assert!(se_reenvia_directo(&[0xFE]));
+
+        assert!(!se_reenvia_directo(&[0xFA]));
+        assert!(!se_reenvia_directo(&[0xFC]));
+        assert!(!se_reenvia_directo(&[0x90, 60, 100]));
+        assert!(!se_reenvia_directo(&[]));
+    }
 }

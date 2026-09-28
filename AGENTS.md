@@ -137,8 +137,10 @@ mergear).
 
 ## Verificación antes de dar por terminada una tarea
 
-- `cargo check` (desde `src-tauri/`) para el backend.
-- `npx tsc --noEmit` (desde la raíz) para el frontend.
+- `cargo check`, `cargo test`, `cargo fmt --check` y
+  `cargo clippy --all-targets -- -D warnings` (desde `src-tauri/`) para el
+  backend.
+- `npx tsc --noEmit` y `npm test` (desde la raíz) para el frontend.
 - `npm run tauri dev` para probar la app real. Tené en cuenta que abre una
   ventana nativa (no es un sitio web): para verlo, hay que ejecutarlo en la
   máquina de la persona usuaria, no alcanza con abrir la URL de Vite en un
@@ -181,6 +183,24 @@ mergear).
   llega como Nota Off con velocidad 64 (`90 3C 00` → `80 3C 40`), y los status
   de sistema indefinidos (`F4`, `F9`, `FD`) se descartan. Para probar esos
   casos hace falta un dispositivo físico, o leer el código.
+
+## Tests
+
+- Se testea solo la lógica pura. En Rust, las funciones de `lib.rs` que no
+  usan `midir` ni el `AppHandle`, en un `mod tests` al final del mismo
+  archivo. En TypeScript, con Vitest en entorno `node` (sin DOM simulado), y
+  cada `.test.ts` va al lado del módulo que prueba.
+- Cada tipo de nodo trae su `.test.ts`, con el estilo didáctico de
+  `desplazar.test.ts` (un `test` por comportamiento, bytes literales, sin
+  helpers): es también el ejemplo que copia quien crea un nodo, así que tiene
+  que poder leerse sin saber nada más del proyecto. Además,
+  `catalogo.test.ts` revisa lo que todo nodo tiene que cumplir.
+- Queda afuera a propósito: la vista (plantillas, lienzo de Rete, tabs),
+  `conectar` y el vigilante (necesitan `midir` real) y la ventana real. Eso
+  se sigue verificando como indica la sección anterior.
+- El CI (`.github/workflows/ci.yml`) corre en Ubuntu, en cada PR contra
+  `main` y en cada push a `main`, todo lo de la verificación más
+  `npm run build`.
 
 ## Estilo de código
 
