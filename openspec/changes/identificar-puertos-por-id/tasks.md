@@ -46,5 +46,5 @@ Al terminar, devolverle al bus su nombre "Bus 2".
       presionar "Conectar" sin tocar los selectores; conecta
 - [x] 3.6 Correr la verificación de AGENTS.md: `cargo check` desde
       `src-tauri/` y `npx tsc --noEmit` desde la raíz
-- [ ] 3.7 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
+- [x] 3.7 Subir la rama, abrir el PR contra `main` y verificar que el PR quedó
       creado
