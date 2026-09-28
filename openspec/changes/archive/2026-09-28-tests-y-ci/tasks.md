@@ -17,13 +17,13 @@
 
 ## 3. CI
 
-- [ ] 3.1 Crear `.github/workflows/ci.yml` con los jobs `frontend` y `backend` descritos en `design.md`, disparados en `pull_request` y `push` a `main`, y verificar la sintaxis abriendo el PR de este cambio
-- [ ] 3.2 Verificar en el PR que los dos jobs quedan en verde y anotar cuánto tardan con y sin caché
-- [ ] 3.3 Verificar que el CI falla de verdad: empujar un commit temporal que rompa un test, confirmar el rojo y revertirlo
+- [x] 3.1 Crear `.github/workflows/ci.yml` con los jobs `frontend` y `backend` descritos en `design.md`, disparados en `pull_request` y `push` a `main`, y verificar la sintaxis abriendo el PR de este cambio
+- [x] 3.2 Verificar en el PR que los dos jobs quedan en verde y anotar cuánto tardan con y sin caché (sin caché: backend 3m57s, frontend 20s; con caché: backend 2m33s, frontend 16s)
+- [x] 3.3 Verificar que el CI falla de verdad: empujar un commit temporal que rompa un test, confirmar el rojo y revertirlo
 
 ## 4. Documentación
 
 - [x] 4.1 En `src/workflow/nodos/LEEME.md`, sumar a "Los pasos" uno nuevo antes de "Probalo": crear `<nodo>.test.ts` copiando `desplazar.test.ts`, y correr `npm test`
 - [x] 4.2 Sumar a `LEEME.md` una sección corta "Cómo escribir el test" (qué es un `test` y un `expect`, cómo pensar los casos límite, qué significa que el test de contrato falle), y verificar que se entiende sin conocer Vitest; sumar el test al "Ejemplo completo" de Nota Off
-- [ ] 4.3 Proponerle a la persona usuaria el diff de `AGENTS.md` (verificación con `cargo test` y `npm test`, convención de un `.test.ts` por nodo, qué corre el CI, dónde van los tests y qué queda afuera a propósito) y aplicarlo solo con su aprobación
-- [ ] 4.4 Mencionar en el PR que se puede marcar el check como requerido en `main` desde la configuración del repositorio
+- [x] 4.3 Proponerle a la persona usuaria el diff de `AGENTS.md` (verificación con `cargo test` y `npm test`, convención de un `.test.ts` por nodo, qué corre el CI, dónde van los tests y qué queda afuera a propósito) y aplicarlo solo con su aprobación
+- [x] 4.4 Mencionar en el PR que se puede marcar el check como requerido en `main` desde la configuración del repositorio
