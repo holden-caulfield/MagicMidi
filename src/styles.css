@@ -25,11 +25,15 @@
 
 body {
   margin: 0;
-  height: 100dvh;
+  overflow: hidden;
 }
 
+/* La ventana no se desplaza nunca: cada panel acomoda su contenido al lugar
+   que tiene. Con `100dvh`, WebKit se quedaba con una medida vieja al entrar y
+   salir de pantalla completa; `position: fixed` ata la raíz a la ventana. */
 #app {
-  height: 100%;
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
 }
@@ -37,20 +41,11 @@ body {
 .contenedor {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 1.25rem 1.5rem 1.5rem;
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .encabezado {
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
   padding: 1.25rem 1.5rem 0;
   display: flex;
   flex-wrap: wrap;
@@ -82,13 +77,24 @@ h1 {
 }
 
 .panel {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   border: 1px solid rgba(127, 127, 127, 0.25);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   background-color: rgba(127, 127, 127, 0.06);
 }
 
-.panel-conexion {
+/* Los selectores no ganan nada con más ancho: conservan el que tenían cuando
+   todo el contenido medía como máximo 900px. */
+.formulario-conexion {
+  width: 100%;
+  max-width: 804px;
+  margin-inline: auto;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
@@ -190,12 +196,6 @@ input:focus-visible {
   color: #b3261e;
 }
 
-.panel-log {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .encabezado-log {
   display: flex;
   justify-content: space-between;
@@ -207,7 +207,8 @@ input:focus-visible {
 }
 
 .lista-mensajes {
-  height: 360px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -237,12 +238,6 @@ input:focus-visible {
   letter-spacing: 0.05em;
 }
 
-.panel-workflow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .barra-herramientas {
   display: flex;
   gap: 0.5rem;
@@ -267,15 +262,19 @@ input:focus-visible {
 }
 
 .area-workflow {
+  flex: 1;
+  min-height: 0;
   display: flex;
   gap: 0.75rem;
-  min-height: 420px;
 }
 
+/* Rete dibuja cada conexión en un SVG de 9999px: la contención asegura que
+   nada de lo que hay en el lienzo agrande el panel. */
 .lienzo {
   flex: 1;
   position: relative;
   overflow: hidden;
+  contain: strict;
   border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.04);
   background-image: radial-gradient(rgba(127, 127, 127, 0.35) 1px, transparent 1px);
@@ -360,6 +359,7 @@ input:focus-visible {
 
 .configuracion {
   flex: 0 0 220px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
