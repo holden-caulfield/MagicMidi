@@ -12,6 +12,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --fondo-inicio: #dcf5e4;
+  --borde-inicio: #2e9d5a;
+  --fondo-fin: #fde6d6;
+  --borde-fin: #dd6b20;
 }
 
 * {
@@ -244,11 +249,15 @@ input:focus-visible {
   flex-wrap: wrap;
 }
 
-.barra-herramientas button,
-.caja {
+.barra-herramientas button {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  aspect-ratio: 1;
+  /* Los 2px de más compensan que el ícono es más bajo que la línea de texto
+     que llevaba antes, para que el botón conserve su altura. */
+  padding: calc(0.6em + 2px);
 }
 
 .ayuda-workflow {
@@ -275,16 +284,25 @@ input:focus-visible {
 
 .caja {
   position: relative;
-  box-sizing: border-box;
-  padding: 0.6rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 2px solid rgba(127, 127, 127, 0.5);
   border-radius: 10px;
   background-color: #ffffff;
   color: #0f0f0f;
-  font-weight: 600;
   cursor: grab;
   user-select: none;
-  white-space: nowrap;
+}
+
+.caja-inicio {
+  border-color: var(--borde-inicio);
+  background-color: var(--fondo-inicio);
+}
+
+.caja-fin {
+  border-color: var(--borde-fin);
+  background-color: var(--fondo-fin);
 }
 
 .caja-seleccionada .caja {
@@ -292,15 +310,52 @@ input:focus-visible {
   box-shadow: 0 0 0 3px rgba(57, 108, 216, 0.3);
 }
 
-/* Rete ubica las conexiones sumando desplazamientos del DOM, sin tener en
-   cuenta `transform`: por eso los conectores se centran con flexbox. */
+/* Rete ubica las conexiones sumando `offsetLeft`/`offsetTop`, sin tener en
+   cuenta `transform`: por eso los conectores se ubican con `top` y `left`. */
+.conector {
+  position: absolute;
+  top: calc(50% - 18px);
+}
+
 .conector-entrada {
-  margin-left: calc(-1.4rem - 20px);
+  left: -18px;
 }
 
 .conector-salida {
-  margin-left: auto;
-  margin-right: calc(-1.4rem - 20px);
+  right: -18px;
+}
+
+/* En el lienzo el globo se oculta con `opacity` y no con `display: none`,
+   para que el nombre siga al alcance de los lectores de pantalla. */
+.globo {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background-color: #0f0f0f;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.caja:hover .globo,
+.barra-herramientas button:hover .globo,
+.barra-herramientas button:focus-visible .globo {
+  opacity: 1;
+}
+
+/* Rete le pone `transform` al contenedor de cada caja, y eso encierra al globo
+   en ese contenedor: para que no lo tape otra caja, sube el contenedor entero. */
+.lienzo :has(> rete-root > .caja:hover) {
+  z-index: 10;
 }
 
 .configuracion {
@@ -373,6 +428,18 @@ input[type="number"] {
 
   .barra-tabs button {
     background-color: transparent;
+  }
+
+  /* Solo los botones de la barra: las cajas del lienzo son claras en los dos
+     modos. */
+  .barra-herramientas .caja-inicio {
+    background-color: #173f27;
+    border-color: #4cc27c;
+  }
+
+  .barra-herramientas .caja-fin {
+    background-color: #5a2e12;
+    border-color: #f08a3c;
   }
 
   .barra-tabs button[aria-selected="true"] {

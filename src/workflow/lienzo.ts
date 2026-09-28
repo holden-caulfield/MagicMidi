@@ -9,18 +9,26 @@ import { AreaPlugin } from "rete-area-plugin";
 import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-plugin";
 
 import { actualizar, estado, type Conexion, type NodoDelFlujo } from "../estado";
-import { tieneSalida, TIPOS_DE_NODO, TRIGGER, type IdDeTipo } from "./catalogo";
+import {
+  etapaDelTipo,
+  tieneSalida,
+  TIPOS_DE_NODO,
+  TRIGGER,
+  type IdDeTipo,
+  type Etapa,
+} from "./catalogo";
 import { dibujarIcono } from "./iconos";
 
-const ANCHO_CAJA = 240;
-const ALTO_CAJA = 44;
-const SEPARACION_INICIAL = 320;
+const LADO_CAJA = 72;
+const LADO_ICONO = 36;
+const SEPARACION_INICIAL = 180;
 
 class Caja extends ClassicPreset.Node {
   constructor(
     id: string,
     public nombre: string,
     public icono: IconNode,
+    public etapa: Etapa,
     conEntrada: boolean,
     conSalida: boolean,
   ) {
@@ -46,10 +54,10 @@ let copiandoDesdeElEstado = false;
 
 function crearCaja(nodo: NodoDelFlujo): Caja {
   if (nodo.tipo === "trigger") {
-    return new Caja(nodo.id, TRIGGER.nombre, TRIGGER.icono, false, true);
+    return new Caja(nodo.id, TRIGGER.nombre, TRIGGER.icono, "inicio", false, true);
   }
   const tipo = TIPOS_DE_NODO[nodo.tipo];
-  return new Caja(nodo.id, tipo.nombre, tipo.icono, true, tieneSalida(tipo));
+  return new Caja(nodo.id, tipo.nombre, tipo.icono, etapaDelTipo(tipo), true, tieneSalida(tipo));
 }
 
 function dibujarCaja(caja: Caja, emit: (senal: Senales) => void) {
@@ -61,10 +69,13 @@ function dibujarCaja(caja: Caja, emit: (senal: Senales) => void) {
     ></rete-ref>
   `;
   return html`
-    <div class="caja" style="width: ${ANCHO_CAJA}px">
+    <div
+      class="caja caja-${caja.etapa}"
+      style="width: ${LADO_CAJA}px; height: ${LADO_CAJA}px"
+    >
       ${caja.inputs.entrada ? conector("input", "entrada", caja.inputs.entrada.socket) : null}
-      <span class="caja-icono">${dibujarIcono(caja.icono)}</span>
-      <span class="caja-nombre">${caja.nombre}</span>
+      ${dibujarIcono(caja.icono, LADO_ICONO)}
+      <span class="globo">${caja.nombre}</span>
       ${caja.outputs.salida ? conector("output", "salida", caja.outputs.salida.socket) : null}
     </div>
   `;
@@ -206,16 +217,16 @@ function centroVisible() {
   const { width, height } = area.container.getBoundingClientRect();
   const corrimiento = (cajasAgregadasConClic++ % 5) * 48;
   return {
-    x: (width / 2 - x) / k - ANCHO_CAJA / 2 + corrimiento,
-    y: (height / 2 - y) / k - ALTO_CAJA / 2 + corrimiento,
+    x: (width / 2 - x) / k - LADO_CAJA / 2 + corrimiento,
+    y: (height / 2 - y) / k - LADO_CAJA / 2 + corrimiento,
   };
 }
 
 export function posicionDesdeEvento(evento: MouseEvent) {
   area.area.setPointerFrom(evento);
   return {
-    x: area.area.pointer.x - ANCHO_CAJA / 2,
-    y: area.area.pointer.y - ALTO_CAJA / 2,
+    x: area.area.pointer.x - LADO_CAJA / 2,
+    y: area.area.pointer.y - LADO_CAJA / 2,
   };
 }
 

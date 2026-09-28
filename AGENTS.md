@@ -107,6 +107,14 @@ mergear).
     (como la selección) se marca desde `lienzo.ts`. Rete ubica las
     conexiones sin tener en cuenta `transform` de CSS: los conectores no se
     posicionan con `transform`.
+  - Rete sí le pone `transform` al contenedor de cada caja, y eso encierra
+    todo lo de la caja en su propio contexto de apilamiento: para que algo
+    que sobresale (como el globo con el nombre) quede encima de otra caja,
+    hay que subir el `z-index` de ese contenedor, no el de la caja.
+  - El color de una caja sale de su etapa en el flujo (`etapaDelTipo` en
+    `catalogo.ts`: inicio, intermedia o fin), no de algo que declare el tipo
+    de nodo. Sumar un color por tipo es una decisión a consultar con la
+    persona usuaria, no un campo para agregar al pasar.
   - La ventana tiene `"dragDropEnabled": false` en `tauri.conf.json`: sin eso,
     Tauri captura los arrastres y el drag and drop de HTML5 (arrastrar cajas
     desde la barra) no funciona en la ventana real.

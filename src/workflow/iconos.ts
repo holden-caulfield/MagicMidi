@@ -1,5 +1,5 @@
 import { createElement, type IconNode } from "lucide";
 
-export function dibujarIcono(icono: IconNode) {
-  return createElement(icono, { width: 18, height: 18, "aria-hidden": "true" });
+export function dibujarIcono(icono: IconNode, tamano = 18) {
+  return createElement(icono, { width: tamano, height: tamano, "aria-hidden": "true" });
 }
