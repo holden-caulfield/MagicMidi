@@ -104,7 +104,7 @@ completo se prueba con `npm run tauri dev` y dos buses del IAC Driver.
 - [x] 4.3 Correr `npx tsc --noEmit`, `npm test`, `npm run build` y, desde
       `src-tauri/`, `cargo check`, `cargo test`, `cargo fmt --check` y
       `cargo clippy --all-targets -- -D warnings`, y verificar que pasan
-- [ ] 4.4 En la ventana real (`npm run tauri dev`, con dos buses del IAC
+- [x] 4.4 En la ventana real (`npm run tauri dev`, con dos buses del IAC
       Driver), tocar notas con el flujo por defecto, con un Desplazar y con un
       acorde, y verificar que el log muestra lo mismo que llega al bus de
       salida, que el reloj y el Sensor Activo no aparecen, y que las
