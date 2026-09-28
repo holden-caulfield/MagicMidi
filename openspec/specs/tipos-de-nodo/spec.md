@@ -63,15 +63,21 @@ arranque.
 
 El archivo de un tipo de nodo SHALL declarar:
 
-- el **nombre** visible en la barra y en las cajas;
-- el **ícono**, tomado de la librería de íconos de la aplicación;
+- el **nombre**, que se ve en el globo de ayuda de la caja (en la barra y en
+  el lienzo) y como título en el panel de configuración;
+- el **ícono**, tomado de la librería de íconos de la aplicación. Es lo único
+  que se ve dentro de la caja;
 - si la caja **no tiene salida**. Es opcional: si no se declara, la caja tiene
-  salida. Todas tienen entrada; las que no tienen salida cierran el flujo;
+  salida. Todas tienen entrada; las que no tienen salida cierran el flujo, y
+  por eso se ven con el color de las cajas de fin, sin declarar nada más;
 - la lista de **parámetros**, cada uno con una clave, una etiqueta visible, un
   tipo y un valor inicial. Los tipos de parámetro disponibles SHALL ser: número
   entero, sí/no, y una opción de una lista cerrada, cuyas opciones tienen cada
   una un valor y un texto visible;
 - una única **función de procesamiento**.
+
+Un tipo de nodo no SHALL declarar su color: el color sale de la etapa de la caja
+en el flujo.
 
 El panel de configuración SHALL armarse solo a partir de la lista de parámetros
 declarada: un campo por parámetro, con su etiqueta y el control que corresponde
@@ -89,13 +95,15 @@ a su tipo.
 
 - **GIVEN** un tipo de nodo declara que no tiene salida
 - **WHEN** se agrega una caja de ese tipo al lienzo
-- **THEN** la caja tiene conector de entrada y ningún conector de salida
+- **THEN** la caja tiene conector de entrada, ningún conector de salida, y se
+  ve con el color de las cajas de fin
 
 #### Scenario: Salida por defecto
 
 - **GIVEN** un tipo de nodo no dice nada sobre su salida
 - **WHEN** se agrega una caja de ese tipo al lienzo
-- **THEN** la caja tiene conector de entrada y conector de salida
+- **THEN** la caja tiene conector de entrada y conector de salida, y se ve con
+  el color neutro de las cajas intermedias
 
 ### Requirement: La función de procesamiento
 
