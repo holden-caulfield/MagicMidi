@@ -83,6 +83,15 @@ mergear).
   renderizado condicional (`${activo ? panel() : nothing}`): desmontarlo le
   borraría al log los mensajes acumulados, que tiene que seguir juntando
   mientras su tab no está a la vista.
+- **Layout de la ventana**: la ventana no se desplaza nunca. `#app` va atado
+  a la ventana con `position: fixed; inset: 0` (no con `100dvh`: en WebKit,
+  al entrar y salir de pantalla completa, esa medida queda vieja y deja un
+  margen o un desplazamiento). Los tres tabs comparten la clase `.panel`,
+  que ocupa todo el lugar entre el encabezado y la barra; no hay reglas por
+  panel. Cada tab estiliza solo lo que dibuja adentro, y eso se confina al
+  lugar que tiene: lo que crece va con `flex: 1; min-height: 0` y desplaza
+  su propio contenido, en vez de agrandar el panel. No usar alturas fijas ni
+  mínimas para que algo "entre".
 - **Excepción del log**: las filas de mensajes se agregan al DOM a mano, no
   por plantilla, porque redibujar la lista entera con cada mensaje MIDI no
   escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
@@ -111,6 +120,10 @@ mergear).
     todo lo de la caja en su propio contexto de apilamiento: para que algo
     que sobresale (como el globo con el nombre) quede encima de otra caja,
     hay que subir el `z-index` de ese contenedor, no el de la caja.
+  - El lienzo lleva `contain: strict`: Rete ubica las cajas con
+    `position: absolute` y dibuja cada conexión en un SVG de 9999 px, y sin
+    la contención eso puede agrandar el panel en WebKit (por ejemplo, con
+    una caja que queda fuera de la vista al achicar la ventana).
   - El color de una caja sale de su etapa en el flujo (`etapaDelTipo` en
     `catalogo.ts`: inicio, intermedia o fin), no de algo que declare el tipo
     de nodo. Sumar un color por tipo es una decisión a consultar con la
@@ -159,6 +172,10 @@ mergear).
   ahí es la activación de controles con el teclado: la inyección de teclas no
   dispara la activación de un botón nativo, así que Enter y barra
   espaciadora hay que probarlos en la ventana real.
+- El navegador de desarrollo es Chromium, pero la ventana real usa WebKit, y
+  el layout puede comportarse distinto. Un problema de tamaños que no se
+  reproduce en el navegador, sobre todo al entrar o salir de pantalla
+  completa, hay que probarlo en la ventana real antes de darlo por resuelto.
 - Como la interfaz se dibuja desde `src/estado.ts`, en el navegador se puede
   manejar el estado a mano desde la consola
   (`const m = await import('/src/estado.ts'); m.actualizar({ conectado: true })`)

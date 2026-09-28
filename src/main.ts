@@ -30,7 +30,7 @@ function ventana() {
         (panel) => html`
           <section
             id="panel-${panel.id}"
-            class="panel panel-${panel.id}"
+            class="panel"
             role="tabpanel"
             aria-labelledby="tab-${panel.id}"
             ?hidden=${estado.panelActivo !== panel.id}

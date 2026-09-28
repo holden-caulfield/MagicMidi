@@ -124,43 +124,45 @@ export function indicadorDeEstado() {
 
 export function panelConexion() {
   return html`
-    <p class="subtitulo">
-      Elegí un puerto de entrada y uno de salida para ver los mensajes MIDI que
-      pasan por la aplicación.
-    </p>
+    <div class="formulario-conexion">
+      <p class="subtitulo">
+        Elegí un puerto de entrada y uno de salida para ver los mensajes MIDI que
+        pasan por la aplicación.
+      </p>
 
-    ${selectorDePuerto(
-      "select-puerto-entrada",
-      "Puerto de entrada",
-      estado.puertosEntrada,
-      estado.puertoEntradaElegido,
-      (idDelPuerto) => actualizar({ puertoEntradaElegido: idDelPuerto }),
-    )}
-    ${selectorDePuerto(
-      "select-puerto-salida",
-      "Puerto de salida",
-      estado.puertosSalida,
-      estado.puertoSalidaElegido,
-      (idDelPuerto) => actualizar({ puertoSalidaElegido: idDelPuerto }),
-    )}
+      ${selectorDePuerto(
+        "select-puerto-entrada",
+        "Puerto de entrada",
+        estado.puertosEntrada,
+        estado.puertoEntradaElegido,
+        (idDelPuerto) => actualizar({ puertoEntradaElegido: idDelPuerto }),
+      )}
+      ${selectorDePuerto(
+        "select-puerto-salida",
+        "Puerto de salida",
+        estado.puertosSalida,
+        estado.puertoSalidaElegido,
+        (idDelPuerto) => actualizar({ puertoSalidaElegido: idDelPuerto }),
+      )}
 
-    <div class="fila-botones">
-      <button
-        type="button"
-        ?disabled=${estado.conectado}
-        @click=${actualizarListaDePuertos}
-      >
-        Actualizar puertos
-      </button>
-      <button type="button" ?disabled=${estado.conectado} @click=${conectar}>
-        Conectar
-      </button>
-      <button type="button" ?disabled=${!estado.conectado} @click=${desconectar}>
-        Desconectar
-      </button>
+      <div class="fila-botones">
+        <button
+          type="button"
+          ?disabled=${estado.conectado}
+          @click=${actualizarListaDePuertos}
+        >
+          Actualizar puertos
+        </button>
+        <button type="button" ?disabled=${estado.conectado} @click=${conectar}>
+          Conectar
+        </button>
+        <button type="button" ?disabled=${!estado.conectado} @click=${desconectar}>
+          Desconectar
+        </button>
     </div>
 
     <p class="mensaje-conexion">${estado.mensajeConexion}</p>
+    </div>
   `;
 }
 
