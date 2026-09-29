@@ -23,6 +23,8 @@
   --letra-sin-cambios: #534ab7;
   --fondo-entrada-que-no-salio: rgba(127, 127, 127, 0.13);
   --letra-descartado: #888780;
+  --letra-error: #a32d2d;
+  --fondo-error: #fcebeb;
 }
 
 * {
@@ -265,6 +267,11 @@ input:focus-visible {
   color: var(--letra-sin-cambios);
 }
 
+.fila-entrada.error {
+  color: var(--letra-error);
+  background-color: var(--fondo-error);
+}
+
 .fila-salida {
   color: var(--letra-salida);
   background-color: var(--fondo-salida);
@@ -477,6 +484,8 @@ input[type="number"] {
     --fondo-salida: #26215c;
     --letra-sin-cambios: #afa9ec;
     --letra-descartado: #8f8f8f;
+    --letra-error: #f7c1c1;
+    --fondo-error: #501313;
   }
 
   .lista-mensajes {

@@ -1,14 +1,18 @@
 import { Zap } from "lucide";
 
+import descartar from "./nodos/descartar";
 import desplazar from "./nodos/desplazar";
 import emitir from "./nodos/emitir";
+import filtrar from "./nodos/filtrar";
 import type { TipoDeNodo } from "./tipos";
 
 // Para sumar un tipo de nodo: importarlo arriba y agregarlo acá. El orden de
 // esta lista es el orden de la barra de herramientas.
 const tipos = {
+  filtrar,
   desplazar,
   emitir,
+  descartar,
 } satisfies Record<string, TipoDeNodo>;
 
 export type IdDeTipo = keyof typeof tipos;

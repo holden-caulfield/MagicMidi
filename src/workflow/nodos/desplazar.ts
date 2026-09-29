@@ -26,12 +26,13 @@ export default {
     { clave: "overflow", etiqueta: "Overflow", tipo: "si-no", inicial: false },
   ],
   procesar(mensaje, parametros) {
+    const bytes = mensaje.bytes;
     const posicion = Number(parametros.byte);
-    if (posicion >= mensaje.length) {
+    if (posicion >= bytes.length) {
       return mensaje;
     }
 
-    const byte = mensaje[posicion];
+    const byte = bytes[posicion];
     const leading = byte & LEADING_BIT;
     const desplazado = (byte & RESTO) + Number(parametros.desplazamiento);
     // `& RESTO` se queda con los 7 bits de abajo: es tomar módulo 128, y por el
@@ -40,7 +41,7 @@ export default {
       ? desplazado & RESTO
       : Math.min(Math.max(desplazado, 0), RESTO);
 
-    mensaje[posicion] = leading | resto;
+    bytes[posicion] = leading | resto;
     return mensaje;
   },
 } satisfies TipoDeNodo;

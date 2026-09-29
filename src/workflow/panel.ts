@@ -143,8 +143,9 @@ export function panelWorkflow() {
   return html`
     ${barraDeHerramientas()}
     <p class="ayuda-workflow">
-      Solo sale por el puerto lo que llega a una caja Emitir. Para borrar una conexión,
-      arrastrala desde su entrada y soltala en un lugar vacío.
+      Cada mensaje sale tal cual, salvo que llegue a una caja naranja: Emitir manda lo que
+      recibe y Descartar no manda nada. Para borrar una conexión, arrastrala desde su entrada
+      y soltala en un lugar vacío.
     </p>
     <div class="area-workflow">
       <div

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
-import type { ValorDeParametro } from "./tipos";
+import { MensajeMidi, type ValorDeParametro } from "./tipos";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
@@ -41,11 +41,11 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => 
         tipo.parametros.map((parametro) => [parametro.clave, parametro.inicial]),
       );
 
-      const resultado = tipo.procesar([...mensaje], iniciales);
+      const resultado = tipo.procesar(new MensajeMidi([...mensaje]), iniciales);
 
       if (resultado != null) {
-        expect(resultado.length).toBeGreaterThan(0);
-        for (const byte of resultado) {
+        expect(resultado.bytes.length).toBeGreaterThan(0);
+        for (const byte of resultado.bytes) {
           expect(Number.isInteger(byte) && byte >= 0 && byte <= 255, `byte ${byte}`).toBe(true);
         }
       }
@@ -53,8 +53,10 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => 
   );
 });
 
-test("Emitir cierra el flujo y Desplazar queda en el medio", () => {
+test("Emitir y Descartar cierran el flujo; Filtrar y Desplazar quedan en el medio", () => {
   expect(etapaDelTipo(TIPOS_DE_NODO.emitir)).toBe("fin");
+  expect(etapaDelTipo(TIPOS_DE_NODO.descartar)).toBe("fin");
+  expect(etapaDelTipo(TIPOS_DE_NODO.filtrar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
 });
 
