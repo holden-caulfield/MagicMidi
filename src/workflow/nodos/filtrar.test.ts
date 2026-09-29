@@ -14,7 +14,7 @@ const NADA_MARCADO = {
   "cambio-de-programa": false,
   "presion-de-canal": false,
   "pitch-bend": false,
-  sistema: false,
+  "sistema": false,
 };
 
 test("deja pasar un Nota On si Nota On está marcado", () => {
@@ -80,7 +80,7 @@ test("no le importa el canal", () => {
 test("con Mensajes de sistema marcado, deja pasar un Inicio", () => {
   const resultado = filtrar.procesar(new MensajeMidi([0xfa]), {
     ...NADA_MARCADO,
-    sistema: true,
+    "sistema": true,
   });
 
   expect(resultado).toEqual(new MensajeMidi([0xfa]));
@@ -89,7 +89,7 @@ test("con Mensajes de sistema marcado, deja pasar un Inicio", () => {
 test("con Mensajes de sistema marcado, no deja pasar una nota", () => {
   const resultado = filtrar.procesar(new MensajeMidi([0x90, 60, 100]), {
     ...NADA_MARCADO,
-    sistema: true,
+    "sistema": true,
   });
 
   expect(resultado).toBeUndefined();
@@ -109,7 +109,7 @@ test("un mensaje que no empieza con un status no pasa nunca", () => {
     "cambio-de-programa": true,
     "presion-de-canal": true,
     "pitch-bend": true,
-    sistema: true,
+    "sistema": true,
   };
 
   expect(filtrar.procesar(new MensajeMidi([0x3c, 0x40]), todoMarcado)).toBeUndefined();

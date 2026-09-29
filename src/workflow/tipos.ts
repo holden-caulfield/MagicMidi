@@ -31,7 +31,7 @@ export const NOMBRES_DE_TIPO: Record<(typeof TIPOS_ELEGIBLES)[number], string> =
   "cambio-de-programa": "Cambio de Programa",
   "presion-de-canal": "Presión de Canal",
   "pitch-bend": "Pitch Bend",
-  sistema: "Mensajes de sistema",
+  "sistema": "Mensajes de sistema",
 };
 
 const TIPOS_DE_CANAL: Record<number, TipoDeMensaje> = {
