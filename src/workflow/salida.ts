@@ -6,8 +6,8 @@ import type { MensajeMidi } from "./tipos";
 // al backend en orden, así que cada envío espera al anterior.
 let ultimoEnvio: Promise<void> = Promise.resolve();
 
-export function enviarMensaje(datos: MensajeMidi) {
+export function enviarMensaje(mensaje: MensajeMidi) {
   ultimoEnvio = ultimoEnvio
-    .then(() => invoke<void>("enviar_mensaje", { datos }))
+    .then(() => invoke<void>("enviar_mensaje", { datos: mensaje.bytes }))
     .catch((error) => console.error("No se pudo enviar el mensaje MIDI:", error));
 }

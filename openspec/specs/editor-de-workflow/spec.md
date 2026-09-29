@@ -96,18 +96,19 @@ no SHALL poder agregarse otro: la barra de herramientas no lo ofrece.
 
 ### Requirement: La barra de herramientas agrega cajas al lienzo
 
-La barra de herramientas SHALL ofrecer, en esta versión, exactamente dos cajas:
-**Desplazar** y **Emitir**. Una caja SHALL poder agregarse arrastrándola desde
-la barra hasta un punto del lienzo, y queda ubicada donde se soltó. SHALL poder
-agregarse también activando su control en la barra, con el mouse o con el
-teclado, y en ese caso queda en un lugar visible del lienzo. Se SHALL poder
-agregar cualquier cantidad de cajas de cada tipo. Cada caja nueva arranca con
-la configuración inicial de su tipo.
+La barra de herramientas SHALL ofrecer, en esta versión, exactamente cuatro
+cajas, en este orden: **Filtrar**, **Desplazar**, **Emitir** y **Descartar**.
+Una caja SHALL poder agregarse arrastrándola desde la barra hasta un punto del
+lienzo, y queda ubicada donde se soltó. SHALL poder agregarse también
+activando su control en la barra, con el mouse o con el teclado, y en ese caso
+queda en un lugar visible del lienzo. Se SHALL poder agregar cualquier cantidad
+de cajas de cada tipo. Cada caja nueva arranca con la configuración inicial de
+su tipo.
 
 #### Scenario: Cajas disponibles
 
 - **WHEN** la persona usuaria mira la barra de herramientas
-- **THEN** ve "Desplazar" y "Emitir"
+- **THEN** ve "Filtrar", "Desplazar", "Emitir" y "Descartar", en ese orden
 
 #### Scenario: Arrastrar al lienzo
 
@@ -126,6 +127,12 @@ la configuración inicial de su tipo.
 - **GIVEN** ya hay una caja "Desplazar" en el lienzo
 - **WHEN** la persona usuaria agrega otra
 - **THEN** hay dos cajas "Desplazar", cada una con su propia configuración
+
+#### Scenario: Las cajas de fin se ven igual
+
+- **WHEN** la persona usuaria agrega una caja "Descartar"
+- **THEN** la caja tiene conector de entrada, ningún conector de salida, y el
+  mismo color que "Emitir"
 
 ### Requirement: Las cajas se mueven dentro del lienzo
 

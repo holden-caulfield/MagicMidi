@@ -1,4 +1,4 @@
-import type { MensajeMidi } from "./workflow/tipos";
+import { type MensajeMidi, NOMBRES_DE_TIPO } from "./workflow/tipos";
 
 const MENSAJES_DE_SISTEMA: Record<number, string> = {
   0xf0: "Mensaje de Sistema Exclusivo (SysEx)",
@@ -19,47 +19,42 @@ function hexadecimal(byte: number): string {
 }
 
 /**
- * Traduce los bytes crudos de un mensaje MIDI a una descripción legible,
- * pensada para usuarios que están aprendiendo el protocolo.
+ * Traduce un mensaje MIDI a una descripción legible, pensada para usuarios que
+ * están aprendiendo el protocolo.
  */
-export function describirMensaje(datos: MensajeMidi): string {
-  if (datos.length === 0) {
-    return "Mensaje vacío";
+export function describirMensaje(mensaje: MensajeMidi): string {
+  const { bytes, tipo } = mensaje;
+  if (tipo === "desconocido") {
+    return bytes.length === 0
+      ? "Mensaje vacío"
+      : `Mensaje MIDI sin reconocer: [${bytes.map(hexadecimal).join(", ")}]`;
   }
-
-  const status = datos[0];
-  if (status >= 0xf0) {
+  if (tipo === "sistema") {
     return (
-      MENSAJES_DE_SISTEMA[status] ??
-      `Mensaje de sistema sin reconocer (0x${hexadecimal(status)})`
+      MENSAJES_DE_SISTEMA[bytes[0]] ??
+      `Mensaje de sistema sin reconocer (0x${hexadecimal(bytes[0])})`
     );
   }
 
-  const canal = (status & 0x0f) + 1;
+  const inicio = `${NOMBRES_DE_TIPO[tipo]} · canal ${mensaje.canal}`;
   // Un mensaje incompleto no tiene que hacer fallar la descripción: los bytes
   // que faltan cuentan como 0.
-  const dato1 = datos[1] ?? 0;
-  const dato2 = datos[2] ?? 0;
+  const dato1 = bytes[1] ?? 0;
+  const dato2 = bytes[2] ?? 0;
 
-  switch (status & 0xf0) {
-    case 0x80:
-      return `Nota Off · canal ${canal} · nota ${dato1} · velocidad ${dato2}`;
-    case 0x90:
-      if (dato2 === 0) {
-        return `Nota Off · canal ${canal} · nota ${dato1} · velocidad 0`;
-      }
-      return `Nota On · canal ${canal} · nota ${dato1} · velocidad ${dato2}`;
-    case 0xa0:
-      return `Presión Polifónica · canal ${canal} · nota ${dato1} · presión ${dato2}`;
-    case 0xb0:
-      return `Cambio de Control · canal ${canal} · controlador ${dato1} · valor ${dato2}`;
-    case 0xc0:
-      return `Cambio de Programa · canal ${canal} · programa ${dato1}`;
-    case 0xd0:
-      return `Presión de Canal · canal ${canal} · presión ${dato1}`;
-    case 0xe0:
-      return `Pitch Bend · canal ${canal} · valor ${(dato2 << 7) | dato1}`;
-    default:
-      return `Mensaje MIDI sin reconocer: [${datos.map(hexadecimal).join(", ")}]`;
+  switch (tipo) {
+    case "nota-off":
+    case "nota-on":
+      return `${inicio} · nota ${dato1} · velocidad ${dato2}`;
+    case "presion-polifonica":
+      return `${inicio} · nota ${dato1} · presión ${dato2}`;
+    case "cambio-de-control":
+      return `${inicio} · controlador ${dato1} · valor ${dato2}`;
+    case "cambio-de-programa":
+      return `${inicio} · programa ${dato1}`;
+    case "presion-de-canal":
+      return `${inicio} · presión ${dato1}`;
+    case "pitch-bend":
+      return `${inicio} · valor ${(dato2 << 7) | dato1}`;
   }
 }

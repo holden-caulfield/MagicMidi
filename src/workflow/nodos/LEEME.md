@@ -8,28 +8,30 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
 ## Los pasos
 
 1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
-   qué hace la caja: por ejemplo, `sin-nota-off.ts`. Lo más fácil es copiar
+   qué hace la caja: por ejemplo, `velocidad-fija.ts`. Lo más fácil es copiar
    `desplazar.ts` y cambiarlo.
 2. **Registralo en el catálogo.** Abrí `src/workflow/catalogo.ts`, importá tu
    archivo arriba y agregalo a la lista `tipos`:
 
    ```ts
-   import sinNotaOff from "./nodos/sin-nota-off";
+   import velocidadFija from "./nodos/velocidad-fija";
 
    const tipos = {
+     filtrar,
      desplazar,
-     sinNotaOff,
+     velocidadFija,
      emitir,
+     descartar,
    } satisfies Record<string, TipoDeNodo>;
    ```
 
-   El nombre que uses en la lista (`sinNotaOff`) es el identificador del tipo:
+   El nombre que uses en la lista (`velocidadFija`) es el identificador del tipo:
    no puede repetirse. El orden de la lista es el orden de la barra.
 
    Si te olvidás de este paso, no aparece ningún error: la caja simplemente no
    aparece en la barra. Es lo primero que conviene revisar cuando "no anda".
 3. **Escribí el test.** Cada caja trae su test al lado, con el mismo nombre y
-   terminado en `.test.ts`: para `sin-nota-off.ts`, `sin-nota-off.test.ts`. Lo
+   terminado en `.test.ts`: para `velocidad-fija.ts`, `velocidad-fija.test.ts`. Lo
    más fácil es copiar `desplazar.test.ts` y cambiar los casos. Después corré,
    desde la raíz del proyecto:
 
@@ -56,10 +58,10 @@ Un tipo de nodo es un objeto con estos campos:
   archivo: `import { Filter } from "lucide";`. Si escribís mal el nombre, el
   editor de código te lo marca.
 - **`tieneSalida`**: solo hace falta escribirlo, con `false`, si la caja
-  *termina* el flujo, como Emitir. Si no lo escribís, la caja tiene salida.
-  En una caja sin salida, lo que devuelve `procesar` es lo que sale por el
-  puerto MIDI (ver más abajo). Las cajas sin salida se ven naranjas, como
-  Emitir, sin que tengas que declarar ningún color.
+  *termina* el flujo, como Emitir o Descartar. Si no lo escribís, la caja
+  tiene salida. En una caja sin salida, lo que devuelve `procesar` es lo que
+  sale por el puerto MIDI (ver más abajo). Las cajas sin salida se ven
+  naranjas, como Emitir, sin que tengas que declarar ningún color.
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
   parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
   (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
@@ -78,92 +80,157 @@ si falta algún campo o si alguno tiene la forma equivocada.
 
 Se llama una vez por cada mensaje MIDI que llega a la caja, y recibe:
 
-- **`mensaje`**: el mensaje como una lista de números, uno por byte. Por
-  ejemplo, un *Nota On* en el canal 1, nota 60 (Do central) y velocidad 100 es
-  `[0x90, 60, 100]`. La lista es una copia solo para esta caja: la podés
-  modificar tranquila, sin afectar a las otras ramas del flujo.
+- **`mensaje`**: el mensaje MIDI. Tiene tres cosas que te van a servir:
+  - **`mensaje.bytes`**: la lista de sus bytes, uno por número. Por ejemplo,
+    un *Nota On* en el canal 1, nota 60 (Do central) y velocidad 100 tiene
+    los bytes `[0x90, 60, 100]`. Los podés leer (`mensaje.bytes[1]` es la
+    nota) y cambiar (`mensaje.bytes[2] = 64`).
+  - **`mensaje.tipo`**: qué clase de mensaje es, sin que tengas que hacer
+    cuentas con los bits del primer byte. Vale uno de estos textos:
+    `"nota-on"`, `"nota-off"`, `"presion-polifonica"`, `"cambio-de-control"`,
+    `"cambio-de-programa"`, `"presion-de-canal"`, `"pitch-bend"`, `"sistema"`
+    o `"desconocido"`. Un Nota On con velocidad 0 cuenta como `"nota-off"`,
+    porque en MIDI es otra forma de soltar la tecla.
+  - **`mensaje.canal`**: el canal, de 1 a 16, en los mensajes de canal (notas,
+    controles, etc.). En los mensajes de sistema vale `null`, porque no tienen
+    canal.
+
+  El tipo y el canal se calculan con los bytes que el mensaje tiene en ese
+  momento: si cambiás el primer byte, `mensaje.tipo` ya dice el tipo nuevo. El
+  mensaje es una copia solo para esta caja: lo podés modificar tranquila, sin
+  afectar a las otras ramas del flujo.
 - **`parametros`**: los valores que tiene configurados esta caja, por `clave`.
   Por ejemplo, `parametros.desplazamiento`. Para usarlos como número, envolvelos
   en `Number(...)`.
 
 Lo que devuelve decide qué pasa después:
 
-- **Una lista de bytes**: ese mensaje sigue hacia las cajas conectadas a la
-  salida. Puede ser la misma lista que recibiste, modificada. Si la caja no
-  tiene salida (`tieneSalida: false`), ese mensaje es el que sale por el
-  puerto MIDI: Emitir, por ejemplo, devuelve el mensaje que recibe tal cual.
-- **Nada** (`return;` o `return null;`): el mensaje se descarta y esa rama del
-  flujo termina ahí. En una caja sin salida, no sale nada por el puerto.
+- **Un mensaje**: sigue hacia las cajas conectadas a la salida. Puede ser el
+  mismo que recibiste, modificado. Si la caja no tiene salida
+  (`tieneSalida: false`), ese mensaje es el que sale por el puerto MIDI:
+  Emitir, por ejemplo, devuelve el mensaje que recibe tal cual.
+- **Nada** (`return;` o `return null;`): esa rama del flujo termina ahí. En una
+  caja sin salida, no agrega nada a lo que sale por el puerto: Descartar hace
+  exactamente eso.
+
+Si necesitás devolver un mensaje distinto, en vez de modificar el que
+recibiste, creá uno nuevo con sus bytes: `new MensajeMidi([0xb0, 7, 100])`.
+Para eso importá `MensajeMidi` de `../tipos`.
 
 `procesar` nunca envía mensajes por su cuenta: devuelve lo que corresponde, y
 la aplicación se encarga de mandarlo al puerto y de mostrarlo en el log. Por
 eso se puede probar solo mirando qué devuelve.
-
-Cada byte tiene que ser un entero entre 0 y 255. Si la función devuelve otra
-cosa, o si tira un error, el mensaje se descarta, aparece un aviso en la
-consola de desarrollo y el resto del flujo sigue funcionando.
 
 Tené en cuenta que la aplicación no verifica que el mensaje tenga sentido MIDI.
 Por ejemplo, si desplazás el status de un *Nota On* (tres bytes) hasta un
 *Program Change* (que usa dos), queda un byte de más, y el mensaje sale igual.
 Si tu caja puede generar casos así, conviene que los revise y los descarte.
 
-## Ejemplo completo: descartar los Nota Off
+## Qué sale por el puerto
 
-Esta caja deja pasar todo salvo los *Nota Off*. En MIDI, un Nota Off puede
-llegar de dos maneras: con status `0x80` a `0x8F`, o como un *Nota On*
-(`0x90` a `0x9F`) con velocidad 0.
+Tu caja no tiene que ocuparse de esto, pero ayuda a entender qué va a pasar
+cuando la uses en un flujo:
+
+- **Si el mensaje no llega a ninguna caja sin salida**, sale tal como llegó.
+  Por eso una caja que no devuelve nada no "borra" el mensaje: solo corta su
+  rama. Si llega a una caja que no está conectada a nada, también sale tal
+  cual.
+- **Si llega a al menos una caja sin salida** (Emitir, Descartar o una tuya),
+  el original ya no sale por su cuenta: sale solo lo que devuelvan esas cajas.
+  Para sacar los Nota Off, por ejemplo, no hace falta escribir una caja: se
+  conecta un **Filtrar** con solo "Nota Off" marcado a un **Descartar**.
+- **Si una caja tira un error, o devuelve algo que no es un mensaje válido**
+  (algún byte que no sea un entero entre 0 y 255, o ningún byte), no sale
+  nada de ese mensaje, ni por las otras ramas. En el log aparece en rojo, y al
+  pasar el puntero por el ícono se ve qué caja falló y por qué. Los mensajes
+  que llegan después se siguen procesando normalmente.
+
+## Ejemplo completo: velocidad fija
+
+Esta caja les pone a todos los *Nota On* la misma velocidad, sin importar qué
+tan fuerte se tocó la tecla. Sirve, por ejemplo, para un teclado que no tiene
+sensibilidad, o para que todas las notas suenen parejas. Los demás mensajes
+pasan sin cambios.
+
+Hay dos detalles importantes, y los dos tienen que ver con que en MIDI un Nota
+On con velocidad 0 es un Nota Off:
+
+- Si la caja le cambiara la velocidad a un Nota On con velocidad 0, lo
+  convertiría en un Nota On de verdad, y la nota quedaría sonando para
+  siempre. Por eso solo se tocan los mensajes cuyo `tipo` es `"nota-on"`: un
+  Nota On con velocidad 0 tiene tipo `"nota-off"`, así que pasa sin cambios.
+- La velocidad configurada tiene que quedar entre 1 y 127: con 0, la caja
+  convertiría las notas en Nota Off, y con más de 127 el byte dejaría de ser
+  un byte de datos.
 
 ```ts
-import { Filter } from "lucide";
+import { Gauge } from "lucide";
 
 import type { TipoDeNodo } from "../tipos";
 
 export default {
-  nombre: "Sin Nota Off",
-  icono: Filter,
-  parametros: [],
-  procesar(mensaje) {
-    const tipo = mensaje[0] & 0xf0; // los 4 bits de arriba del status dicen el tipo
-    const esNotaOff = tipo === 0x80 || (tipo === 0x90 && mensaje[2] === 0);
-    if (esNotaOff) {
-      return;
+  nombre: "Velocidad fija",
+  icono: Gauge,
+  parametros: [{ clave: "velocidad", etiqueta: "Velocidad", tipo: "entero", inicial: 100 }],
+  procesar(mensaje, parametros) {
+    if (mensaje.tipo !== "nota-on") {
+      return mensaje;
     }
+    // Entre 1 y 127: con 0 sería un Nota Off, y más de 127 no es un byte de datos.
+    const velocidad = Math.min(Math.max(Number(parametros.velocidad), 1), 127);
+    mensaje.bytes[2] = velocidad;
     return mensaje;
   },
 } satisfies TipoDeNodo;
 ```
 
 No escribe `tieneSalida` porque la caja deja pasar los mensajes hacia las
-siguientes.
+siguientes. Para usarla, se la pone entre el trigger y un Emitir.
 
-Y su test, en `sin-nota-off.test.ts`. Los dos casos del Nota Off van por
-separado, y también se prueba el borde: un Nota On con velocidad 1 no es un Nota
-Off.
+Y su test, en `velocidad-fija.test.ts`. Además del caso normal, prueba los
+bordes: el Nota On con velocidad 0, las velocidades configuradas fuera de
+rango, y un mensaje que no es un Nota On.
 
 ```ts
 import { expect, test } from "vitest";
 
-import sinNotaOff from "./sin-nota-off";
+import { MensajeMidi } from "../tipos";
+import velocidadFija from "./velocidad-fija";
 
-test("deja pasar los Nota On", () => {
-  expect(sinNotaOff.procesar([0x90, 60, 100])).toEqual([0x90, 60, 100]);
+test("les pone la velocidad elegida a los Nota On", () => {
+  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 30]), { velocidad: 100 });
+
+  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 100]));
 });
 
-test("descarta los Nota Off", () => {
-  expect(sinNotaOff.procesar([0x80, 60, 64])).toBeUndefined();
+test("no toca un Nota On con velocidad 0, porque es un Nota Off", () => {
+  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 0]), { velocidad: 100 });
+
+  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 0]));
 });
 
-test("descarta los Nota On con velocidad 0, que también son Nota Off", () => {
-  expect(sinNotaOff.procesar([0x90, 60, 0])).toBeUndefined();
+test("no toca los Nota Off", () => {
+  const resultado = velocidadFija.procesar(new MensajeMidi([0x80, 60, 64]), { velocidad: 100 });
+
+  expect(resultado).toEqual(new MensajeMidi([0x80, 60, 64]));
 });
 
-test("deja pasar un Nota On con velocidad 1", () => {
-  expect(sinNotaOff.procesar([0x90, 60, 1])).toEqual([0x90, 60, 1]);
+test("con velocidad 0 configurada, usa 1 para no convertir la nota en Nota Off", () => {
+  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 30]), { velocidad: 0 });
+
+  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 1]));
 });
 
-test("deja pasar los mensajes que no son de notas", () => {
-  expect(sinNotaOff.procesar([0xb0, 7, 127])).toEqual([0xb0, 7, 127]);
+test("con más de 127 configurado, usa 127", () => {
+  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 30]), { velocidad: 200 });
+
+  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 127]));
+});
+
+test("deja pasar sin cambios los mensajes que no son notas", () => {
+  const resultado = velocidadFija.procesar(new MensajeMidi([0xb0, 7, 30]), { velocidad: 100 });
+
+  expect(resultado).toEqual(new MensajeMidi([0xb0, 7, 30]));
 });
 ```
 
@@ -178,9 +245,10 @@ qué devuelve.
 - **`test("qué se espera", () => { ... })`** define un caso. El texto es lo que
   vas a leer si falla, así que escribilo como una frase que diga qué tiene que
   pasar: "sin overflow, pasarse de 127 se queda en 127".
-- **`expect(resultado).toEqual([0x90, 72, 100])`** es la revisión: si
-  `resultado` no es esa lista, el test falla y te muestra las dos, la que
-  esperabas y la que salió. Para "no devuelve nada" se usa `.toBeUndefined()`.
+- **`expect(resultado).toEqual(new MensajeMidi([0x90, 72, 100]))`** es la
+  revisión: si `resultado` no es un mensaje con esos bytes, el test falla y te
+  muestra los dos, el que esperabas y el que salió. Para "no devuelve nada" se
+  usa `.toBeUndefined()`.
 
 Un `test` por comportamiento, aunque se repita un poco: es más fácil de leer y,
 cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
@@ -205,7 +273,7 @@ de esta carpeta (por ejemplo, en `src/workflow/`) e importala desde tus nodos.
 Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
-solo usa `../tipos`, su ícono de `lucide` y, si le hace falta, funciones
-auxiliares para MIDI que calculen algo sin efectos. Tampoco importes
+solo usa `../tipos` (el contrato y `MensajeMidi`), su ícono de `lucide` y, si
+le hace falta, funciones auxiliares para MIDI que calculen algo sin efectos. Tampoco importes
 `../salida`: para que un mensaje salga por el puerto, alcanza con que una caja
 sin salida lo devuelva.

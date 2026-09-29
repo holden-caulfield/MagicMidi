@@ -9,13 +9,22 @@ entendimiento del protocolo MIDI.
 
 - Permite elegir un puerto MIDI de **entrada** y uno de **salida** entre los
   disponibles en el sistema.
-- Reenvía (pass-through) cada mensaje que llega por la entrada hacia la
-  salida elegida.
-- Muestra en pantalla un log en tiempo real de los mensajes que pasan, con
-  una descripción legible (Nota On/Off, Control Change, Pitch Bend, etc.)
-  pensada para gente que recién se acerca al protocolo.
-- Filtra del log los mensajes de reloj MIDI (*Timing Clock*, `0xF8`): siguen
-  reenviándose a la salida con normalidad, pero no saturan la pantalla.
+- Pasa cada mensaje que llega por la entrada por un **flujo** que se arma
+  en el tab Workflow, conectando cajas en un editor visual: **Filtrar**
+  (deja seguir solo los tipos de mensaje elegidos), **Desplazar** (suma o
+  resta un valor a un byte, por ejemplo para transponer), **Emitir** (manda
+  el mensaje a la salida) y **Descartar** (hace que no salga).
+- Si un mensaje no llega a ninguna caja de fin (Emitir o Descartar), sale tal
+  cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
+  caja falla, no sale nada de ese mensaje.
+- Muestra en pantalla un log en tiempo real de los mensajes que entran y lo
+  que el flujo hizo con cada uno (si salió igual, transformado, descartado o
+  con error), con una descripción legible (Nota On/Off, Control Change, Pitch
+  Bend, etc.) pensada para gente que recién se acerca al protocolo.
+- Los mensajes de reloj MIDI (*Timing Clock*, `0xF8`) y de Sensor Activo
+  (*Active Sensing*, `0xFE`) no pasan por el flujo ni aparecen en el log: se
+  reenvían directo a la salida, para no sumarles demora ni saturar la
+  pantalla.
 
 ## Hacia dónde va
 
@@ -24,7 +33,8 @@ semi-técnicos armar sus propios flujos de trabajo manipulando mensajes MIDI
 (por ejemplo: filtrar, transformar o remapear mensajes mediante un editor
 visual de nodos). La idea no es evitarles la programación, sino darles una
 puerta de entrada visual para que además vayan aprendiendo conceptos básicos
-de programación en el proceso. Ese trabajo todavía no arrancó.
+de programación en el proceso. El editor de flujos ya existe, y los tipos de
+caja se van sumando de a uno.
 
 ## Arquitectura
 

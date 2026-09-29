@@ -1,17 +1,18 @@
 import { html } from "lit-html";
-import { Ban, CornerDownRight, Equal, type IconNode } from "lucide";
+import { Ban, CornerDownRight, Equal, type IconNode, TriangleAlert } from "lucide";
 
 import { describirMensaje } from "./describir";
 import { dibujarIcono } from "./workflow/iconos";
-import type { MensajeMidi } from "./workflow/tipos";
+import { MensajeMidi } from "./workflow/tipos";
 
 export interface EventoMidi {
   puerto: string;
   marca_temporal_ms: number;
-  datos: MensajeMidi;
+  datos: number[];
 }
 
 export type Resultado =
+  | { tipo: "error"; texto: string }
   | { tipo: "descartado" }
   | { tipo: "sin-cambios" }
   | { tipo: "transformado"; salidas: MensajeMidi[] };
@@ -23,7 +24,7 @@ const MAXIMO_MENSAJES_EN_PANTALLA = 500;
 let listaMensajes: HTMLDivElement;
 
 function sonIguales(a: MensajeMidi, b: MensajeMidi): boolean {
-  return a.length === b.length && a.every((byte, i) => byte === b[i]);
+  return a.bytes.length === b.bytes.length && a.bytes.every((byte, i) => byte === b.bytes[i]);
 }
 
 /**
@@ -32,7 +33,16 @@ function sonIguales(a: MensajeMidi, b: MensajeMidi): boolean {
  * fila; si salió más de un mensaje, van todos como sub-filas, aunque alguno
  * sea igual a la entrada.
  */
-export function clasificarSalidas(entrada: MensajeMidi, salidas: MensajeMidi[]): Resultado {
+export function clasificarSalidas(
+  entrada: MensajeMidi,
+  salidas: MensajeMidi[],
+  error: string | null = null,
+): Resultado {
+  // Va primero: con un error las salidas vienen vacías, y sin esto se vería
+  // como descartado.
+  if (error !== null) {
+    return { tipo: "error", texto: error };
+  }
   if (salidas.length === 0) {
     return { tipo: "descartado" };
   }
@@ -42,8 +52,8 @@ export function clasificarSalidas(entrada: MensajeMidi, salidas: MensajeMidi[]):
   return { tipo: "transformado", salidas };
 }
 
-function formatearBytes(datos: MensajeMidi): string {
-  return datos
+function formatearBytes(mensaje: MensajeMidi): string {
+  return mensaje.bytes
     .map((byte) => byte.toString(16).padStart(2, "0").toUpperCase())
     .join(" ");
 }
@@ -73,34 +83,41 @@ function crearMarca(icono: IconNode, texto: string): HTMLSpanElement {
   return marca;
 }
 
-function crearFila(clase: string, datos: MensajeMidi, primeraColumna: HTMLSpanElement) {
+function crearFila(clase: string, mensaje: MensajeMidi, primeraColumna: HTMLSpanElement) {
   const fila = document.createElement("div");
   fila.className = clase;
   fila.append(
     primeraColumna,
-    crearColumna("columna-bytes", formatearBytes(datos)),
-    crearColumna("columna-descripcion", describirMensaje(datos)),
+    crearColumna("columna-bytes", formatearBytes(mensaje)),
+    crearColumna("columna-descripcion", describirMensaje(mensaje)),
   );
   return fila;
 }
 
-function crearFilaDeSalida(datos: MensajeMidi): HTMLDivElement {
+function crearFilaDeSalida(mensaje: MensajeMidi): HTMLDivElement {
   const flecha = crearColumna("columna-hora");
   flecha.append(dibujarIcono(CornerDownRight, 14), crearTextoOculto("Salida"));
-  const fila = crearFila("fila-mensaje fila-salida", datos, flecha);
+  const fila = crearFila("fila-mensaje fila-salida", mensaje, flecha);
   fila.append(crearColumna("columna-marca"));
   return fila;
 }
 
-function crearGrupo(evento: EventoMidi, salidas: MensajeMidi[]): HTMLDivElement {
-  const resultado = clasificarSalidas(evento.datos, salidas);
+function crearGrupo(
+  evento: EventoMidi,
+  salidas: MensajeMidi[],
+  error: string | null,
+): HTMLDivElement {
+  const mensaje = new MensajeMidi(evento.datos);
+  const resultado = clasificarSalidas(mensaje, salidas, error);
 
   const entrada = crearFila(
     `fila-mensaje fila-entrada ${resultado.tipo}`,
-    evento.datos,
+    mensaje,
     crearColumna("columna-hora", formatearHora(evento.marca_temporal_ms)),
   );
-  if (resultado.tipo === "sin-cambios") {
+  if (resultado.tipo === "error") {
+    entrada.append(crearMarca(TriangleAlert, `Error: ${resultado.texto}`));
+  } else if (resultado.tipo === "sin-cambios") {
     entrada.append(crearMarca(Equal, "Salió sin cambios"));
   } else if (resultado.tipo === "descartado") {
     entrada.append(crearMarca(Ban, "Descartado"));
@@ -117,9 +134,12 @@ function crearGrupo(evento: EventoMidi, salidas: MensajeMidi[]): HTMLDivElement 
   return grupo;
 }
 
-/** Agrega arriba de todo el mensaje que entró junto con lo que salió de él. */
-export function agregarAlLog(evento: EventoMidi, salidas: MensajeMidi[]) {
-  listaMensajes.prepend(crearGrupo(evento, salidas));
+/**
+ * Agrega arriba de todo el mensaje que entró junto con lo que salió de él, o
+ * con el error si una caja falló al procesarlo.
+ */
+export function agregarAlLog(evento: EventoMidi, salidas: MensajeMidi[], error: string | null) {
+  listaMensajes.prepend(crearGrupo(evento, salidas, error));
 
   while (listaMensajes.childElementCount > MAXIMO_MENSAJES_EN_PANTALLA) {
     listaMensajes.removeChild(listaMensajes.lastChild as ChildNode);
