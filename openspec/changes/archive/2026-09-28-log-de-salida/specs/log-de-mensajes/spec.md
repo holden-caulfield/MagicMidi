@@ -1,13 +1,4 @@
-# log-de-mensajes Specification
-
-## Purpose
-Define qué muestra el log del tab Log: por cada mensaje MIDI que llega por el
-puerto de entrada, un grupo con la hora, los bytes crudos y una descripción en
-castellano pensada para quien está aprendiendo el protocolo, junto con lo que
-el flujo emitió a partir de él, para que se pueda relacionar cada entrada con
-sus salidas.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: El log muestra los mensajes que entran, salvo el reloj y el Sensor Activo
 
@@ -70,41 +61,6 @@ entrada, y no SHALL mostrar hora.
 - **THEN** la sub-fila muestra `90 40 64` debajo de `90 3C 64` y "Nota On ·
   canal 1 · nota 64 · velocidad 100" debajo de la descripción de la entrada,
   sin hora
-
-### Requirement: Descripción de los mensajes de canal
-
-Los mensajes de canal SHALL describirse con su tipo, el canal numerado de 1 a
-16 y sus valores, separados por " · ", así:
-
-| Status | Descripción |
-|---|---|
-| `8n` | Nota Off · canal · nota · velocidad |
-| `9n` con velocidad 0 | Nota Off · canal · nota · velocidad 0 |
-| `9n` | Nota On · canal · nota · velocidad |
-| `An` | Presión Polifónica · canal · nota · presión |
-| `Bn` | Cambio de Control · canal · controlador · valor |
-| `Cn` | Cambio de Programa · canal · programa |
-| `Dn` | Presión de Canal · canal · presión |
-| `En` | Pitch Bend · canal · valor |
-
-Los valores SHALL mostrarse en decimal. El valor de Pitch Bend SHALL ser el
-número de 14 bits que forman los dos bytes de datos (de 0 a 16383).
-
-#### Scenario: Nota On con velocidad cero
-
-- **WHEN** llega `90 3C 00`
-- **THEN** la descripción es "Nota Off · canal 1 · nota 60 · velocidad 0"
-
-#### Scenario: Canal distinto de 1
-
-- **WHEN** llega `B9 07 64`
-- **THEN** la descripción es "Cambio de Control · canal 10 · controlador 7 ·
-  valor 100"
-
-#### Scenario: Pitch Bend centrado
-
-- **WHEN** llega `E0 00 40`
-- **THEN** la descripción es "Pitch Bend · canal 1 · valor 8192"
 
 ### Requirement: Descripción de los mensajes de sistema
 
@@ -180,25 +136,6 @@ descartados no SHALL poder recuperarse.
 - **WHEN** llegan 500 mensajes
 - **THEN** el log muestra los 500 grupos, cada uno con sus tres sub-filas
 
-### Requirement: Limpiar vacía el log
-
-El botón "Limpiar" SHALL borrar todas las filas del log, esté o no la
-aplicación conectada. Los mensajes que lleguen después SHALL seguir
-agregándose normalmente. Desconectar o volver a conectar no SHALL borrar el
-log.
-
-#### Scenario: Limpiar con conexión activa
-
-- **GIVEN** hay una conexión activa y el log tiene filas
-- **WHEN** la persona usuaria presiona "Limpiar" y después llega `90 3C 64`
-- **THEN** el log queda con una sola fila, la de `90 3C 64`
-
-#### Scenario: Desconectar no borra el log
-
-- **GIVEN** el log tiene filas
-- **WHEN** la persona usuaria desconecta y vuelve a conectar
-- **THEN** las filas anteriores siguen en el log
-
 ### Requirement: La lista de mensajes ocupa el espacio disponible
 
 La lista de mensajes del tab Log SHALL ocupar todo el alto que queda en el
@@ -238,6 +175,8 @@ desplaza SHALL ser la lista: ni el panel ni la ventana.
 - **WHEN** la persona usuaria las recorre
 - **THEN** se desplaza la lista, y el encabezado del log y la barra de tabs
   quedan quietos
+
+## ADDED Requirements
 
 ### Requirement: Las salidas van en sub-filas
 

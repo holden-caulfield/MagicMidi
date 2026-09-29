@@ -57,8 +57,9 @@ Un tipo de nodo es un objeto con estos campos:
   editor de código te lo marca.
 - **`tieneSalida`**: solo hace falta escribirlo, con `false`, si la caja
   *termina* el flujo, como Emitir. Si no lo escribís, la caja tiene salida.
-  Las cajas sin salida se ven naranjas, como Emitir, sin que tengas que
-  declarar ningún color.
+  En una caja sin salida, lo que devuelve `procesar` es lo que sale por el
+  puerto MIDI (ver más abajo). Las cajas sin salida se ven naranjas, como
+  Emitir, sin que tengas que declarar ningún color.
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
   parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
   (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
@@ -88,9 +89,15 @@ Se llama una vez por cada mensaje MIDI que llega a la caja, y recibe:
 Lo que devuelve decide qué pasa después:
 
 - **Una lista de bytes**: ese mensaje sigue hacia las cajas conectadas a la
-  salida. Puede ser la misma lista que recibiste, modificada.
+  salida. Puede ser la misma lista que recibiste, modificada. Si la caja no
+  tiene salida (`tieneSalida: false`), ese mensaje es el que sale por el
+  puerto MIDI: Emitir, por ejemplo, devuelve el mensaje que recibe tal cual.
 - **Nada** (`return;` o `return null;`): el mensaje se descarta y esa rama del
-  flujo termina ahí.
+  flujo termina ahí. En una caja sin salida, no sale nada por el puerto.
+
+`procesar` nunca envía mensajes por su cuenta: devuelve lo que corresponde, y
+la aplicación se encarga de mandarlo al puerto y de mostrarlo en el log. Por
+eso se puede probar solo mirando qué devuelve.
 
 Cada byte tiene que ser un entero entre 0 y 255. Si la función devuelve otra
 cosa, o si tira un error, el mensaje se descarta, aparece un aviso en la
@@ -198,6 +205,7 @@ de esta carpeta (por ejemplo, en `src/workflow/`) e importala desde tus nodos.
 Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
-solo usa `../tipos`, su ícono de `lucide` y, si le hace falta, utilidades para
-MIDI como `../salida`, que es lo que usa Emitir para mandar el mensaje al
-puerto.
+solo usa `../tipos`, su ícono de `lucide` y, si le hace falta, funciones
+auxiliares para MIDI que calculen algo sin efectos. Tampoco importes
+`../salida`: para que un mensaje salga por el puerto, alcanza con que una caja
+sin salida lo devuelva.

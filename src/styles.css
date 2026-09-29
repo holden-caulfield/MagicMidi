@@ -17,6 +17,12 @@
   --borde-inicio: #2e9d5a;
   --fondo-fin: #fde6d6;
   --borde-fin: #dd6b20;
+
+  --letra-salida: #3c3489;
+  --fondo-salida: #eeedfe;
+  --letra-sin-cambios: #534ab7;
+  --fondo-entrada-que-no-salio: rgba(127, 127, 127, 0.13);
+  --letra-descartado: #888780;
 }
 
 * {
@@ -196,6 +202,20 @@ input:focus-visible {
   color: #b3261e;
 }
 
+/* Lo justo para que la fila más ancha de un mensaje de canal ("Cambio de
+   Control · canal 16 · controlador 127 · valor 127") entre en una línea: más
+   ancho solo aleja las marcas de la descripción. */
+.contenido-log {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 51rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .encabezado-log {
   display: flex;
   justify-content: space-between;
@@ -218,16 +238,55 @@ input:focus-visible {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-.fila-mensaje {
-  display: grid;
-  grid-template-columns: 7.5em 11em 1fr;
-  gap: 0.75rem;
-  padding: 0.3rem 0.75rem;
+.grupo-mensaje {
   border-bottom: 1px solid rgba(127, 127, 127, 0.12);
 }
 
-.fila-mensaje:nth-child(odd) {
-  background-color: rgba(127, 127, 127, 0.05);
+/* Todas las filas comparten las columnas, así los bytes y la descripción de
+   lo que salió quedan debajo de los de la entrada. */
+.fila-mensaje {
+  display: grid;
+  grid-template-columns: 7.5em 11em 1fr 1.5em;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+}
+
+.fila-entrada.transformado {
+  background-color: var(--fondo-entrada-que-no-salio);
+}
+
+.fila-entrada.descartado {
+  color: var(--letra-descartado);
+  background-color: var(--fondo-entrada-que-no-salio);
+}
+
+.fila-entrada.sin-cambios {
+  color: var(--letra-sin-cambios);
+}
+
+.fila-salida {
+  color: var(--letra-salida);
+  background-color: var(--fondo-salida);
+}
+
+.fila-salida .columna-hora,
+.columna-marca {
+  display: flex;
+  align-items: center;
+}
+
+.columna-marca {
+  justify-content: flex-end;
+}
+
+.texto-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .columna-hora {
@@ -411,6 +470,13 @@ input[type="number"] {
 
   button:active {
     background-color: #0f0f0f69;
+  }
+
+  :root {
+    --letra-salida: #cecbf6;
+    --fondo-salida: #26215c;
+    --letra-sin-cambios: #afa9ec;
+    --letra-descartado: #8f8f8f;
   }
 
   .lista-mensajes {

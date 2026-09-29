@@ -32,8 +32,11 @@ mergear).
   además está detrás de un `Arc` porque el callback de la conexión de
   entrada —que corre en su propio hilo— también necesita escribir en ella
   para reenviar el reloj MIDI y el Sensor Activo). El backend no procesa
-  mensajes: manda cada uno al frontend (evento `mensaje-midi`) y envía a la
-  salida lo que el frontend le pida con el comando `enviar_mensaje`.
+  mensajes: manda cada uno al frontend (evento `mensaje-midi`, solo con los
+  bytes y la marca temporal) y envía a la salida lo que el frontend le pida
+  con el comando `enviar_mensaje`. La descripción legible de un mensaje la
+  arma el frontend (`src/describir.ts`), porque también describe lo que sale
+  del flujo, que nunca vuelve del backend.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
   puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
@@ -95,11 +98,19 @@ mergear).
 - **Excepción del log**: las filas de mensajes se agregan al DOM a mano, no
   por plantilla, porque redibujar la lista entera con cada mensaje MIDI no
   escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
-  filas), y lo hace después del primer dibujado.
+  filas), y lo hace después del primer dibujado. El log no escucha
+  `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa el
+  mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la entrada
+  y lo que se emitió.
 - **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
   - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
     el trigger y solo sale lo que llega a una caja Emitir. El pass-through ya
     no es un comportamiento fijo: es el flujo por defecto (trigger → Emitir).
+  - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
+    Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
+    puro y devuelve la lista de lo emitido; el listener de `mensaje-midi` lo
+    envía con `enviarMensaje` y se lo pasa al log. Ningún tipo de nodo importa
+    `salida.ts`.
   - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
     `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
     Rete: es la segunda excepción a la regla de `estado.ts`, junto con el log.
@@ -191,7 +202,7 @@ mergear).
   necesitando la ventana real es la activación con teclado y el flujo MIDI
   completo.
 - En el navegador, el arranque se corta en el primer `listen` (el de
-  `inicializarLog`), así que los `inicializar<X>()` que vienen después nunca
+  `inicializarWorkflow`), así que los `inicializar<X>()` que vienen después nunca
   corren. Para probar uno, o para simular respuestas del backend (por ejemplo
   un comando que falla, un caso que en la aplicación real no se puede
   provocar), se reemplaza el puente desde la consola y se llama a la función

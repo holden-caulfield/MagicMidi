@@ -34,7 +34,8 @@ export interface TipoDeNodo {
   /**
    * Recibe una copia del mensaje (se puede modificar sin afectar a otras
    * ramas) y devuelve el mensaje que pasa a las cajas siguientes, o nada para
-   * descartarlo.
+   * descartarlo. En una caja sin salida, lo que devuelve es lo que sale por el
+   * puerto MIDI. Nunca envía nada por su cuenta.
    */
   procesar(
     mensaje: MensajeMidi,

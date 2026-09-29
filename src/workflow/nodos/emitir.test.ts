@@ -1,21 +1,14 @@
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
 
-import { enviarMensaje } from "../salida";
 import emitir from "./emitir";
 
-// Emitir no devuelve nada: manda el mensaje a la salida. En el test no hay
-// salida MIDI de verdad, así que se reemplaza `enviarMensaje` por una función
-// falsa (`vi.fn()`) que solo anota con qué la llamaron.
-vi.mock("../salida", () => ({ enviarMensaje: vi.fn() }));
-
-test("manda el mensaje a la salida tal cual", () => {
-  emitir.procesar([0x90, 60, 100]);
-
-  expect(enviarMensaje).toHaveBeenCalledExactlyOnceWith([0x90, 60, 100]);
+// Emitir es una caja sin salida: lo que devuelve es lo que sale por el puerto
+// MIDI. La caja no envía nada por su cuenta, así que alcanza con mirar qué
+// devuelve.
+test("devuelve el mensaje tal cual, para que salga por el puerto", () => {
+  expect(emitir.procesar([0x90, 60, 100])).toEqual([0x90, 60, 100]);
 });
 
-test("no devuelve nada, porque no tiene salida hacia otras cajas", () => {
-  const resultado = emitir.procesar([0x90, 60, 100]);
-
-  expect(resultado).toBeUndefined();
+test("devuelve los mensajes de un solo byte sin cambios", () => {
+  expect(emitir.procesar([0xfa])).toEqual([0xfa]);
 });

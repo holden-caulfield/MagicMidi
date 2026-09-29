@@ -1,6 +1,5 @@
 import { Send } from "lucide";
 
-import { enviarMensaje } from "../salida";
 import type { TipoDeNodo } from "../tipos";
 
 export default {
@@ -8,7 +7,9 @@ export default {
   icono: Send,
   tieneSalida: false,
   parametros: [],
+  // Emitir no tiene salida hacia otras cajas: lo que devuelve es lo que sale
+  // por el puerto MIDI, y el envío lo hace la aplicación.
   procesar(mensaje) {
-    enviarMensaje(mensaje);
+    return mensaje;
   },
 } satisfies TipoDeNodo;
