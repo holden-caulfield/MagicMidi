@@ -56,8 +56,9 @@ arranque.
 #### Scenario: Los tipos de esta versión siguen el contrato
 
 - **WHEN** se revisa la carpeta de tipos de nodo
-- **THEN** "Desplazar" y "Emitir" están definidos cada uno en su propio archivo
-  con la misma forma, y ninguno recibe un trato especial fuera de él
+- **THEN** "Filtrar", "Desplazar", "Emitir" y "Descartar" están definidos cada
+  uno en su propio archivo con la misma forma, y ninguno recibe un trato
+  especial fuera de él
 
 ### Requirement: Qué declara un tipo de nodo
 
@@ -107,27 +108,36 @@ a su tipo.
 
 ### Requirement: La función de procesamiento
 
-La función de procesamiento SHALL recibir el mensaje MIDI que llega a la caja,
-como una lista de bytes, y los valores de los parámetros de esa caja. SHALL
-devolver el mensaje que la caja pasa a las siguientes, o nada, si lo descarta.
+La función de procesamiento SHALL recibir el mensaje MIDI que llega a la caja
+(ver "El mensaje dice su tipo y su canal") y los valores de los parámetros de
+esa caja. SHALL devolver el mensaje que la caja pasa a las siguientes, o nada,
+si lo descarta. Que una caja con salida descarte un mensaje corta solo ese
+camino: no cancela el reenvío del original.
+
 En un tipo sin salida, lo que devuelva SHALL ser lo que sale por el puerto de
 salida (por ejemplo, Emitir devuelve el mensaje que recibe), y devolver nada
-SHALL significar que no sale nada. La función no SHALL enviar mensajes por su
-cuenta: devuelve lo que corresponde y la aplicación se encarga del envío. La
-función SHALL poder modificar la lista que recibe sin afectar al mensaje que
-reciben otras ramas.
+SHALL significar que esa caja no agrega nada a la salida. En los dos casos,
+que el mensaje haya llegado a una caja sin salida SHALL cancelar el reenvío del
+original: una caja sin salida que no devuelve nada, como Descartar, es la
+forma de que un mensaje no salga.
+
+La función no SHALL enviar mensajes por su cuenta: devuelve lo que corresponde
+y la aplicación se encarga del envío. La función SHALL poder modificar el
+mensaje que recibe sin afectar al mensaje que reciben otras ramas.
 
 #### Scenario: Descartar un mensaje
 
-- **GIVEN** un tipo de nodo cuya función no devuelve nada para los mensajes
-  "Nota Off"
-- **WHEN** una caja de ese tipo, conectada a un "Emitir", recibe un "Nota Off"
-- **THEN** no sale nada por esa rama
+- **GIVEN** un tipo de nodo con salida cuya función no devuelve nada para los
+  mensajes "Nota Off", y el trigger conectado solo a una caja de ese tipo, que
+  va a un "Emitir"
+- **WHEN** la caja recibe un "Nota Off"
+- **THEN** el "Emitir" no recibe nada, y el "Nota Off" sale tal como llegó,
+  porque ningún camino llegó a una caja sin salida
 
 #### Scenario: Modificar la lista recibida
 
 - **GIVEN** la salida del trigger va a una caja cuya función cambia el segundo
-  byte de la lista que recibe y la devuelve, y también directo a una caja
+  byte del mensaje que recibe y lo devuelve, y también directo a una caja
   "Emitir"
 - **WHEN** llega un mensaje
 - **THEN** la caja "Emitir" conectada directo al trigger envía el mensaje
@@ -137,13 +147,14 @@ reciben otras ramas.
 
 - **GIVEN** un tipo de nodo sin salida
 - **WHEN** su función se llama con `90 3C 64` y devuelve `90 3C 64`
-- **THEN** la aplicación envía `90 3C 64` al puerto de salida, sin que el
-  archivo del tipo importe nada para enviarlo
+- **THEN** la aplicación envía `90 3C 64` al puerto de salida, una sola vez,
+  sin que el archivo del tipo importe nada para enviarlo
 
 #### Scenario: Un tipo sin salida que no devuelve nada
 
-- **GIVEN** un tipo de nodo sin salida cuya función no devuelve nada
-- **WHEN** una caja de ese tipo recibe un mensaje
+- **GIVEN** un tipo de nodo sin salida cuya función no devuelve nada, y el
+  trigger conectado solo a una caja de ese tipo
+- **WHEN** la caja recibe un mensaje
 - **THEN** no sale nada por el puerto de salida
 
 ### Requirement: Los tipos de nodo no dependen del editor
@@ -168,11 +179,67 @@ tipo de nodo.
 La carpeta de tipos de nodo SHALL incluir una guía breve, en castellano,
 pensada para quien recién empieza a programar. SHALL explicar qué archivo
 crear, cómo registrarlo en el catálogo, qué declarar, cómo elegir un ícono, qué
-recibe y qué devuelve la función de procesamiento, e incluir un ejemplo
-completo.
+recibe y qué devuelve la función de procesamiento (incluyendo cómo leer los
+bytes, el tipo y el canal del mensaje), y que un mensaje sale tal cual salvo
+que llegue a una caja sin salida o que una caja falle. SHALL incluir un
+ejemplo completo de una caja que transforma mensajes, con su test, que no sea
+algo que ya se resuelve combinando las cajas existentes.
 
 #### Scenario: Guía disponible
 
 - **WHEN** una persona desarrolladora abre la carpeta de tipos de nodo
 - **THEN** encuentra la guía junto a los archivos de los tipos, y siguiéndola
   puede crear un tipo nuevo sin leer el código del editor
+
+#### Scenario: El ejemplo no repite lo que ya hay
+
+- **WHEN** una persona desarrolladora lee el ejemplo completo de la guía
+- **THEN** es una caja "Velocidad fija", que pone a los Nota On una velocidad
+  configurable y deja pasar sin cambios los demás mensajes, y no una caja que
+  descarta mensajes, que ya se arma con "Filtrar" y "Descartar"
+
+### Requirement: El mensaje dice su tipo y su canal
+
+El mensaje que recibe la función de procesamiento SHALL dar acceso a su lista
+de bytes y SHALL permitir leer, sin hacer cuentas con los bits del status:
+
+- su **tipo**, que es uno de: Nota On, Nota Off, Presión Polifónica, Cambio de
+  Control, Cambio de Programa, Presión de Canal, Pitch Bend, mensaje de
+  sistema (status `F0` a `FF`) o desconocido (sin bytes, o con un primer byte
+  que no es un status, es decir menor que `80`). Un Nota On (`9n`) con
+  velocidad 0 SHALL leerse como Nota Off, igual que en la descripción del log;
+  un `9n` sin tercer byte cuenta como velocidad 0;
+- su **canal**, de 1 a 16, en los mensajes de canal (status `80` a `EF`). Los
+  demás mensajes no SHALL tener canal.
+
+El tipo y el canal SHALL salir siempre de los bytes que el mensaje tiene en
+ese momento: si una caja cambia el status o la velocidad, lo que se lee
+después SHALL reflejar el cambio. La descripción del log y cualquier caja que
+necesite el tipo o el canal SHALL usar esta misma lectura, para que no haya
+dos interpretaciones del status.
+
+#### Scenario: Tipo y canal de un Nota On
+
+- **WHEN** se lee el mensaje `91 3C 64`
+- **THEN** su tipo es Nota On y su canal es 2
+
+#### Scenario: Nota On con velocidad cero
+
+- **WHEN** se lee el mensaje `90 3C 00`
+- **THEN** su tipo es Nota Off y su canal es 1
+
+#### Scenario: Mensaje de sistema
+
+- **WHEN** se lee el mensaje `FA`
+- **THEN** su tipo es mensaje de sistema y no tiene canal
+
+#### Scenario: Mensaje sin status
+
+- **WHEN** se lee el mensaje `3C 40`
+- **THEN** su tipo es desconocido y no tiene canal
+
+#### Scenario: La lectura sigue a los bytes
+
+- **GIVEN** una caja recibe `90 3C 64` y cambia su primer byte a `B0`
+- **WHEN** la caja siguiente lee el mensaje
+- **THEN** su tipo es Cambio de Control

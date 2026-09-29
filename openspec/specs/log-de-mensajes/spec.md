@@ -16,10 +16,10 @@ mensaje que llega por el puerto de entrada, con la única excepción del reloj
 MIDI (`F8`) y del Sensor Activo (`FE`), que no SHALL mostrarse nunca como
 entrada. Cada grupo SHALL mostrar el mensaje de entrada y lo que el flujo
 emitió a partir de él, según los requisitos "Las salidas van en sub-filas",
-"Un mensaje que pasa sin cambios se marca en la fila de entrada" y "Lo que no
-sale se marca como descartado". Lo que la aplicación reenvía directo a la
-salida sin pasar por el flujo (el reloj y el Sensor Activo) no SHALL aparecer
-en el log.
+"Un mensaje que pasa sin cambios se marca en la fila de entrada", "Lo que no
+sale se marca como descartado" y "Un mensaje cuyo procesamiento falló se
+marca como error". Lo que la aplicación reenvía directo a la salida sin pasar
+por el flujo (el reloj y el Sensor Activo) no SHALL aparecer en el log.
 
 #### Scenario: Nota tocada
 
@@ -49,9 +49,10 @@ La fila de entrada de cada grupo SHALL tener cuatro columnas:
 - los bytes del mensaje en hexadecimal, en mayúsculas, con dos dígitos por byte
   y separados por un espacio;
 - una descripción legible del mensaje;
-- la marca de lo que pasó con el mensaje sin cambios, cuando corresponde (ver
-  "Lo que sale igual se marca en la fila de entrada" y "Lo que no sale se
-  marca como descartado").
+- la marca de lo que pasó con el mensaje, cuando corresponde (ver "Un mensaje
+  que pasa sin cambios se marca en la fila de entrada", "Lo que no sale se
+  marca como descartado" y "Un mensaje cuyo procesamiento falló se marca como
+  error").
 
 Las sub-filas de salida SHALL mostrar los bytes y la descripción con el mismo
 formato y alineados con las columnas de bytes y descripción de la fila de
@@ -312,29 +313,40 @@ disponible para lectores de pantalla.
 
 ### Requirement: Lo que no sale se marca como descartado
 
-Cuando el flujo no emitió nada a partir de un mensaje de entrada, la fila de
-entrada SHALL llevar una marca de "descartado", y el grupo no SHALL tener
-sub-filas. La marca SHALL tener un texto que la explique, visible al pasar el
-puntero y disponible para lectores de pantalla, y SHALL distinguirse a simple
-vista de la de "salió sin cambios".
+Cuando el flujo procesó un mensaje de entrada sin errores y no emitió nada a
+partir de él, la fila de entrada SHALL llevar una marca de "descartado", y el
+grupo no SHALL tener sub-filas. La marca SHALL tener un texto que la explique,
+visible al pasar el puntero y disponible para lectores de pantalla, y SHALL
+distinguirse a simple vista de la de "salió sin cambios". Un mensaje que salió
+porque se reenvió por defecto (ver la spec `ejecucion-de-workflow`) no está
+descartado: se muestra como cualquier mensaje que salió sin cambios. Uno que
+no salió porque una caja falló tampoco: lleva la marca de error.
+
+#### Scenario: Descartar todo
+
+- **GIVEN** el trigger está conectado solo a una caja "Descartar"
+- **WHEN** llega `90 3C 64`
+- **THEN** la fila de entrada `90 3C 64` lleva la marca de "descartado"
 
 #### Scenario: Sin ningún Emitir
 
-- **GIVEN** la persona usuaria borró el Emitir inicial, así que el lienzo tiene
-  solo el trigger
+- **GIVEN** la persona usuaria borró el Emitir inicial, así que el lienzo
+  tiene solo el trigger
 - **WHEN** llega `90 3C 64`
-- **THEN** la fila de entrada `90 3C 64` lleva la marca de "descartado"
+- **THEN** la fila de entrada lleva la marca de "salió sin cambios", no la de
+  "descartado"
 
 #### Scenario: Camino que no termina en Emitir
 
 - **GIVEN** el trigger está conectado a una caja "Desplazar" que no está
   conectada a nada
 - **WHEN** llega `90 3C 64`
-- **THEN** la fila de entrada lleva la marca de "descartado"
+- **THEN** la fila de entrada lleva la marca de "salió sin cambios", no la de
+  "descartado"
 
 ### Requirement: Los colores separan lo que salió de lo que solo entró
 
-Los colores del log SHALL seguir dos reglas:
+Los colores del log SHALL seguir tres reglas:
 
 - **Letra del color de salida**: toda fila que representa un mensaje que salió
   por el puerto de salida SHALL tener la letra del color de salida. Las
@@ -347,12 +359,16 @@ Los colores del log SHALL seguir dos reglas:
   letra que no es del color de salida. La de un mensaje descartado SHALL
   tener además la letra atenuada, y no SHALL usar un color que se lea como
   error.
+- **Rojo**: la fila de entrada de un mensaje cuyo procesamiento falló SHALL
+  tener fondo rojo suave y letra roja, para que se note aunque pasen muchos
+  mensajes. Ninguna otra fila SHALL usar rojo.
 
 Así, recorrer las filas con la letra del color de salida SHALL ser leer todo
-lo que salió, en orden. Las filas no SHALL alternar colores de fondo que se
-puedan confundir con el gris de una entrada. Los colores SHALL poder leerse en
-modo claro y en modo oscuro, y el estado de cada grupo SHALL poder
-distinguirse también sin ver colores, por sus marcas y sus sub-filas.
+lo que salió, en orden, y recorrer las rojas SHALL ser leer todo lo que falló.
+Las filas no SHALL alternar colores de fondo que se puedan confundir con el
+gris de una entrada. Los colores SHALL poder leerse en modo claro y en modo
+oscuro, y el estado de cada grupo SHALL poder distinguirse también sin ver
+colores, por sus marcas y sus sub-filas.
 
 #### Scenario: Leer todo lo que salió
 
@@ -381,7 +397,59 @@ distinguirse también sin ver colores, por sus marcas y sus sub-filas.
 
 #### Scenario: Descartado
 
-- **GIVEN** el lienzo tiene solo el trigger
+- **GIVEN** el trigger está conectado solo a una caja "Descartar"
 - **WHEN** llega `90 3C 64`
 - **THEN** la fila de entrada tiene fondo gris, la letra atenuada y la marca de
   "descartado"
+
+#### Scenario: Error
+
+- **GIVEN** la salida del trigger va a una caja que falla y a una caja
+  "Emitir"
+- **WHEN** llega `90 3C 64`
+- **THEN** la fila de entrada tiene fondo rojo suave, letra roja y la marca de
+  error, y ninguna fila del grupo tiene la letra del color de salida
+
+### Requirement: Un mensaje cuyo procesamiento falló se marca como error
+
+Cuando una caja falló al procesar un mensaje de entrada (ver "Un error en una
+caja cancela todo lo que produce ese mensaje" en la spec
+`ejecucion-de-workflow`), la fila de entrada SHALL llevar una marca de error
+con un ícono de advertencia, y el grupo no SHALL tener sub-filas. La marca
+SHALL tener un texto que la explique, visible al pasar el puntero y disponible
+para lectores de pantalla, y SHALL distinguirse a simple vista de las de
+"salió sin cambios" y "descartado". Ese texto SHALL incluir el mensaje del
+error, con el nombre de la caja que falló y por qué, para que se pueda
+entender qué pasó sin abrir la consola de desarrollo.
+
+#### Scenario: Una caja que falla
+
+- **GIVEN** la salida del trigger va a una caja que falla y a una caja
+  "Emitir"
+- **WHEN** llega `90 3C 64`
+- **THEN** la fila de entrada `90 3C 64` lleva la marca de error, y el grupo
+  no tiene sub-filas
+
+#### Scenario: El texto del error llega al log
+
+- **GIVEN** trigger → "Desplazar" → "Emitir", y "Desplazar" falla con el
+  mensaje "algo salió mal"
+- **WHEN** llega `90 3C 64` y la persona usuaria pasa el puntero por la marca
+  de error
+- **THEN** el texto de la marca nombra la caja "Desplazar" e incluye "algo
+  salió mal"
+
+#### Scenario: Un mensaje inválido
+
+- **GIVEN** trigger → una caja que produce un byte mayor que 255 → "Emitir"
+- **WHEN** llega `90 3C 64`
+- **THEN** la fila de entrada lleva la marca de error, y su texto dice que la
+  caja produjo un mensaje MIDI inválido
+
+#### Scenario: El error no se confunde con un descarte
+
+- **GIVEN** el log tiene un grupo `90 3C 64` descartado por una caja
+  "Descartar" y un grupo `90 3C 64` que falló
+- **WHEN** la persona usuaria los mira
+- **THEN** los dos grupos no tienen sub-filas, pero se distinguen por la marca
+  y por los colores

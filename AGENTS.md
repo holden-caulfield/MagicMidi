@@ -36,7 +36,9 @@ mergear).
   bytes y la marca temporal) y envía a la salida lo que el frontend le pida
   con el comando `enviar_mensaje`. La descripción legible de un mensaje la
   arma el frontend (`src/describir.ts`), porque también describe lo que sale
-  del flujo, que nunca vuelve del backend.
+  del flujo, que nunca vuelve del backend. El tipo y el canal de un mensaje
+  no se calculan ahí: los lee `MensajeMidi` (`src/workflow/tipos.ts`), y
+  cualquier otro módulo que los necesite usa esa misma lectura.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
   puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
@@ -100,17 +102,25 @@ mergear).
   escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
   filas), y lo hace después del primer dibujado. El log no escucha
   `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa el
-  mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la entrada
-  y lo que se emitió.
+  mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la entrada,
+  lo que se emitió y el texto del error, si una caja falló.
 - **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
   - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
-    el trigger y solo sale lo que llega a una caja Emitir. El pass-through ya
-    no es un comportamiento fijo: es el flujo por defecto (trigger → Emitir).
+    el trigger y sale tal cual, salvo que llegue a al menos una caja sin
+    salida (Emitir, Descartar): entonces sale solo lo que devuelvan esas
+    cajas. Si una caja falla, no sale nada de ese mensaje. Ninguna caja
+    declara nada para esto: lo decide el recorrido.
   - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
     Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
-    puro y devuelve la lista de lo emitido; el listener de `mensaje-midi` lo
-    envía con `enviarMensaje` y se lo pasa al log. Ningún tipo de nodo importa
-    `salida.ts`.
+    puro y devuelve `{ salidas, error }`; el listener de `mensaje-midi` envía
+    las salidas con `enviarMensaje` y le pasa todo al log. Ningún tipo de
+    nodo importa `salida.ts`.
+  - Un error en una caja se lanza como `Error` (con el nombre de la caja y
+    `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
+    el único que lo atrapa: el recorrido no revisa marcas de error.
+  - `MensajeMidi` guarda solo los bytes; `tipo` y `canal` son getters que se
+    calculan en cada lectura, para que no queden viejos si una caja cambia el
+    status. No agregar campos derivados que haya que mantener sincronizados.
   - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
     `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
     Rete: es la segunda excepción a la regla de `estado.ts`, junto con el log.
