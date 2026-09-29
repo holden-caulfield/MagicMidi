@@ -125,10 +125,10 @@ buses del IAC Driver.
       que falló y por qué) cuando una caja falla, en modo
       claro y oscuro (se provoca el error reemplazando a mano, desde la
       consola, el `procesar` de un tipo del catálogo)
-- [ ] 6.3 En `npm run tauri dev` con dos buses del IAC Driver: el acorde con
+- [x] 6.3 En `npm run tauri dev` con dos buses del IAC Driver: el acorde con
       Filtrar (Nota On y Nota Off) deja pasar un Cambio de Control tal cual, y
       Filtrar (Nota Off) → Descartar corta los Nota Off
-- [ ] 6.4 Antes de archivar, proponer a la persona usuaria el diff de la
+- [x] 6.4 Antes de archivar, proponer a la persona usuaria el diff de la
       sección Workflow de AGENTS.md (el reenvío por defecto en lugar de "solo
       sale lo que llega a una caja Emitir", que un error cancela todo lo de
       ese mensaje, el `MensajeMidi` como objeto, la
