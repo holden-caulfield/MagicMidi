@@ -1,7 +1,14 @@
-import { expect, test } from "vitest";
+import { beforeEach, expect, test } from "vitest";
 
-import { clasificarSalidas } from "./log";
 import { MensajeMidi } from "@/midi/mensaje";
+import {
+  agregarAlLog,
+  clasificarSalidas,
+  entradasDelLog,
+  limpiarLog,
+  suscribirAlLog,
+  type EventoMidi,
+} from "./log";
 
 function m(...bytes: number[]): MensajeMidi {
   return new MensajeMidi(bytes);
@@ -75,4 +82,67 @@ test("si una caja falló, es un error con su texto", () => {
     tipo: "error",
     texto: 'La caja "Desplazar" falló: ups',
   });
+});
+
+function evento(marca: number, ...datos: number[]): EventoMidi {
+  return { puerto: "entrada", marca_temporal_ms: marca, datos };
+}
+
+beforeEach(() => {
+  limpiarLog();
+});
+
+test("cada entrada guarda el mensaje y lo que pasó con él", () => {
+  agregarAlLog(evento(1000, 0x90, 60, 100), [], null);
+
+  const [entrada] = entradasDelLog();
+  expect(entrada.marcaTemporalMs).toBe(1000);
+  expect(entrada.mensaje).toEqual(m(0x90, 60, 100));
+  expect(entrada.resultado).toEqual({ tipo: "descartado" });
+});
+
+test("la entrada más nueva va primero", () => {
+  agregarAlLog(evento(1, 0x90, 60, 100), [], null);
+  agregarAlLog(evento(2, 0x80, 60, 0), [], null);
+
+  expect(entradasDelLog().map((entrada) => entrada.marcaTemporalMs)).toEqual([2, 1]);
+});
+
+test("conserva las últimas 500 entradas y descarta las más viejas", () => {
+  for (let marca = 1; marca <= 501; marca++) {
+    agregarAlLog(evento(marca, 0x90, 60, 100), [], null);
+  }
+
+  const entradas = entradasDelLog();
+  expect(entradas).toHaveLength(500);
+  expect(entradas[0].marcaTemporalMs).toBe(501);
+  expect(entradas[499].marcaTemporalMs).toBe(2);
+});
+
+test("cada entrada tiene un id distinto", () => {
+  agregarAlLog(evento(1, 0x90, 60, 100), [], null);
+  agregarAlLog(evento(1, 0x90, 60, 100), [], null);
+
+  const [primera, segunda] = entradasDelLog();
+  expect(primera.id).not.toBe(segunda.id);
+});
+
+test("limpiar vacía el log", () => {
+  agregarAlLog(evento(1, 0x90, 60, 100), [], null);
+
+  limpiarLog();
+
+  expect(entradasDelLog()).toHaveLength(0);
+});
+
+test("avisa a quien se suscribió, hasta que se desuscribe", () => {
+  let avisos = 0;
+  const desuscribir = suscribirAlLog(() => avisos++);
+
+  agregarAlLog(evento(1, 0x90, 60, 100), [], null);
+  limpiarLog();
+  desuscribir();
+  agregarAlLog(evento(2, 0x90, 60, 100), [], null);
+
+  expect(avisos).toBe(2);
 });

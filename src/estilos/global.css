@@ -1,0 +1,80 @@
+/* Lo único que no vive en un componente: las variables (que sí atraviesan el
+   Shadow DOM) y la letra que heredan todos. */
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  --acento: #396cd8;
+  --borde-suave: rgba(127, 127, 127, 0.35);
+  --fondo-control: #ffffff;
+  --letra-control: inherit;
+  --fondo-control-activo: #ffffff;
+  --fondo-hundido: rgba(0, 0, 0, 0.04);
+
+  --fondo-inicio: #dcf5e4;
+  --borde-inicio: #2e9d5a;
+  --fondo-fin: #fde6d6;
+  --borde-fin: #dd6b20;
+  /* Las cajas del lienzo son claras en los dos modos; los botones de la barra
+     de herramientas, no. */
+  --fondo-boton-inicio: var(--fondo-inicio);
+  --borde-boton-inicio: var(--borde-inicio);
+  --fondo-boton-fin: var(--fondo-fin);
+  --borde-boton-fin: var(--borde-fin);
+
+  --letra-salida: #3c3489;
+  --fondo-salida: #eeedfe;
+  --letra-sin-cambios: #534ab7;
+  --fondo-entrada-que-no-salio: rgba(127, 127, 127, 0.13);
+  --letra-descartado: #888780;
+  --letra-error: #a32d2d;
+  --fondo-error: #fcebeb;
+
+  --fondo-tab-activo: rgba(127, 127, 127, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #2f2f2f;
+
+    --fondo-control: #0f0f0f98;
+    --letra-control: #ffffff;
+    --fondo-control-activo: #0f0f0f69;
+    --fondo-hundido: rgba(255, 255, 255, 0.04);
+
+    --fondo-boton-inicio: #173f27;
+    --borde-boton-inicio: #4cc27c;
+    --fondo-boton-fin: #5a2e12;
+    --borde-boton-fin: #f08a3c;
+
+    --letra-salida: #cecbf6;
+    --fondo-salida: #26215c;
+    --letra-sin-cambios: #afa9ec;
+    --letra-descartado: #8f8f8f;
+    --letra-error: #f7c1c1;
+    --fondo-error: #501313;
+
+    --fondo-tab-activo: rgba(255, 255, 255, 0.14);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}

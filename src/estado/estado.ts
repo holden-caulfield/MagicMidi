@@ -1,5 +1,5 @@
 import type { IdDeTipo } from "@/workflow/catalogo";
-import type { ValorDeParametro } from "@/workflow/tipos";
+import type { ValorDeParametro } from "@/workflow/parametros/catalogo";
 
 export interface NodoDelFlujo {
   id: string;
@@ -63,8 +63,12 @@ export const estado: Estado = {
 
 const observadores: Array<() => void> = [];
 
-export function suscribir(observador: () => void) {
+/** Devuelve la función para dejar de recibir los avisos. */
+export function suscribir(observador: () => void): () => void {
   observadores.push(observador);
+  return () => {
+    observadores.splice(observadores.indexOf(observador), 1);
+  };
 }
 
 export function actualizar(cambios: Partial<Estado>) {

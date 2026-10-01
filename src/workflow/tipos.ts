@@ -1,24 +1,7 @@
 import type { IconNode } from "lucide";
 
 import type { MensajeMidi } from "@/midi/mensaje";
-
-export type ValorDeParametro = number | boolean | string;
-
-// Genérico para que el valor inicial y los de las opciones sean del mismo tipo.
-interface ParametroDeOpciones<T extends ValorDeParametro> {
-  clave: string;
-  etiqueta: string;
-  tipo: "opciones";
-  inicial: T;
-  opciones: { valor: T; texto: string }[];
-}
-
-export type Parametro =
-  | { clave: string; etiqueta: string; tipo: "entero"; inicial: number }
-  | { clave: string; etiqueta: string; tipo: "si-no"; inicial: boolean }
-  | ParametroDeOpciones<number>
-  | ParametroDeOpciones<string>
-  | ParametroDeOpciones<boolean>;
+import type { Parametro, ValorDeParametro } from "./parametros/catalogo";
 
 /**
  * Todo lo que hace falta para definir un tipo de nodo. Ver la guía en

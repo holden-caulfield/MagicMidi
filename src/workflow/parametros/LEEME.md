@@ -1,0 +1,257 @@
+# Cómo crear un tipo de parámetro
+
+Un *parámetro* es algo que la persona usuaria configura en una caja, desde el
+panel que aparece a la derecha del lienzo al seleccionarla: el desplazamiento
+de Desplazar, por ejemplo. Cada parámetro tiene un *tipo*, que decide qué
+control se ve en el panel y qué valores acepta: por ejemplo, `"entero"` (un
+campo para escribir un número entero) o `"si-no"` (una casilla). Cada tipo es
+un archivo de esta carpeta, y los que hay son los que figuran en
+`catalogo.ts`.
+
+Hace falta un tipo nuevo cuando una caja necesita que se configure algo que
+los que hay no expresan bien. Si alcanza con uno de los que hay, usá ese: ver
+[cómo se declaran los parámetros](../nodos/LEEME.md#qué-va-en-el-archivo).
+
+Crear un tipo de parámetro es un paso más que crear un tipo de nodo: además de
+la lógica, hay que escribir el control que se ve en el panel. Pero lo común
+(la etiqueta, los estilos, guardar el valor en la caja) ya está resuelto, y
+tu archivo solo dice qué control dibujar y qué valores acepta.
+
+## Los pasos
+
+1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
+   qué se configura: por ejemplo, `real.ts`. Lo más fácil es copiar el de un
+   tipo parecido (por ejemplo, `entero.ts`) y cambiarlo.
+2. **Registralo en el catálogo.** Abrí `catalogo.ts`, en esta misma carpeta,
+   y hacé tres cosas: importá tu archivo arriba, sumá su declaración a la
+   lista `Parametro` y su entrada a `TIPOS_DE_PARAMETRO`:
+
+   ```ts
+   import real, { type ParametroReal } from "./real";
+
+   export type Parametro =
+     | ParametroReal
+     // …los que ya estaban
+
+   const TIPOS_DE_PARAMETRO = {
+     real,
+     // …los que ya estaban
+   } satisfies …;
+   ```
+
+   El nombre en `TIPOS_DE_PARAMETRO` tiene que ser el mismo que pusiste en
+   `tipo` (ver más abajo). A diferencia de los tipos de nodo, si te olvidás de
+   alguna de las tres cosas, el chequeo de tipos te avisa: corré
+   `npx tsc --noEmit` desde la raíz del proyecto.
+3. **Escribí el test** de la función que interpreta lo que se escribe, si tu
+   tipo tiene una (ver [Qué va en el archivo](#qué-va-en-el-archivo)). Va al
+   lado, terminado en `.test.ts`: para `real.ts`, `real.test.ts`. Lo más fácil
+   es copiar el test de un tipo parecido. Después corré `npm test`, que tiene
+   que terminar diciendo que pasaron todos.
+4. **Usalo desde un tipo de nodo**, declarando un parámetro con tu `tipo`:
+
+   ```ts
+   parametros: [{ clave: "factor", etiqueta: "Factor", tipo: "real", inicial: 1.5 }],
+   ```
+
+   Levantá la aplicación, agregá esa caja desde la barra, seleccionala y
+   probá el control en el panel: que muestre el valor inicial, que guarde lo
+   que escribís y que rechace lo que no corresponde.
+
+## Qué va en el archivo
+
+- **La forma de la declaración**: lo que escribe un tipo de nodo para declarar
+  un parámetro de tu tipo. Es una `interface` que extiende `ParametroBase`, con
+  el tipo del valor entre `<>` (por ejemplo `ParametroBase<number>`) y un
+  campo `tipo` con el nombre del tipo. `ParametroBase` ya trae la `clave`, la
+  `etiqueta` y el valor `inicial`. Si tu tipo necesita algo más, va acá: el de
+  opciones, por ejemplo, agrega la lista de opciones.
+- **`interpretar(texto)`**, si lo que se escribe en el control puede no ser un
+  valor válido: devuelve el valor, o `null` si no sirve. Es una función común,
+  sin nada de la interfaz, y por eso se puede probar con un test. Una casilla
+  sí/no no la necesita, porque no hay forma de marcarla mal.
+- **El control**: una clase que extiende `CampoDeParametro`, con el nombre de
+  su etiqueta HTML en `@customElement("parametro-…")`. Lo único que escribe es
+  `control()`, que devuelve el control que se ve en el panel:
+  - el control lleva `id="control"`, así la etiqueta queda enlazada a él (al
+    hacer clic en la etiqueta, el foco va al control);
+  - `this.valor` es el valor que tiene la caja, y `this.parametro`, la
+    declaración;
+  - cuando la persona usuaria cambia el valor, llamá a
+    `this.avisarCambio(valorNuevo)`. Si lo que escribió no sirve, llamá a
+    `this.requestUpdate()` en su lugar: eso vuelve a dibujar el control con el
+    valor que la caja conserva;
+  - el valor se muestra envuelto en `live(…)`, para que vuelva a aparecer
+    aunque la persona haya escrito otra cosa en el control. Si se muestra
+    distinto de como se guarda, armá el texto con una función aparte (como
+    `mostrar` en el ejemplo de abajo), que también se puede probar;
+  - si el control va antes de la etiqueta y en la misma línea, como una
+    casilla, poné `protected enLinea = true;` (ver `si-no.ts`).
+- **La entrada para el catálogo** (el `export default`), con dos funciones:
+  - **`valido(parametro, valor)`**: si un valor le sirve a este parámetro. El
+    test que revisa todas las cajas (`src/workflow/catalogo.test.ts`) la usa
+    para comprobar que el valor `inicial` de cada parámetro tenga sentido.
+  - **`dibujar(parametro, valor)`**: devuelve tu etiqueta HTML con
+    `.parametro` y `.valor`. Es siempre igual: copiala y cambiá el nombre de
+    la etiqueta.
+
+No hace falta ocuparse de la etiqueta, de los estilos del campo, ni de
+guardar el valor en la caja: de eso se encargan `CampoDeParametro` y el panel
+de configuración.
+
+## Ejemplo completo: real
+
+Este tipo es para números con decimales, como un factor por el que multiplicar
+algo (1,5 para que sea un 50 % más). La caja guarda un número común, así que
+para `procesar` no tiene nada especial; lo que cambia es cómo se escribe y
+cómo se muestra.
+
+Dos detalles importantes:
+
+- En castellano los decimales se separan con coma, pero mucha gente escribe
+  punto, y JavaScript solo entiende el punto. Por eso `interpretar` acepta las
+  dos cosas, y cambia la coma por un punto antes de convertir el texto con
+  `Number(…)`.
+- El control muestra el valor con coma (`mostrar`), así que después de
+  escribir "2.5" se ve "2,5": es el mismo número.
+
+```ts
+import { html } from "lit";
+import { customElement } from "lit/decorators.js";
+import { live } from "lit/directives/live.js";
+
+import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
+
+export interface ParametroReal extends ParametroBase<number> {
+  tipo: "real";
+}
+
+/**
+ * El número escrito, con o sin decimales, o `null` si no es un número. Los
+ * decimales se pueden separar con coma ("2,5") o con punto ("2.5").
+ */
+export function interpretar(texto: string): number | null {
+  const conPunto = texto.trim().replace(",", ".");
+  if (conPunto === "") return null;
+
+  const numero = Number(conPunto);
+  return Number.isFinite(numero) ? numero : null;
+}
+
+/** El número como se escribe en castellano, con coma: 2.5 se muestra "2,5". */
+export function mostrar(numero: number): string {
+  return String(numero).replace(".", ",");
+}
+
+@customElement("parametro-real")
+export class CampoReal extends CampoDeParametro<ParametroReal, number> {
+  protected control() {
+    return html`
+      <input
+        id="control"
+        type="text"
+        inputmode="decimal"
+        .value=${live(mostrar(this.valor))}
+        @change=${(evento: Event) => {
+          const numero = interpretar((evento.target as HTMLInputElement).value);
+          if (numero === null) {
+            // Redibujar vuelve a mostrar el valor que la caja conserva.
+            this.requestUpdate();
+          } else {
+            this.avisarCambio(numero);
+          }
+        }}
+      />
+    `;
+  }
+}
+
+export default {
+  valido: (_parametro: ParametroReal, valor: number) => Number.isFinite(valor),
+  dibujar: (parametro: ParametroReal, valor: number) =>
+    html`<parametro-real .parametro=${parametro} .valor=${valor}></parametro-real>`,
+};
+```
+
+El control es un campo de texto, no uno numérico: un campo numérico decide por
+su cuenta qué separador acepta según el idioma del sistema, y así no se podría
+aceptar los dos. `inputmode="decimal"` hace que, en una pantalla táctil,
+aparezca el teclado de números.
+
+Y su test, en `real.test.ts`. Además de los casos normales, prueba las dos
+formas de separar los decimales y lo que no es un número.
+
+```ts
+import { expect, test } from "vitest";
+
+import { interpretar, mostrar } from "./real";
+
+test("acepta un número con decimales separados por punto", () => {
+  expect(interpretar("2.5")).toBe(2.5);
+});
+
+test("acepta un número con decimales separados por coma", () => {
+  expect(interpretar("2,5")).toBe(2.5);
+});
+
+test("acepta un número negativo", () => {
+  expect(interpretar("-0,75")).toBe(-0.75);
+});
+
+test("acepta un número sin decimales", () => {
+  expect(interpretar("3")).toBe(3);
+});
+
+test("acepta los decimales sin el cero de adelante", () => {
+  expect(interpretar(",5")).toBe(0.5);
+});
+
+test("acepta espacios alrededor del número", () => {
+  expect(interpretar(" 1,5 ")).toBe(1.5);
+});
+
+test("rechaza el campo vacío", () => {
+  expect(interpretar("")).toBeNull();
+});
+
+test("rechaza un campo con solo espacios", () => {
+  expect(interpretar("   ")).toBeNull();
+});
+
+test("rechaza un texto que no es un número", () => {
+  expect(interpretar("dos")).toBeNull();
+});
+
+test("rechaza un número con dos separadores", () => {
+  expect(interpretar("1,2,3")).toBeNull();
+});
+
+test("rechaza el infinito", () => {
+  expect(interpretar("Infinity")).toBeNull();
+});
+
+test("muestra los decimales con coma", () => {
+  expect(mostrar(2.5)).toBe("2,5");
+  expect(mostrar(-0.75)).toBe("-0,75");
+  expect(mostrar(3)).toBe("3");
+});
+```
+
+Para usarlo, una caja declara `tipo: "real"` en uno de sus parámetros, como
+en el paso 4.
+
+## Cómo escribir el test
+
+Es igual que el de un tipo de nodo (ver
+[Cómo escribir el test](../nodos/LEEME.md#cómo-escribir-el-test)), pero lo
+que se prueba es `interpretar`: se le pasa lo que alguien podría escribir y se
+revisa qué valor devuelve, o que devuelva `null`. Para elegir los casos:
+
+- **El caso normal**: algo que se escribe todos los días.
+- **Las variantes que tienen que funcionar**: mayúsculas y minúsculas,
+  espacios alrededor, negativos, las distintas formas de escribir lo mismo.
+- **Los bordes**: el valor más chico y el más grande que se aceptan, y los
+  primeros que ya no.
+- **Lo que no sirve**: el campo vacío, texto que no corresponde.
+
+El control en sí no se testea: se prueba en la aplicación, como en el paso 4.
