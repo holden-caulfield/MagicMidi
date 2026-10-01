@@ -254,6 +254,14 @@ mergear).
   ahí es la activación de controles con el teclado: la inyección de teclas no
   dispara la activación de un botón nativo, así que Enter y barra
   espaciadora hay que probarlos en la ventana real.
+- Para revisar la interfaz sin la ventana real, `verificacion-para-agentes/`
+  tiene herramientas para agentes (no para personas): corren pruebas en el
+  WebKit del sistema (el mismo motor que la ventana de Tauri, sin abrirla) o
+  en Chromium, y comparan la huella de la interfaz (posición y estilos de
+  cada elemento) antes y después de un cambio. Cómo se usan, y qué hace falta
+  instalar, está en su `LEEME.md`. Al terminar un cambio que no debería
+  verse, la huella tiene que dar igual. No reemplazan a la ventana real para
+  la activación con teclado ni para el flujo MIDI completo.
 - El navegador de desarrollo es Chromium, pero la ventana real usa WebKit, y
   el layout puede comportarse distinto. Un problema de tamaños que no se
   reproduce en el navegador, sobre todo al entrar o salir de pantalla
