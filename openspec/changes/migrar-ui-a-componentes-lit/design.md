@@ -201,6 +201,29 @@ archivo que importa Rete:
   con `side`, `key`, `nodeId` y la función `emit`), así que va en `lienzo.ts`
   para que Rete siga teniendo un único archivo.
 
+**Resultado de la prueba (tarea 1.2).** Se montó Rete dentro del shadow root
+de un componente anidado en otro, con la caja como componente Lit con su
+propio Shadow DOM y los `rete-ref` adentro. En Chromium y en el WebKit del
+sistema funcionaron:
+
+- mover cajas;
+- seleccionar, con la caja redibujada;
+- conectar, arrastrando de una salida a una entrada;
+- desconectar, soltando la entrada en un lugar vacío;
+- soltar una caja desde la barra, que quedó en el punto de soltado;
+- que una caja trasladada a 6000 px no agrande el lienzo ni la página.
+
+Las conexiones se dibujan de conector a conector, así que Rete calcula bien
+la posición de los conectores dentro del shadow root de la caja. En
+Chromium, además, el hover sobre una caja sube el `z-index` de su
+contenedor. **No hace falta la alternativa en light DOM.**
+
+**Cómo se redibuja la caja.** El plugin de dibujo le asigna `data` y `emit` al
+primer elemento de la plantilla y llama a su `requestUpdate()`. Entonces la
+plantilla de la caja es `<caja-del-flujo .data=${nodo} .emit=${emit}>`, y la
+selección se marca con la propiedad `selected` del nodo de Rete más
+`area.update("node", id)`.
+
 **Alternativa descartada:** que el lienzo reconcilie Rete con `estado.flujo`
 en cada `updated()`, y que la barra y el panel solo toquen el store. Sería más
 declarativo, pero la posición de una caja nueva (el centro visible o el punto
@@ -291,17 +314,32 @@ en el DOM.
 Si no se cumple, `<panel-log>` conserva el DOM a mano (con `@query` en vez de
 `document.querySelector`), y la excepción queda encapsulada en el componente.
 
-### D9. Decoradores estándar con `accessor`
+### D9. Decoradores legacy
 
-Se escribe, por ejemplo, `@state() accessor abierto = false` y
-`@customElement("panel-log")`, sin `experimentalDecorators`. Con
-`useDefineForClassFields: true` (el valor actual) los campos de clase comunes
-pisarían las propiedades reactivas; `accessor` lo evita.
+Se escribe, por ejemplo, `@state() abierto = false` y
+`@customElement("panel-log")`, con `experimentalDecorators: true` y
+`useDefineForClassFields: false` en `tsconfig.json`. La segunda opción hace
+falta porque, con campos de clase estándar, un campo como `abierto = false`
+pisaría la propiedad reactiva que define el decorador.
 
-**Condición:** antes de migrar el primer componente, se prueba que `npm run
-build` y `npm run dev` transformen los decoradores y que el resultado ande en
-WebKit, porque WebKit no los soporta de forma nativa. Si falla, se usa
-`static properties` con campos `declare`, sin decoradores.
+**Resultado de la prueba (tarea 1.1).** La idea original eran los decoradores
+estándar con `accessor`, pero Oxc (el transformador de Vite 8) los deja sin
+transformar: el build sale con `@X() accessor nombre = …` literal, y el
+módulo no carga, ni en Chromium 152 ni en WebKit. Los decoradores legacy, en
+cambio, sí se transforman, y un componente con `@customElement`, `@property`
+y `@state` se dibuja y reacciona a los cambios en Chromium y en el WebKit del
+sistema (macOS 14.1, el mismo motor que la ventana de Tauri). Se eligieron
+legacy en vez de `static properties` (la alternativa prevista) por
+legibilidad, con el acuerdo de la persona usuaria.
+
+**Costo:** dos opciones en `tsconfig.json`, y una sintaxis que TypeScript
+llama experimental, aunque Lit la soporta y documenta. Cuando Oxc transforme
+los decoradores estándar, pasar a ellos es agregar `accessor` a cada
+propiedad y sacar las dos opciones.
+
+**Alternativa descartada:** `static properties` con campos `declare` y los
+valores iniciales en el constructor. No necesita configuración, pero cada
+propiedad se escribe en tres lugares.
 
 ### D10. Dependencias e imports de Lit
 
@@ -317,7 +355,6 @@ mezclar.
   posicionamiento en WebKit. Si algo falla, `<lienzo-workflow>` y
   `<caja-del-flujo>` usan light DOM (`createRenderRoot() { return this; }`),
   con sus estilos en el `static styles` del componente de afuera.
-- **[El build no transforma los decoradores]** → Alternativa de D9.
 - **[El log declarativo no aguanta en WebKit]** → Alternativa de D8.
 - **[Dibujado asíncrono]** Después de `actualizar()`, el DOM todavía no
   cambió. → La receta de depuración por consola de `AGENTS.md` pasa a esperar
@@ -349,8 +386,8 @@ migración va de las hojas hacia la raíz, con la aplicación andando después d
 cada paso:
 
 1. **Pruebas:** decoradores en el build y en WebKit, y Rete en shadow roots
-   anidados. Sus resultados fijan las alternativas de D6, D8 y D9 antes de
-   escribir componentes.
+   anidados. Sus resultados fijan las alternativas de D6 y D9 antes de
+   escribir componentes; la de D8 se fija al medir el log.
 2. **Base:** `estado/` (con el controlador), `estilos/` y dependencias.
 3. **Conexión:** `selector-de-puerto` y `panel-conexion`.
 4. **Parámetros:** carpeta, catálogo, clase base, los tres tipos con sus

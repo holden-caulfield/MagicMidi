@@ -10,16 +10,21 @@ pantalla completa) y el flujo MIDI completo se prueban con
 `npx tsc --noEmit`, `npm test` y `npm run build` tienen que pasar, y la
 aplicación tiene que seguir andando.
 
+Lo que piden "en WebKit" se corre en un `WKWebView` del sistema (el mismo
+motor que la ventana de Tauri), con un script de Swift fuera del repositorio
+que carga `localhost:1420`, ejecuta una prueba en la página y saca una
+captura. El WebKit de Playwright no arranca en macOS 14.1.
+
 ## 1. Pruebas previas
 
-- [ ] 1.1 Probar los decoradores estándar con `accessor` (design.md, D9): un
+- [x] 1.1 Probar los decoradores estándar con `accessor` (design.md, D9): un
       componente de prueba con `@customElement`, `@property` y `@state`;
       verificar que `npm run build` y `npm run dev` lo transforman y que se
       dibuja y reacciona a un cambio de propiedad en WebKit (Safari con la
       URL de desarrollo). Anotar el resultado en design.md; si falla, fijar
       `static properties` con `declare` como forma de escribir los
       componentes
-- [ ] 1.2 Probar Rete dentro de shadow roots anidados (design.md, D6): montar
+- [x] 1.2 Probar Rete dentro de shadow roots anidados (design.md, D6): montar
       el lienzo actual dentro del shadow root de un componente de prueba
       anidado en otro, con una caja como componente Lit con Shadow DOM.
       Verificar en Chromium y en WebKit que se pueden arrastrar cajas,
@@ -27,7 +32,7 @@ aplicación tiene que seguir andando.
       que una caja fuera de la vista no agranda el panel. Anotar el resultado
       en design.md; si algo falla, fijar light DOM para `<lienzo-workflow>` y
       `<caja-del-flujo>`
-- [ ] 1.3 Borrar el código de prueba de 1.1 y 1.2; verificar con `git status`
+- [x] 1.3 Borrar el código de prueba de 1.1 y 1.2; verificar con `git status`
       que solo quedan las anotaciones en design.md
 
 ## 2. Base
