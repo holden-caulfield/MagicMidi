@@ -314,6 +314,24 @@ en el DOM.
 Si no se cumple, `<panel-log>` conserva el DOM a mano (con `@query` en vez de
 `document.querySelector`), y la excepción queda encapsulada en el componente.
 
+**Resultado de la medición (tarea 6.3).** Se midió en el WebKit del sistema,
+con el log lleno y cada mensaje en su propia tarea:
+
+| | Ráfaga: procesamiento | Ráfaga: peor cuadro | Sostenido: peor cuadro | Sostenido: clic |
+|---|---|---|---|---|
+| Original (DOM a mano) | 181 ms | 203 ms | 22 ms | 9 ms |
+| Declarativo | 349 ms | 374 ms | 26 ms | 8 ms |
+| Declarativo, agrupado por cuadro | 13–29 ms | 112–127 ms | 23–35 ms | 1–13 ms |
+
+El límite de 100 ms en la ráfaga no lo cumple ninguna de las tres, ni siquiera
+la original: las 2000 tareas seguidas no dejan dibujar. Por eso el criterio
+pasa a ser **no ser peor que la implementación anterior**. Lo cumple el
+declarativo agrupado por cuadro: `<panel-log>` redefine `scheduleUpdate` para
+esperar al próximo `requestAnimationFrame`, y así una ráfaga se dibuja una
+sola vez en lugar de una vez por mensaje. El cuadro de ~120 ms es el que
+dibuja de una vez las 500 filas nuevas. Se elige el declarativo agrupado, y no
+el DOM a mano, con el acuerdo de la persona usuaria.
+
 ### D9. Decoradores legacy
 
 Se escribe, por ejemplo, `@state() abierto = false` y

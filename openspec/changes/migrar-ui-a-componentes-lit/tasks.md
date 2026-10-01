@@ -123,7 +123,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
       descripción, sub-filas, marcas sin cambios, descartado y error,
       colores, 500 mensajes, Limpiar) y que el log sigue juntando mensajes
       con su tab oculto
-- [ ] 6.3 Medir en WebKit con los dos criterios de design.md, D8 (ráfaga de
+- [x] 6.3 Medir en WebKit con los dos criterios de design.md, D8 (ráfaga de
       2000 mensajes sin cuadros de más de 100 ms; 500 por segundo durante
       10 s con la interfaz respondiendo) y anotar los números en design.md.
       Si no se cumplen, pasar `<panel-log>` al DOM a mano encapsulado (con
