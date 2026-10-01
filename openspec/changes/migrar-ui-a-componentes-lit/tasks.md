@@ -37,16 +37,16 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 2. Base
 
-- [ ] 2.1 Quitar `lit-html` de `package.json` y pasar todos los imports a
+- [x] 2.1 Quitar `lit-html` de `package.json` y pasar todos los imports a
       `lit` y `lit/directives/…` (design.md, D10), con la configuración de
       decoradores que haya fijado 1.1 en `tsconfig.json`; verificar con
       `npm install`, `npx tsc --noEmit` y `npm run build`
-- [ ] 2.2 Mover `src/estado.ts` a `src/estado/estado.ts`, hacer que
+- [x] 2.2 Mover `src/estado.ts` a `src/estado/estado.ts`, hacer que
       `suscribir` devuelva la función para desuscribirse, y escribir
       `ControladorDeEstado` en `estado/controlador.ts`, genérico sobre
       cualquier fuente con `suscribir` (design.md, D3 y D8); verificar con
       `npx tsc --noEmit` y `npm test`
-- [ ] 2.3 Crear `src/estilos/global.css` (variables en `:root`, `body`, el
+- [x] 2.3 Crear `src/estilos/global.css` (variables en `:root`, `body`, el
       bloque que fija la ventana) y `src/estilos/compartidos.ts` (botones,
       `select`, `input`, foco, `.campo`) a partir de `styles.css`, sin
       borrar todavía lo que siguen usando las plantillas viejas; verificar

@@ -1,11 +1,11 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 
 import {
   indicadorDeEstado,
   inicializarConexion,
   panelConexion,
 } from "@/conexion";
-import { estado, suscribir } from "@/estado";
+import { estado, suscribir } from "@/estado/estado";
 import { inicializarLog, panelLog } from "@/log";
 import { barraDeTabs, type Panel } from "@/tabs";
 import { inicializarWorkflow } from "@/workflow/ejecutar";

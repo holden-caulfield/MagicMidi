@@ -1,6 +1,6 @@
-import { html, type TemplateResult } from "lit-html";
+import { html, type TemplateResult } from "lit";
 
-import { actualizar } from "@/estado";
+import { actualizar } from "@/estado/estado";
 
 export interface Panel {
   id: string;

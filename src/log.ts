@@ -1,4 +1,4 @@
-import { html } from "lit-html";
+import { html } from "lit";
 import { Ban, CornerDownRight, Equal, type IconNode, TriangleAlert } from "lucide";
 
 import { describirMensaje } from "@/midi/describir";

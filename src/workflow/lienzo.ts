@@ -2,13 +2,13 @@
 // zoom y el arrastre son de la librería; qué cajas hay y cómo se conectan vive
 // en `estado.flujo`, y este módulo mantiene las dos cosas de acuerdo.
 import { LitPlugin, Presets as PresetsDeDibujo, type LitArea2D } from "@retejs/lit-plugin";
-import { html } from "lit-html";
+import { html } from "lit";
 import type { IconNode } from "lucide";
 import { ClassicPreset, NodeEditor, type GetSchemes } from "rete";
 import { AreaPlugin } from "rete-area-plugin";
 import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-plugin";
 
-import { actualizar, estado, type Conexion, type NodoDelFlujo } from "@/estado";
+import { actualizar, estado, type Conexion, type NodoDelFlujo } from "@/estado/estado";
 import {
   etapaDelTipo,
   tieneSalida,

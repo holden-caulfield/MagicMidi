@@ -1,51 +1,3 @@
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-
-  --fondo-inicio: #dcf5e4;
-  --borde-inicio: #2e9d5a;
-  --fondo-fin: #fde6d6;
-  --borde-fin: #dd6b20;
-
-  --letra-salida: #3c3489;
-  --fondo-salida: #eeedfe;
-  --letra-sin-cambios: #534ab7;
-  --fondo-entrada-que-no-salio: rgba(127, 127, 127, 0.13);
-  --letra-descartado: #888780;
-  --letra-error: #a32d2d;
-  --fondo-error: #fcebeb;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  overflow: hidden;
-}
-
-/* La ventana no se desplaza nunca: cada panel acomoda su contenido al lugar
-   que tiene. Con `100dvh`, WebKit se quedaba con una medida vieja al entrar y
-   salir de pantalla completa; `position: fixed` ata la raíz a la ventana. */
-#app {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .contenedor {
   flex: 1;
   min-height: 0;
@@ -464,11 +416,6 @@ input[type="number"] {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
   select,
   button {
     color: #ffffff;
@@ -477,15 +424,6 @@ input[type="number"] {
 
   button:active {
     background-color: #0f0f0f69;
-  }
-
-  :root {
-    --letra-salida: #cecbf6;
-    --fondo-salida: #26215c;
-    --letra-sin-cambios: #afa9ec;
-    --letra-descartado: #8f8f8f;
-    --letra-error: #f7c1c1;
-    --fondo-error: #501313;
   }
 
   .lista-mensajes {

@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "useDefineForClassFields": true,
+    /* Decoradores de Lit en su forma legacy: Oxc (Vite 8) todavía no
+       transforma los estándar. Sin `useDefineForClassFields: false`, un campo
+       con valor inicial pisaría la propiedad reactiva del decorador. */
+    "useDefineForClassFields": false,
+    "experimentalDecorators": true,
     "module": "ESNext",
     "lib": ["ES2020", "ES2022.Error", "DOM"],
     "skipLibCheck": true,
