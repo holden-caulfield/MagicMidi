@@ -32,19 +32,6 @@ h1 {
   background-color: rgba(127, 127, 127, 0.06);
 }
 
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  flex: 1 1 220px;
-}
-
-.campo label {
-  font-size: 0.85em;
-  font-weight: 600;
-  opacity: 0.8;
-}
-
 select,
 button {
   border-radius: 8px;
@@ -340,42 +327,6 @@ input:focus-visible {
   z-index: 10;
 }
 
-.configuracion {
-  flex: 0 0 220px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.configuracion h3 {
-  margin: 0;
-}
-
-.configuracion-vacia {
-  margin: 0;
-  opacity: 0.7;
-}
-
-.configuracion .campo {
-  flex: none;
-}
-
-.campo-si-no {
-  flex-direction: row;
-  align-items: center;
-}
-
-input[type="number"] {
-  border-radius: 8px;
-  border: 1px solid rgba(127, 127, 127, 0.35);
-  padding: 0.6em 0.9em;
-  font-size: 1em;
-  font-family: inherit;
-  color: inherit;
-  background-color: #ffffff;
-}
-
 [hidden] {
   display: none;
 }
@@ -397,11 +348,6 @@ input[type="number"] {
 
   .lienzo {
     background-color: rgba(255, 255, 255, 0.04);
-  }
-
-  input[type="number"] {
-    color: #ffffff;
-    background-color: #0f0f0f98;
   }
 
   .barra-tabs button {

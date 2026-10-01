@@ -68,22 +68,22 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 4. Tipos de parámetro
 
-- [ ] 4.1 Crear `src/workflow/parametros/` con `campo-de-parametro.ts`
+- [x] 4.1 Crear `src/workflow/parametros/` con `campo-de-parametro.ts`
       (`CampoDeParametro`: etiqueta e `id` en la misma raíz, estilos de
       campo, `avisarCambio`) y `catalogo.ts` (unión `Parametro`,
       `ValorDeParametro` y mapa con `satisfies`), según design.md, D7, y
       hacer que `workflow/tipos.ts` tome de ahí `Parametro` y
       `ValorDeParametro`; verificar con `npx tsc --noEmit`
-- [ ] 4.2 Escribir `entero.ts` con `interpretar` y su test (enteros
+- [x] 4.2 Escribir `entero.ts` con `interpretar` y su test (enteros
       positivos y negativos, "2.5", vacío, espacios, texto); `si-no.ts`; y
       `opciones.ts` para valores numéricos, de texto y sí/no. Verificar con
       `npm test`
-- [ ] 4.3 Verificar al compilar los escenarios de "Un tipo de parámetro es un
+- [x] 4.3 Verificar al compilar los escenarios de "Un tipo de parámetro es un
       archivo registrado en su catálogo": declarar por un momento en un tipo
       de nodo un parámetro de tipo inexistente, uno entero con inicial
       `true`, y sacar un tipo del mapa del catálogo, y comprobar que
       `npx tsc --noEmit` falla en cada caso señalando el problema
-- [ ] 4.4 Pasar el panel de configuración a `<panel-de-configuracion>` en
+- [x] 4.4 Pasar el panel de configuración a `<panel-de-configuracion>` en
       `src/workflow/editor/`, buscando cada parámetro en el catálogo, sin
       `switch` ni nombres de tipos, y emitiendo `eliminar-caja`; verificar
       en el navegador los escenarios de "La caja seleccionada se configura
