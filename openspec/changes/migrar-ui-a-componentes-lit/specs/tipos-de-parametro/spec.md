@@ -133,6 +133,6 @@ la aplicación, con su test.
 #### Scenario: El ejemplo es un tipo nuevo
 
 - **WHEN** una persona desarrolladora lee el ejemplo completo de la guía
-- **THEN** es un tipo "nota", donde se escribe el nombre de una nota (como
-  "C4") y el valor que guarda la caja es su número MIDI (60), que rechaza lo
-  que no sea un nombre de nota válido
+- **THEN** es un tipo "real", para números con decimales (como "2,5"), que
+  acepta tanto la coma como el punto para separar los decimales y rechaza lo
+  que no sea un número

@@ -3,12 +3,13 @@
 Un *parámetro* es algo que la persona usuaria configura en una caja, desde el
 panel que aparece a la derecha del lienzo al seleccionarla: el desplazamiento
 de Desplazar, por ejemplo. Cada parámetro tiene un *tipo*, que decide qué
-control se ve en el panel y qué valores acepta. Hoy hay tres: `"entero"`,
-`"si-no"` y `"opciones"`, cada uno en un archivo de esta carpeta.
+control se ve en el panel y qué valores acepta: por ejemplo, `"entero"` (un
+campo para escribir un número entero) o `"si-no"` (una casilla). Cada tipo es
+un archivo de esta carpeta, y los que hay son los que figuran en
+`catalogo.ts`.
 
 Hace falta un tipo nuevo cuando una caja necesita que se configure algo que
-esos tres no expresan bien. Por ejemplo, elegir una nota escribiendo "C4" en
-vez de su número. Si alcanza con uno de los que hay, usá ese: ver
+los que hay no expresan bien. Si alcanza con uno de los que hay, usá ese: ver
 [cómo se declaran los parámetros](../nodos/LEEME.md#qué-va-en-el-archivo).
 
 Crear un tipo de parámetro es un paso más que crear un tipo de nodo: además de
@@ -19,24 +20,22 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
 ## Los pasos
 
 1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
-   qué se configura: por ejemplo, `nota.ts`. Lo más fácil es copiar
-   `entero.ts` y cambiarlo.
+   qué se configura: por ejemplo, `real.ts`. Lo más fácil es copiar el de un
+   tipo parecido (por ejemplo, `entero.ts`) y cambiarlo.
 2. **Registralo en el catálogo.** Abrí `catalogo.ts`, en esta misma carpeta,
    y hacé tres cosas: importá tu archivo arriba, sumá su declaración a la
    lista `Parametro` y su entrada a `TIPOS_DE_PARAMETRO`:
 
    ```ts
-   import nota, { type ParametroNota } from "./nota";
+   import real, { type ParametroReal } from "./real";
 
    export type Parametro =
-     | ParametroEntero
-     | ParametroNota
-     // …
+     | ParametroReal
+     // …los que ya estaban
 
    const TIPOS_DE_PARAMETRO = {
-     entero,
-     nota,
-     // …
+     real,
+     // …los que ya estaban
    } satisfies …;
    ```
 
@@ -46,13 +45,13 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
    `npx tsc --noEmit` desde la raíz del proyecto.
 3. **Escribí el test** de la función que interpreta lo que se escribe, si tu
    tipo tiene una (ver [Qué va en el archivo](#qué-va-en-el-archivo)). Va al
-   lado, terminado en `.test.ts`: para `nota.ts`, `nota.test.ts`. Lo más fácil
-   es copiar `entero.test.ts`. Después corré `npm test`, que tiene que
-   terminar diciendo que pasaron todos.
+   lado, terminado en `.test.ts`: para `real.ts`, `real.test.ts`. Lo más fácil
+   es copiar el test de un tipo parecido. Después corré `npm test`, que tiene
+   que terminar diciendo que pasaron todos.
 4. **Usalo desde un tipo de nodo**, declarando un parámetro con tu `tipo`:
 
    ```ts
-   parametros: [{ clave: "nota", etiqueta: "Nota", tipo: "nota", inicial: 60 }],
+   parametros: [{ clave: "factor", etiqueta: "Factor", tipo: "real", inicial: 1.5 }],
    ```
 
    Levantá la aplicación, agregá esa caja desde la barra, seleccionala y
@@ -83,7 +82,9 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
     `this.requestUpdate()` en su lugar: eso vuelve a dibujar el control con el
     valor que la caja conserva;
   - el valor se muestra envuelto en `live(…)`, para que vuelva a aparecer
-    aunque la persona haya escrito otra cosa en el control;
+    aunque la persona haya escrito otra cosa en el control. Si se muestra
+    distinto de como se guarda, armá el texto con una función aparte (como
+    `mostrar` en el ejemplo de abajo), que también se puede probar;
   - si el control va antes de la etiqueta y en la misma línea, como una
     casilla, poné `protected enLinea = true;` (ver `si-no.ts`).
 - **La entrada para el catálogo** (el `export default`), con dos funciones:
@@ -98,19 +99,21 @@ No hace falta ocuparse de la etiqueta, de los estilos del campo, ni de
 guardar el valor en la caja: de eso se encargan `CampoDeParametro` y el panel
 de configuración.
 
-## Ejemplo completo: nota
+## Ejemplo completo: real
 
-Este tipo deja elegir una nota escribiendo su nombre, como "C4" o "F#2", en
-lugar de su número MIDI. La caja guarda el número (C4 es el 60, el Do
-central), así que para `procesar` es un entero como cualquier otro; lo que
-cambia es cómo se escribe y cómo se muestra.
+Este tipo es para números con decimales, como un factor por el que multiplicar
+algo (1,5 para que sea un 50 % más). La caja guarda un número común, así que
+para `procesar` no tiene nada especial; lo que cambia es cómo se escribe y
+cómo se muestra.
 
 Dos detalles importantes:
 
-- MIDI tiene notas del 0 al 127, que van de C-1 a G9. Lo que quede fuera de
-  ese rango no es una nota válida, aunque el nombre esté bien escrito.
-- El control muestra el valor como nombre (`nombreDeNota`), así que después
-  de escribir "Db4" se ve "C#4": es la misma nota.
+- En castellano los decimales se separan con coma, pero mucha gente escribe
+  punto, y JavaScript solo entiende el punto. Por eso `interpretar` acepta las
+  dos cosas, y cambia la coma por un punto antes de convertir el texto con
+  `Number(…)`.
+- El control muestra el valor con coma (`mostrar`), así que después de
+  escribir "2.5" se ve "2,5": es el mismo número.
 
 ```ts
 import { html } from "lit";
@@ -119,45 +122,36 @@ import { live } from "lit/directives/live.js";
 
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
-export interface ParametroNota extends ParametroBase<number> {
-  tipo: "nota";
-}
-
-// El lugar de cada nota dentro de la octava, contando desde Do (C).
-const SEMITONOS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-const NOMBRES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-/** El nombre de una nota, como "C4" o "F#2", a partir de su número MIDI. */
-export function nombreDeNota(numero: number): string {
-  const octava = Math.floor(numero / 12) - 1;
-  return `${NOMBRES[numero % 12]}${octava}`;
+export interface ParametroReal extends ParametroBase<number> {
+  tipo: "real";
 }
 
 /**
- * El número MIDI de una nota escrita por su nombre (como "C4", "f#2" o
- * "Bb-1"), o `null` si no es una nota que exista en MIDI. Se usa la
- * convención en la que C4 es el Do central, el 60.
+ * El número escrito, con o sin decimales, o `null` si no es un número. Los
+ * decimales se pueden separar con coma ("2,5") o con punto ("2.5").
  */
 export function interpretar(texto: string): number | null {
-  const partes = /^([A-G])([#b]?)(-?\d+)$/i.exec(texto.trim());
-  if (!partes) return null;
+  const conPunto = texto.trim().replace(",", ".");
+  if (conPunto === "") return null;
 
-  const [, letra, alteracion, octava] = partes;
-  let numero = (Number(octava) + 1) * 12 + SEMITONOS[letra.toUpperCase()];
-  if (alteracion === "#") numero += 1;
-  if (alteracion === "b") numero -= 1;
-
-  return numero >= 0 && numero <= 127 ? numero : null;
+  const numero = Number(conPunto);
+  return Number.isFinite(numero) ? numero : null;
 }
 
-@customElement("parametro-nota")
-export class CampoNota extends CampoDeParametro<ParametroNota, number> {
+/** El número como se escribe en castellano, con coma: 2.5 se muestra "2,5". */
+export function mostrar(numero: number): string {
+  return String(numero).replace(".", ",");
+}
+
+@customElement("parametro-real")
+export class CampoReal extends CampoDeParametro<ParametroReal, number> {
   protected control() {
     return html`
       <input
         id="control"
         type="text"
-        .value=${live(nombreDeNota(this.valor))}
+        inputmode="decimal"
+        .value=${live(mostrar(this.valor))}
         @change=${(evento: Event) => {
           const numero = interpretar((evento.target as HTMLInputElement).value);
           if (numero === null) {
@@ -173,73 +167,77 @@ export class CampoNota extends CampoDeParametro<ParametroNota, number> {
 }
 
 export default {
-  valido: (_parametro: ParametroNota, valor: number) =>
-    Number.isInteger(valor) && valor >= 0 && valor <= 127,
-  dibujar: (parametro: ParametroNota, valor: number) =>
-    html`<parametro-nota .parametro=${parametro} .valor=${valor}></parametro-nota>`,
+  valido: (_parametro: ParametroReal, valor: number) => Number.isFinite(valor),
+  dibujar: (parametro: ParametroReal, valor: number) =>
+    html`<parametro-real .parametro=${parametro} .valor=${valor}></parametro-real>`,
 };
 ```
 
-Y su test, en `nota.test.ts`. Además de los casos normales, prueba los bordes
-del rango y lo que no es una nota.
+El control es un campo de texto, no uno numérico: un campo numérico decide por
+su cuenta qué separador acepta según el idioma del sistema, y así no se podría
+aceptar los dos. `inputmode="decimal"` hace que, en una pantalla táctil,
+aparezca el teclado de números.
+
+Y su test, en `real.test.ts`. Además de los casos normales, prueba las dos
+formas de separar los decimales y lo que no es un número.
 
 ```ts
 import { expect, test } from "vitest";
 
-import { interpretar, nombreDeNota } from "./nota";
+import { interpretar, mostrar } from "./real";
 
-test("C4 es el Do central, el 60", () => {
-  expect(interpretar("C4")).toBe(60);
+test("acepta un número con decimales separados por punto", () => {
+  expect(interpretar("2.5")).toBe(2.5);
 });
 
-test("acepta las letras en minúscula", () => {
-  expect(interpretar("a4")).toBe(69);
+test("acepta un número con decimales separados por coma", () => {
+  expect(interpretar("2,5")).toBe(2.5);
 });
 
-test("un sostenido sube un semitono", () => {
-  expect(interpretar("C#4")).toBe(61);
+test("acepta un número negativo", () => {
+  expect(interpretar("-0,75")).toBe(-0.75);
 });
 
-test("un bemol baja un semitono", () => {
-  expect(interpretar("Db4")).toBe(61);
+test("acepta un número sin decimales", () => {
+  expect(interpretar("3")).toBe(3);
 });
 
-test("acepta la octava -1, donde están las notas más graves", () => {
-  expect(interpretar("C-1")).toBe(0);
+test("acepta los decimales sin el cero de adelante", () => {
+  expect(interpretar(",5")).toBe(0.5);
 });
 
-test("acepta la nota más aguda de MIDI, G9", () => {
-  expect(interpretar("G9")).toBe(127);
-});
-
-test("rechaza una nota más aguda que G9", () => {
-  expect(interpretar("G#9")).toBeNull();
-});
-
-test("rechaza una nota más grave que C-1", () => {
-  expect(interpretar("Cb-1")).toBeNull();
-});
-
-test("rechaza una letra que no es una nota", () => {
-  expect(interpretar("H4")).toBeNull();
-});
-
-test("rechaza un número suelto", () => {
-  expect(interpretar("60")).toBeNull();
+test("acepta espacios alrededor del número", () => {
+  expect(interpretar(" 1,5 ")).toBe(1.5);
 });
 
 test("rechaza el campo vacío", () => {
   expect(interpretar("")).toBeNull();
 });
 
-test("muestra el número como el nombre de la nota", () => {
-  expect(nombreDeNota(60)).toBe("C4");
-  expect(nombreDeNota(61)).toBe("C#4");
-  expect(nombreDeNota(0)).toBe("C-1");
+test("rechaza un campo con solo espacios", () => {
+  expect(interpretar("   ")).toBeNull();
+});
+
+test("rechaza un texto que no es un número", () => {
+  expect(interpretar("dos")).toBeNull();
+});
+
+test("rechaza un número con dos separadores", () => {
+  expect(interpretar("1,2,3")).toBeNull();
+});
+
+test("rechaza el infinito", () => {
+  expect(interpretar("Infinity")).toBeNull();
+});
+
+test("muestra los decimales con coma", () => {
+  expect(mostrar(2.5)).toBe("2,5");
+  expect(mostrar(-0.75)).toBe("-0,75");
+  expect(mostrar(3)).toBe("3");
 });
 ```
 
-Para usarlo, una caja declara `tipo: "nota"` en uno de sus parámetros, como
+Para usarlo, una caja declara `tipo: "real"` en uno de sus parámetros, como
 en el paso 4.
 
 ## Cómo escribir el test
@@ -251,10 +249,9 @@ revisa qué valor devuelve, o que devuelva `null`. Para elegir los casos:
 
 - **El caso normal**: algo que se escribe todos los días.
 - **Las variantes que tienen que funcionar**: mayúsculas y minúsculas,
-  espacios alrededor, negativos.
+  espacios alrededor, negativos, las distintas formas de escribir lo mismo.
 - **Los bordes**: el valor más chico y el más grande que se aceptan, y los
   primeros que ya no.
-- **Lo que no sirve**: el campo vacío, texto que no corresponde, un número con
-  decimales.
+- **Lo que no sirve**: el campo vacío, texto que no corresponde.
 
 El control en sí no se testea: se prueba en la aplicación, como en el paso 4.

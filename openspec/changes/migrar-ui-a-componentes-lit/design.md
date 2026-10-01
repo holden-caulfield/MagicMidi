@@ -446,7 +446,7 @@ cada paso:
 7. **Raíz:** `ventana-principal` y `barra-de-tabs`; `index.html` y `main.ts`
    reducidos.
 8. **Limpieza y documentación:** se borran `styles.css` y los restos, se
-   escriben `parametros/LEEME.md` y la guía del tipo "nota", y se propone el
+   escriben `parametros/LEEME.md` y la guía del tipo "real", y se propone el
    diff de `AGENTS.md`.
 
 **Rollback:** todo va en un único PR. Si algo sale mal antes de mergear, se

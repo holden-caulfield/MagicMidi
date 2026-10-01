@@ -65,12 +65,13 @@ Un tipo de nodo es un objeto con estos campos:
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
   parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
   (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
-  disponibles son los de la carpeta `src/workflow/parametros/`, y hoy son:
+  disponibles son los de la carpeta `src/workflow/parametros/`. Por ejemplo:
   - `"entero"`: un número entero (acepta negativos).
   - `"si-no"`: una casilla para marcar o desmarcar.
   - `"opciones"`: una lista cerrada. Cada opción tiene un `valor` y un `texto`.
 
-  Si ninguno te sirve, se puede crear uno nuevo: la guía está en
+  Los que hay están en `parametros/catalogo.ts`. Si ninguno te sirve, se puede
+  crear uno nuevo: la guía está en
   [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
   poné `parametros: []`.
 - **`procesar(mensaje, parametros)`**: la función donde la caja hace su trabajo.
