@@ -38,6 +38,7 @@ export class CampoEntero extends CampoDeParametro<ParametroEntero, number> {
 }
 
 export default {
+  valido: (_parametro: ParametroEntero, valor: number) => Number.isInteger(valor),
   dibujar: (parametro: ParametroEntero, valor: number) =>
     html`<parametro-entero .parametro=${parametro} .valor=${valor}></parametro-entero>`,
 };

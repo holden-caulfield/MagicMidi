@@ -239,8 +239,12 @@ de soltado) es estado de la vista de Rete, y habría que pasarla por el store.
 - si valida, una función pura `interpretar(texto)`, que devuelve el valor o
   `null`, con su test al lado;
 - su componente `<parametro-…>`;
-- la entrada para el catálogo, con su identificador y una función que dibuja
-  su componente con el parámetro y el valor.
+- la entrada para el catálogo, con su identificador y dos funciones:
+  `dibujar`, que dibuja su componente con el parámetro y el valor, y
+  `valido`, que dice si un valor le sirve al parámetro. `valido` se agregó en
+  la tarea 8.1: la prueba de `catalogo.test.ts` que revisa los valores
+  iniciales decidía con un `if` por tipo, y un tipo nuevo habría obligado a
+  tocarla. Ahora la usa sin nombrar ningún tipo.
 
 **`CampoDeParametro`** (`campo-de-parametro.ts`) es la clase base de los
 componentes `<parametro-…>`. Resuelve en un solo lugar:

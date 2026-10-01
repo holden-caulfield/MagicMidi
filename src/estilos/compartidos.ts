@@ -18,7 +18,7 @@ export const compartidos = css`
 
   select,
   button,
-  input[type="number"] {
+  input:not([type="checkbox"]) {
     border-radius: 8px;
     border: 1px solid var(--borde-suave);
     padding: 0.6em 0.9em;

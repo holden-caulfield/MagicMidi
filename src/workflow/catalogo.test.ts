@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { MensajeMidi } from "@/midi/mensaje";
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
-import type { ValorDeParametro } from "./parametros/catalogo";
+import { esValorValido } from "./parametros/catalogo";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
@@ -19,14 +19,7 @@ const MENSAJES_TIPICOS = [
 describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => {
   test("tiene valores iniciales coherentes con sus parámetros", () => {
     for (const parametro of tipo.parametros) {
-      if (parametro.tipo === "entero") {
-        expect(Number.isInteger(parametro.inicial), parametro.clave).toBe(true);
-      } else if (parametro.tipo === "opciones") {
-        const valores: ValorDeParametro[] = parametro.opciones.map((opcion) => opcion.valor);
-        expect(valores, parametro.clave).toContain(parametro.inicial);
-      } else {
-        expect(typeof parametro.inicial, parametro.clave).toBe("boolean");
-      }
+      expect(esValorValido(parametro, parametro.inicial), parametro.clave).toBe(true);
     }
   });
 

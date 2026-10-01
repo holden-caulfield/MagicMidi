@@ -146,7 +146,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 8. Documentación
 
-- [ ] 8.1 Escribir `src/workflow/parametros/LEEME.md` según "La carpeta de
+- [x] 8.1 Escribir `src/workflow/parametros/LEEME.md` según "La carpeta de
       tipos de parámetro explica cómo crear uno", con el ejemplo completo del
       tipo "nota" y su test (que no se registra en la aplicación); verificar
       siguiendo la guía, en una copia descartable, que el ejemplo compila,
