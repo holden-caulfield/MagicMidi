@@ -72,17 +72,18 @@ El archivo de un tipo de nodo SHALL declarar:
   salida. Todas tienen entrada; las que no tienen salida cierran el flujo, y
   por eso se ven con el color de las cajas de fin, sin declarar nada más;
 - la lista de **parámetros**, cada uno con una clave, una etiqueta visible, un
-  tipo y un valor inicial. Los tipos de parámetro disponibles SHALL ser: número
-  entero, sí/no, y una opción de una lista cerrada, cuyas opciones tienen cada
-  una un valor y un texto visible;
+  tipo y un valor inicial, más los datos propios de su tipo. Los tipos de
+  parámetro disponibles SHALL ser los registrados en el catálogo de tipos de
+  parámetro (ver "Un tipo de parámetro es un archivo registrado en su
+  catálogo");
 - una única **función de procesamiento**.
 
 Un tipo de nodo no SHALL declarar su color: el color sale de la etapa de la caja
 en el flujo.
 
 El panel de configuración SHALL armarse solo a partir de la lista de parámetros
-declarada: un campo por parámetro, con su etiqueta y el control que corresponde
-a su tipo.
+declarada: un campo por parámetro, con su etiqueta y el control que define su
+tipo de parámetro.
 
 #### Scenario: Campos generados desde la declaración
 
@@ -91,6 +92,13 @@ a su tipo.
 - **WHEN** la persona usuaria selecciona una caja nueva de ese tipo
 - **THEN** el panel muestra un control sí/no con la etiqueta "Invertir",
   desactivado, sin que el archivo del tipo incluya nada de la interfaz
+
+#### Scenario: Un tipo de parámetro nuevo sin tocar el tipo de nodo
+
+- **GIVEN** se registra un tipo de parámetro nuevo en su catálogo
+- **WHEN** un tipo de nodo declara un parámetro de ese tipo
+- **THEN** el panel muestra el control del tipo nuevo, y el archivo del tipo de
+  nodo solo agregó la declaración del parámetro
 
 #### Scenario: Tipo sin salida
 
