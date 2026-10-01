@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "../tipos";
+import { MensajeMidi } from "@/workflow/tipos";
 import emitir from "./emitir";
 
 // Emitir es una caja sin salida: lo que devuelve es lo que sale por el puerto

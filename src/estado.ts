@@ -1,5 +1,5 @@
-import type { IdDeTipo } from "./workflow/catalogo";
-import type { ValorDeParametro } from "./workflow/tipos";
+import type { IdDeTipo } from "@/workflow/catalogo";
+import type { ValorDeParametro } from "@/workflow/tipos";
 
 export interface NodoDelFlujo {
   id: string;

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { actualizar, type Flujo } from "../estado";
+import { actualizar, type Flujo } from "@/estado";
 import { TIPOS_DE_NODO } from "./catalogo";
 import { procesarMensaje } from "./ejecutar";
 import { MensajeMidi } from "./tipos";

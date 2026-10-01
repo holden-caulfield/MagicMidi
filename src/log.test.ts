@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
 import { clasificarSalidas } from "./log";
-import { MensajeMidi } from "./workflow/tipos";
+import { MensajeMidi } from "@/workflow/tipos";
 
 function m(...bytes: number[]): MensajeMidi {
   return new MensajeMidi(bytes);

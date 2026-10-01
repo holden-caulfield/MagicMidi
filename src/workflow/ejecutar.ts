@@ -1,7 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 
-import { estado } from "../estado";
-import { agregarAlLog, type EventoMidi } from "../log";
+import { estado } from "@/estado";
+import { agregarAlLog, type EventoMidi } from "@/log";
 import { tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import { enviarMensaje } from "./salida";
 import { MensajeMidi } from "./tipos";

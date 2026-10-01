@@ -1,6 +1,6 @@
 import { ArrowUpDown } from "lucide";
 
-import type { TipoDeNodo } from "../tipos";
+import type { TipoDeNodo } from "@/workflow/tipos";
 
 // En MIDI el primer bit de cada byte es fijo (1 en el status, 0 en los datos):
 // se separa, se desplazan los 7 bits restantes y se vuelve a poner.

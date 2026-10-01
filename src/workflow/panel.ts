@@ -1,7 +1,7 @@
 import { html } from "lit-html";
 import { live } from "lit-html/directives/live.js";
 
-import { actualizar, estado, type NodoDelFlujo } from "../estado";
+import { actualizar, estado, type NodoDelFlujo } from "@/estado";
 import { etapaDelTipo, TIPOS_DE_NODO, TRIGGER, type IdDeTipo } from "./catalogo";
 import { dibujarIcono } from "./iconos";
 import { agregarNodo, eliminarNodo, posicionDesdeEvento } from "./lienzo";

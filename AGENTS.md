@@ -257,6 +257,11 @@ mergear).
 - No introducir abstracciones, frameworks o configuración pensada para
   necesidades futuras que todavía no llegaron (por ejemplo, no sumar tipos de
   parámetro o de trigger al workflow hasta que un nodo concreto los necesite).
+- Imports: `./archivo` solo para un archivo de la misma carpeta; todo lo
+  demás va con `@/`, que es `src/` (`@/workflow/tipos`), nunca con `../`. El
+  alias se define una sola vez, en `paths` de `tsconfig.json`: Vite (y con él
+  Vitest) lo lee de ahí por `resolve.tsconfigPaths`, así que no hay que
+  repetirlo en `vite.config.ts`.
 
 ## OpenSpec
 

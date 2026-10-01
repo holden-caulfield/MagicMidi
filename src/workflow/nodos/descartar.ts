@@ -1,6 +1,6 @@
 import { Ban } from "lucide";
 
-import type { TipoDeNodo } from "../tipos";
+import type { TipoDeNodo } from "@/workflow/tipos";
 
 export default {
   nombre: "Descartar",

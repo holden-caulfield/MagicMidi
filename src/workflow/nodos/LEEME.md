@@ -14,7 +14,7 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
    archivo arriba y agregalo a la lista `tipos`:
 
    ```ts
-   import velocidadFija from "./nodos/velocidad-fija";
+   import velocidadFija from "@/workflow/nodos/velocidad-fija";
 
    const tipos = {
      filtrar,
@@ -115,7 +115,8 @@ Lo que devuelve decide qué pasa después:
 
 Si necesitás devolver un mensaje distinto, en vez de modificar el que
 recibiste, creá uno nuevo con sus bytes: `new MensajeMidi([0xb0, 7, 100])`.
-Para eso importá `MensajeMidi` de `../tipos`.
+Para eso importá `MensajeMidi` de `@/workflow/tipos`. El `@/` es la carpeta
+`src/` del proyecto, así que ese import se escribe igual desde cualquier archivo.
 
 `procesar` nunca envía mensajes por su cuenta: devuelve lo que corresponde, y
 la aplicación se encarga de mandarlo al puerto y de mostrarlo en el log. Por
@@ -166,7 +167,7 @@ On con velocidad 0 es un Nota Off:
 ```ts
 import { Gauge } from "lucide";
 
-import type { TipoDeNodo } from "../tipos";
+import type { TipoDeNodo } from "@/workflow/tipos";
 
 export default {
   nombre: "Velocidad fija",
@@ -194,7 +195,7 @@ rango, y un mensaje que no es un Nota On.
 ```ts
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "../tipos";
+import { MensajeMidi } from "@/workflow/tipos";
 import velocidadFija from "./velocidad-fija";
 
 test("les pone la velocidad elegida a los Nota On", () => {
@@ -273,7 +274,7 @@ de esta carpeta (por ejemplo, en `src/workflow/`) e importala desde tus nodos.
 Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
-solo usa `../tipos` (el contrato y `MensajeMidi`), su ícono de `lucide` y, si
+solo usa `@/workflow/tipos` (el contrato y `MensajeMidi`), su ícono de `lucide` y, si
 le hace falta, funciones auxiliares para MIDI que calculen algo sin efectos. Tampoco importes
-`../salida`: para que un mensaje salga por el puerto, alcanza con que una caja
+`@/workflow/salida`: para que un mensaje salga por el puerto, alcanza con que una caja
 sin salida lo devuelva.
