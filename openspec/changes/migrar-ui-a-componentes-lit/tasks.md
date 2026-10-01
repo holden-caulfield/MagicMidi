@@ -131,14 +131,14 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 7. Ventana
 
-- [ ] 7.1 Escribir `<ventana-principal>` en `src/ventana/`, con encabezado,
+- [x] 7.1 Escribir `<ventana-principal>` en `src/ventana/`, con encabezado,
       paneles y barra en la misma raíz, la lista `PANELES` y `?hidden` (nunca
       renderizado condicional), y `<barra-de-tabs>` como función o
       componente en la misma raíz para que los `id` de ARIA se encuentren;
       verificar en el navegador los escenarios de `navegacion-por-tabs`,
       incluidos los atributos ARIA, el orden de tabulación y que ningún
       componente que se oculta pierde `hidden` por su `display`
-- [ ] 7.2 Reducir `index.html` a `<ventana-principal>` y `main.ts` a importar
+- [x] 7.2 Reducir `index.html` a `<ventana-principal>` y `main.ts` a importar
       los componentes y llamar a los `inicializar<X>()`, borrar
       `src/tabs.ts` y lo que quede de `styles.css`; verificar con `grep` que
       ningún módulo llama a `render` ni a `document.querySelector`, y con

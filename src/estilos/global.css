@@ -1,5 +1,5 @@
 /* Lo único que no vive en un componente: las variables (que sí atraviesan el
-   Shadow DOM), la letra que heredan todos y la ventana fija. */
+   Shadow DOM) y la letra que heredan todos. */
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -77,14 +77,4 @@
 body {
   margin: 0;
   overflow: hidden;
-}
-
-/* La ventana no se desplaza nunca: cada panel acomoda su contenido al lugar
-   que tiene. Con `100dvh`, WebKit se quedaba con una medida vieja al entrar y
-   salir de pantalla completa; `position: fixed` ata la raíz a la ventana. */
-#app {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
 }

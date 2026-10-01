@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { html } from "lit";
+import { css, html } from "lit";
 
 import { actualizar, estado, type Puerto } from "@/estado/estado";
 
@@ -76,6 +76,22 @@ export async function desconectar() {
     actualizar({ conectado: false });
   }
 }
+
+/** Los estilos de `indicadorDeEstado`, para el componente que lo dibuja. */
+export const estilosDelIndicador = css`
+  .estado {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .estado-conectado {
+    color: #1b8a3d;
+  }
+
+  .estado-desconectado {
+    color: #b3261e;
+  }
+`;
 
 export function indicadorDeEstado() {
   return html`

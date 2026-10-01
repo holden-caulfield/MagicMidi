@@ -398,6 +398,14 @@ mezclar.
   explicar cómo bajar por `shadowRoot`. El código propio que dependía de
   mirar el DOM justo después de dibujar (`asegurarLienzo`,
   `inicializarLog`) desaparece.
+- **[Las herramientas de navegador del agente no ven el Shadow DOM]**
+  `read_page`, `find` y `get_page_text` muestran la página vacía, porque no
+  entran en los shadow roots. Esto se comprobó en la tarea 7.1 y contradice lo
+  que suponía la propuesta. Siguen sirviendo las capturas, los clics por
+  coordenadas, las teclas y `javascript_tool`. → La sección de verificación
+  de `AGENTS.md` pasa a explicar cómo recorrer los shadow roots desde
+  `javascript_tool` (por ejemplo, `elemento.shadowRoot.querySelector(…)`) en
+  lugar de leer la página con esas herramientas.
 - **[Layout distinto en WebKit]** Cada componente agrega un nivel a la cadena
   de `flex` que mantiene la ventana sin scroll. → Las reglas de `:host` de D1
   y una verificación en la ventana real, entrando y saliendo de pantalla
