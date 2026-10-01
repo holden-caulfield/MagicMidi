@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
 import { describirMensaje } from "./describir";
-import { MensajeMidi } from "./workflow/tipos";
+import { MensajeMidi } from "./mensaje";
 
 function describir(...bytes: number[]): string {
   return describirMensaje(new MensajeMidi(bytes));

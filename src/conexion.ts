@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { html } from "lit-html";
 
-import { actualizar, estado, type Puerto } from "./estado";
+import { actualizar, estado, type Puerto } from "@/estado";
 
 function puertoVigente(elegido: string, puertos: Puerto[]): string {
   return puertos.some((puerto) => puerto.id === elegido) ? elegido : "";

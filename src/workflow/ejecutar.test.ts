@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { actualizar, type Flujo } from "../estado";
+import { actualizar, type Flujo } from "@/estado";
+import { MensajeMidi } from "@/midi/mensaje";
 import { TIPOS_DE_NODO } from "./catalogo";
 import { procesarMensaje } from "./ejecutar";
-import { MensajeMidi } from "./tipos";
 
 // `procesarMensaje` no envía nada: devuelve lo que tiene que salir por el
 // puerto, así que no hace falta ningún backend falso.

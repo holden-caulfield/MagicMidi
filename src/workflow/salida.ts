@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import type { MensajeMidi } from "./tipos";
+import type { MensajeMidi } from "@/midi/mensaje";
 
 // `invoke` es asincrónico y nada garantiza que dos pedidos simultáneos lleguen
 // al backend en orden, así que cada envío espera al anterior.

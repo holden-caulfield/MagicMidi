@@ -8,7 +8,7 @@ import { ClassicPreset, NodeEditor, type GetSchemes } from "rete";
 import { AreaPlugin } from "rete-area-plugin";
 import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-plugin";
 
-import { actualizar, estado, type Conexion, type NodoDelFlujo } from "../estado";
+import { actualizar, estado, type Conexion, type NodoDelFlujo } from "@/estado";
 import {
   etapaDelTipo,
   tieneSalida,
