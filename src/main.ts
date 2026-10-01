@@ -3,14 +3,14 @@ import { html, render } from "lit";
 import { indicadorDeEstado, inicializarConexion } from "@/conexion/conexion";
 import "@/conexion/panel-conexion";
 import { estado, suscribir } from "@/estado/estado";
-import { inicializarLog, panelLog } from "@/log";
+import "@/log/panel-log";
 import { barraDeTabs, type Panel } from "@/tabs";
 import { inicializarWorkflow } from "@/workflow/ejecutar";
 import "@/workflow/editor/panel-workflow";
 
 const PANELES: Panel[] = [
   { id: "conexion", titulo: "Conexión", contenido: () => html`<panel-conexion></panel-conexion>` },
-  { id: "log", titulo: "Log", contenido: panelLog },
+  { id: "log", titulo: "Log", contenido: () => html`<panel-log></panel-log>` },
   { id: "workflow", titulo: "Workflow", contenido: () => html`<panel-workflow></panel-workflow>` },
 ];
 
@@ -48,7 +48,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   suscribir(dibujar);
   dibujar();
 
-  inicializarLog();
   await inicializarWorkflow();
   await inicializarConexion();
 });

@@ -111,13 +111,13 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 6. Log
 
-- [ ] 6.1 Mover `src/log.ts` y su test a `src/log/`, con el registro de
+- [x] 6.1 Mover `src/log.ts` y su test a `src/log/`, con el registro de
       entradas (`id` incremental, hora, mensaje y `Resultado` ya
       clasificado, hasta 500, la más nueva primero) y su suscripción, sin
       tocar DOM (design.md, D8); sumar al test que el registro conserva 500
       entradas en el orden correcto y que limpiar lo vacía; verificar con
       `npm test`
-- [ ] 6.2 Escribir `<panel-log>` declarativo con `repeat` y borrar
+- [x] 6.2 Escribir `<panel-log>` declarativo con `repeat` y borrar
       `inicializarLog`; verificar en el navegador, llamando a `agregarAlLog`
       desde la consola, los escenarios de `log-de-mensajes` (hora, bytes y
       descripción, sub-filas, marcas sin cambios, descartado y error,
