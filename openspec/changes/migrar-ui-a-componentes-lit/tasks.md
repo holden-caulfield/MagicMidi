@@ -92,7 +92,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 5. Editor de flujos
 
-- [ ] 5.1 Pasar `src/workflow/lienzo.ts` a `src/workflow/editor/lienzo.ts`
+- [x] 5.1 Pasar `src/workflow/lienzo.ts` a `src/workflow/editor/lienzo.ts`
       como `<lienzo-workflow>`, con `<caja-del-flujo>` en el mismo archivo
       (design.md, D6): montaje con `ResizeObserver`, `dragover`/`drop`
       propios, `agregarCaja`/`eliminarCaja` como métodos, sin `editor` ni
@@ -101,7 +101,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
       `rete`, y en el navegador los escenarios de `editor-de-workflow` sobre
       agregar, mover, conectar, borrar, seleccionar, colores por etapa y el
       globo encima de otra caja
-- [ ] 5.2 Escribir `<barra-de-herramientas>` (evento `agregar-caja`) y
+- [x] 5.2 Escribir `<barra-de-herramientas>` (evento `agregar-caja`) y
       `<panel-workflow>`, que conecta los eventos de la barra y del panel de
       configuración con los métodos del lienzo, y borrar `workflow/panel.ts`;
       verificar en el navegador que se agrega una caja con clic y
