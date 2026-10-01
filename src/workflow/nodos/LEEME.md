@@ -65,12 +65,14 @@ Un tipo de nodo es un objeto con estos campos:
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
   parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
   (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
-  disponibles son:
+  disponibles son los de la carpeta `src/workflow/parametros/`, y hoy son:
   - `"entero"`: un número entero (acepta negativos).
   - `"si-no"`: una casilla para marcar o desmarcar.
   - `"opciones"`: una lista cerrada. Cada opción tiene un `valor` y un `texto`.
 
-  Si la caja no se configura, poné `parametros: []`.
+  Si ninguno te sirve, se puede crear uno nuevo: la guía está en
+  [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
+  poné `parametros: []`.
 - **`procesar(mensaje, parametros)`**: la función donde la caja hace su trabajo.
 
 Terminá el objeto con `satisfies TipoDeNodo`: así el editor de código te avisa
@@ -264,7 +266,8 @@ cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
 Además de tu test, hay uno que revisa **todas** las cajas del catálogo
 (`src/workflow/catalogo.test.ts`). Si falla con el nombre de tu caja, quiere
 decir que algo no cumple lo que toda caja tiene que cumplir: un valor `inicial`
-que no coincide con su `tipo` (o que no está entre las `opciones`), dos
+que no le sirve a su `tipo` (un entero con decimales, o uno que no está entre
+las `opciones`), dos
 parámetros con la misma `clave`, o un `procesar` que tira un error o devuelve
 bytes fuera de 0 a 255 con un mensaje común.
 
@@ -278,5 +281,5 @@ Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
 solo usa `../tipos` (el contrato), `@/midi/mensaje` (`MensajeMidi` y los tipos
 de mensaje), su ícono de `lucide` y, si le hace falta, funciones auxiliares para
-MIDI que calculen algo sin efectos. Tampoco importes `../salida`: para que un mensaje salga por el puerto, alcanza con que una caja
-sin salida lo devuelva.
+MIDI que calculen algo sin efectos. Tampoco importes `../salida`: para que un
+mensaje salga por el puerto, alcanza con que una caja sin salida lo devuelva.
