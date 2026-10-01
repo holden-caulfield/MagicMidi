@@ -35,9 +35,9 @@ mergear).
   mensajes: manda cada uno al frontend (evento `mensaje-midi`, solo con los
   bytes y la marca temporal) y envía a la salida lo que el frontend le pida
   con el comando `enviar_mensaje`. La descripción legible de un mensaje la
-  arma el frontend (`src/describir.ts`), porque también describe lo que sale
-  del flujo, que nunca vuelve del backend. El tipo y el canal de un mensaje
-  no se calculan ahí: los lee `MensajeMidi` (`src/workflow/tipos.ts`), y
+  arma el frontend (`src/midi/describir.ts`), porque también describe lo que
+  sale del flujo, que nunca vuelve del backend. El tipo y el canal de un mensaje
+  no se calculan ahí: los lee `MensajeMidi` (`src/midi/mensaje.ts`), y
   cualquier otro módulo que los necesite usa esa misma lectura.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
@@ -262,9 +262,9 @@ mergear).
   módulos, con `@/`, que es `src/` (`@/workflow/ejecutar`). Un `../` nunca
   sale del módulo. Un módulo es una carpeta de primer nivel de `src/`; cada
   archivo suelto en `src/` cuenta como un módulo propio, y su `.test.ts` es
-  parte de él. El alias se define una sola vez, en `paths` de `tsconfig.json`: Vite (y con él
-  Vitest) lo lee de ahí por `resolve.tsconfigPaths`, así que no hay que
-  repetirlo en `vite.config.ts`.
+  parte de él. El alias se define una sola vez, en `paths` de
+  `tsconfig.json`: Vite (y con él Vitest) lo lee de ahí por
+  `resolve.tsconfigPaths`, así que no hay que repetirlo en `vite.config.ts`.
 
 ## OpenSpec
 

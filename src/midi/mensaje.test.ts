@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "./tipos";
+import { MensajeMidi } from "./mensaje";
 
 test("lee el tipo de los mensajes de canal", () => {
   expect(new MensajeMidi([0x80, 60, 64]).tipo).toBe("nota-off");

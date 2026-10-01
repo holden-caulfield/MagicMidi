@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 
+import { MensajeMidi } from "@/midi/mensaje";
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
-import { MensajeMidi, type ValorDeParametro } from "./tipos";
+import type { ValorDeParametro } from "./tipos";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.

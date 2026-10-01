@@ -1,9 +1,9 @@
 import { html } from "lit-html";
 import { Ban, CornerDownRight, Equal, type IconNode, TriangleAlert } from "lucide";
 
-import { describirMensaje } from "@/describir";
+import { describirMensaje } from "@/midi/describir";
 import { dibujarIcono } from "@/workflow/iconos";
-import { MensajeMidi } from "@/workflow/tipos";
+import { MensajeMidi } from "@/midi/mensaje";
 
 export interface EventoMidi {
   puerto: string;

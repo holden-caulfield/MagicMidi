@@ -115,7 +115,9 @@ Lo que devuelve decide qué pasa después:
 
 Si necesitás devolver un mensaje distinto, en vez de modificar el que
 recibiste, creá uno nuevo con sus bytes: `new MensajeMidi([0xb0, 7, 100])`.
-Para eso importá `MensajeMidi` de `../tipos`.
+Para eso importá `MensajeMidi` de `@/midi/mensaje`. El `@/` es la carpeta
+`src/` del proyecto: lo que no es del workflow se importa así, igual desde
+cualquier archivo.
 
 `procesar` nunca envía mensajes por su cuenta: devuelve lo que corresponde, y
 la aplicación se encarga de mandarlo al puerto y de mostrarlo en el log. Por
@@ -194,7 +196,7 @@ rango, y un mensaje que no es un Nota On.
 ```ts
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "../tipos";
+import { MensajeMidi } from "@/midi/mensaje";
 import velocidadFija from "./velocidad-fija";
 
 test("les pone la velocidad elegida a los Nota On", () => {
@@ -269,11 +271,12 @@ bytes fuera de 0 a 255 con un mensaje común.
 ## Si necesitás código compartido
 
 Si varias cajas usan la misma función auxiliar, ponela en un archivo **fuera**
-de esta carpeta (por ejemplo, en `src/workflow/`) e importala desde tus nodos.
+de esta carpeta (por ejemplo, en `src/midi/` si calcula algo sobre los
+mensajes, o en `src/workflow/`) e importala desde tus nodos.
 Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
-solo usa `../tipos` (el contrato y `MensajeMidi`), su ícono de `lucide` y, si
-le hace falta, funciones auxiliares para MIDI que calculen algo sin efectos. Tampoco importes
-`../salida`: para que un mensaje salga por el puerto, alcanza con que una caja
+solo usa `../tipos` (el contrato), `@/midi/mensaje` (`MensajeMidi` y los tipos
+de mensaje), su ícono de `lucide` y, si le hace falta, funciones auxiliares para
+MIDI que calculen algo sin efectos. Tampoco importes `../salida`: para que un mensaje salga por el puerto, alcanza con que una caja
 sin salida lo devuelva.

@@ -1,4 +1,4 @@
-import { type MensajeMidi, NOMBRES_DE_TIPO } from "@/workflow/tipos";
+import { type MensajeMidi, NOMBRES_DE_TIPO } from "./mensaje";
 
 const MENSAJES_DE_SISTEMA: Record<number, string> = {
   0xf0: "Mensaje de Sistema Exclusivo (SysEx)",
