@@ -332,6 +332,24 @@ sola vez en lugar de una vez por mensaje. El cuadro de ~120 ms es el que
 dibuja de una vez las 500 filas nuevas. Se elige el declarativo agrupado, y no
 el DOM a mano, con el acuerdo de la persona usuaria.
 
+**Con la ventana oculta.** Mientras la ventana no se ve, el navegador no pide
+cuadros, así que el log no se dibuja: solo se guarda en el registro, que nunca
+pasa de 500 entradas. Al volver, se dibuja una sola vez. Se midió ocultando un
+`WKWebView` (es lo más parecido a minimizar que se puede automatizar), con el
+log lleno, acumulando una ráfaga de 20 000 mensajes y mostrándolo de nuevo.
+En las dos implementaciones, cambiar el tamaño de la ventana con 500 filas da
+cuadros de 33–43 ms.
+
+| | Acumular 20 000 oculta | Al mostrarla | Peor cuadro al mostrarla |
+|---|---|---|---|
+| Original (DOM a mano) | 1451–1487 ms | ya está al día | 21–27 ms |
+| Declarativo, agrupado por cuadro | 59–71 ms | al día en 92–98 ms | 133–140 ms |
+
+El costo se mueve: la original trabaja mientras la ventana está oculta, y la
+declarativa paga un único cuadro de ~135 ms al volver, que coincide con la
+animación de restaurar la ventana. Falta confirmarlo minimizando la ventana
+real (tarea 9.2).
+
 ### D9. Decoradores legacy
 
 Se escribe, por ejemplo, `@state() abierto = false` y
