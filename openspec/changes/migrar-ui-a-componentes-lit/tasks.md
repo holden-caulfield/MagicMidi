@@ -164,7 +164,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 - [x] 9.1 Correr `npx tsc --noEmit`, `npm test`, `npm run build`, y los
       chequeos de Rust de AGENTS.md (no deberían cambiar)
-- [ ] 9.2 Probar en `npm run tauri dev` con el IAC Driver: conectar, armar un
+- [x] 9.2 Probar en `npm run tauri dev` con el IAC Driver: conectar, armar un
       flujo con Filtrar, Desplazar y Emitir, ver el log con un flujo
       sostenido, la activación de tabs y botones con Enter y barra
       espaciadora, y el layout al entrar y salir de pantalla completa;
