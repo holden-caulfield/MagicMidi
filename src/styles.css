@@ -19,23 +19,6 @@ h1 {
   font-size: 1.6rem;
 }
 
-.subtitulo {
-  flex-basis: 100%;
-  margin: 0;
-  opacity: 0.75;
-}
-
-.mensaje-conexion {
-  flex-basis: 100%;
-  margin: 0;
-  font-weight: 600;
-  color: #b3261e;
-}
-
-.mensaje-conexion:empty {
-  display: none;
-}
-
 .panel {
   flex: 1;
   min-width: 0;
@@ -47,18 +30,6 @@ h1 {
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   background-color: rgba(127, 127, 127, 0.06);
-}
-
-/* Los selectores no ganan nada con más ancho: conservan el que tenían cuando
-   todo el contenido medía como máximo 900px. */
-.formulario-conexion {
-  width: 100%;
-  max-width: 804px;
-  margin-inline: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: end;
 }
 
 .campo {
@@ -135,12 +106,6 @@ input:focus-visible {
   outline: 2px solid #396cd8;
   outline-offset: 2px;
   opacity: 1;
-}
-
-.fila-botones {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
 }
 
 .estado {

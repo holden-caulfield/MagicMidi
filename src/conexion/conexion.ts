@@ -28,7 +28,7 @@ function puertoElegido(elegido: string, puertos: Puerto[]): Puerto | undefined {
   return conNombresAMostrar(puertos).find((puerto) => puerto.id === elegido);
 }
 
-async function actualizarListaDePuertos() {
+export async function actualizarListaDePuertos() {
   actualizar({ mensajeConexion: "" });
 
   try {
@@ -48,7 +48,7 @@ async function actualizarListaDePuertos() {
   }
 }
 
-async function conectar() {
+export async function conectar() {
   actualizar({ mensajeConexion: "" });
 
   const puertoEntrada = puertoElegido(estado.puertoEntradaElegido, estado.puertosEntrada);
@@ -67,7 +67,7 @@ async function conectar() {
   }
 }
 
-async function desconectar() {
+export async function desconectar() {
   actualizar({ mensajeConexion: "" });
 
   try {
@@ -75,38 +75,6 @@ async function desconectar() {
   } finally {
     actualizar({ conectado: false });
   }
-}
-
-function selectorDePuerto(
-  id: string,
-  etiqueta: string,
-  puertos: Puerto[],
-  elegido: string,
-  alElegir: (idDelPuerto: string) => void,
-) {
-  return html`
-    <div class="campo">
-      <label for=${id}>${etiqueta}</label>
-      <select
-        id=${id}
-        ?disabled=${estado.conectado}
-        @change=${(evento: Event) =>
-          alElegir((evento.target as HTMLSelectElement).value)}
-      >
-        ${puertos.length === 0
-          ? html`<option disabled selected>No hay puertos disponibles</option>`
-          : html`
-              <option value="" disabled .selected=${elegido === ""}>
-                Elegí un puerto
-              </option>
-              ${conNombresAMostrar(puertos).map(
-                (puerto) =>
-                  html`<option value=${puerto.id} .selected=${puerto.id === elegido}>${puerto.nombre}</option>`,
-              )}
-            `}
-      </select>
-    </div>
-  `;
 }
 
 export function indicadorDeEstado() {
@@ -119,50 +87,6 @@ export function indicadorDeEstado() {
     >
       ${estado.conectado ? "Conectado" : "Desconectado"}
     </p>
-  `;
-}
-
-export function panelConexion() {
-  return html`
-    <div class="formulario-conexion">
-      <p class="subtitulo">
-        Elegí un puerto de entrada y uno de salida para ver los mensajes MIDI que
-        pasan por la aplicación.
-      </p>
-
-      ${selectorDePuerto(
-        "select-puerto-entrada",
-        "Puerto de entrada",
-        estado.puertosEntrada,
-        estado.puertoEntradaElegido,
-        (idDelPuerto) => actualizar({ puertoEntradaElegido: idDelPuerto }),
-      )}
-      ${selectorDePuerto(
-        "select-puerto-salida",
-        "Puerto de salida",
-        estado.puertosSalida,
-        estado.puertoSalidaElegido,
-        (idDelPuerto) => actualizar({ puertoSalidaElegido: idDelPuerto }),
-      )}
-
-      <div class="fila-botones">
-        <button
-          type="button"
-          ?disabled=${estado.conectado}
-          @click=${actualizarListaDePuertos}
-        >
-          Actualizar puertos
-        </button>
-        <button type="button" ?disabled=${estado.conectado} @click=${conectar}>
-          Conectar
-        </button>
-        <button type="button" ?disabled=${!estado.conectado} @click=${desconectar}>
-          Desconectar
-        </button>
-    </div>
-
-    <p class="mensaje-conexion">${estado.mensajeConexion}</p>
-    </div>
   `;
 }
 

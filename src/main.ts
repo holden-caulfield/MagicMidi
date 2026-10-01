@@ -1,10 +1,7 @@
 import { html, render } from "lit";
 
-import {
-  indicadorDeEstado,
-  inicializarConexion,
-  panelConexion,
-} from "@/conexion";
+import { indicadorDeEstado, inicializarConexion } from "@/conexion/conexion";
+import "@/conexion/panel-conexion";
 import { estado, suscribir } from "@/estado/estado";
 import { inicializarLog, panelLog } from "@/log";
 import { barraDeTabs, type Panel } from "@/tabs";
@@ -13,7 +10,7 @@ import { asegurarLienzo } from "@/workflow/lienzo";
 import { panelWorkflow } from "@/workflow/panel";
 
 const PANELES: Panel[] = [
-  { id: "conexion", titulo: "Conexión", contenido: panelConexion },
+  { id: "conexion", titulo: "Conexión", contenido: () => html`<panel-conexion></panel-conexion>` },
   { id: "log", titulo: "Log", contenido: panelLog },
   { id: "workflow", titulo: "Workflow", contenido: panelWorkflow },
 ];

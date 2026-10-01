@@ -54,7 +54,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 
 ## 3. Conexión
 
-- [ ] 3.1 Escribir `<selector-de-puerto>` (componente hoja: puertos, elegido y
+- [x] 3.1 Escribir `<selector-de-puerto>` (componente hoja: puertos, elegido y
       deshabilitado por propiedad, evento `cambio`) y `<panel-conexion>`
       (componente de área) en `src/conexion/`, y mover `conexion.ts` y su
       test ahí, sin plantillas; el indicador de estado queda como función
@@ -62,7 +62,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
       estado desde la consola, los escenarios de `estado-de-la-interfaz`
       sobre los controles de conexión, y que la elección de puerto sobrevive
       a un redibujado
-- [ ] 3.2 Verificar con el reemplazo del puente de IPC (AGENTS.md) que una
+- [x] 3.2 Verificar con el reemplazo del puente de IPC (AGENTS.md) que una
       falla al pedir los puertos y un intento de conexión fallido se
       muestran como antes
 
