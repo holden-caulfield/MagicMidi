@@ -154,7 +154,7 @@ captura. El WebKit de Playwright no arranca en macOS 14.1.
 - [x] 8.2 Revisar `src/workflow/nodos/LEEME.md` para que explique los tipos de
       parámetro a partir del catálogo y remita a `parametros/LEEME.md`;
       verificar que sus ejemplos siguen compilando
-- [ ] 8.3 Proponerle a la persona usuaria el diff de `AGENTS.md`
+- [x] 8.3 Proponerle a la persona usuaria el diff de `AGENTS.md`
       (Frontend, Estado de la interfaz, Componentes, `main.ts`, Paneles y
       tabs, Layout, Excepción del log, Workflow, receta de depuración por
       consola, y el criterio de estado global o local) y aplicarlo solo con

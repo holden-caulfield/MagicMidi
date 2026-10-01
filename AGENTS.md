@@ -54,56 +54,97 @@ mergear).
   " (2)" de los repetidos lo arma el frontend (`conNombresAMostrar`). En
   macOS el `id` no cambia al desenchufar y volver a enchufar; en Linux
   (ALSA) sí puede cambiar.
-- **Frontend**: TypeScript con Vite y [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
-  para las plantillas. Se comunica con el backend mediante comandos
-  (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar un framework
-  de componentes (React, Vue, Svelte, etc.) sin que la persona usuaria lo
-  pida explícitamente. `lit` está instalado solo porque lo pide el plugin de
-  dibujado de Rete (ver Workflow): nuestro código no escribe `LitElement` ni
-  componentes web, sigue usando funciones de `lit-html`.
-- **Estado de la interfaz**: todo lo que la pantalla muestra vive en
-  `src/estado.ts`. Se modifica solo con `actualizar()`, que avisa a quien se
-  suscribió, y eso vuelve a dibujar la ventana. Ningún módulo guarda estado
-  propio ni lee el estado del DOM: si un dato hace falta para dibujar, va en
-  `Estado`. No agrupamos redibujados a propósito — los cambios vienen de
-  clics, no de mensajes MIDI.
-- **Componentes**: un componente es una función que devuelve una plantilla de
-  `lit-html`. Lee del estado, o recibe lo que necesita por parámetro; no tiene
-  estado interno ni ciclo de vida. Sigue habiendo un módulo por área de la
-  interfaz (`conexion.ts`, `log.ts`, `tabs.ts`), y si además tiene que
-  escuchar al backend exporta un `inicializar<X>()` aparte del componente. Un
-  módulo es dueño de un comportamiento, no de una región de la pantalla:
-  `conexion.ts` exporta también el indicador de estado, que el componente raíz
-  ubica en el encabezado.
-- **`main.ts` es el componente raíz**: arma la ventana con los demás adentro y
-  es el único lugar que llama a `render` y a `suscribir`. `index.html` quedó
-  reducido a `<div id="app">`; el marcado vive en los componentes.
-- **Paneles y tabs**: la lista `PANELES` de `main.ts` es la única fuente; de
-  ahí salen la barra, las `<section>` de los paneles y los atributos ARIA que
-  los enlazan (`id`, `aria-controls`, `aria-labelledby`, `aria-selected`).
-  Agregar un panel es agregar una entrada a esa lista y el módulo con su
-  componente. La barra va última en la raíz, después de los paneles, para que
-  el recorrido por teclado siga el orden visual. En el encabezado va solo lo
-  que aplica a todos los tabs. Ocultar un panel es `?hidden`, **nunca**
-  renderizado condicional (`${activo ? panel() : nothing}`): desmontarlo le
-  borraría al log los mensajes acumulados, que tiene que seguir juntando
-  mientras su tab no está a la vista.
-- **Layout de la ventana**: la ventana no se desplaza nunca. `#app` va atado
-  a la ventana con `position: fixed; inset: 0` (no con `100dvh`: en WebKit,
-  al entrar y salir de pantalla completa, esa medida queda vieja y deja un
-  margen o un desplazamiento). Los tres tabs comparten la clase `.panel`,
-  que ocupa todo el lugar entre el encabezado y la barra; no hay reglas por
-  panel. Cada tab estiliza solo lo que dibuja adentro, y eso se confina al
-  lugar que tiene: lo que crece va con `flex: 1; min-height: 0` y desplaza
-  su propio contenido, en vez de agrandar el panel. No usar alturas fijas ni
-  mínimas para que algo "entre".
-- **Excepción del log**: las filas de mensajes se agregan al DOM a mano, no
-  por plantilla, porque redibujar la lista entera con cada mensaje MIDI no
-  escala. Es el único módulo que busca un nodo en el DOM (su contenedor de
-  filas), y lo hace después del primer dibujado. El log no escucha
-  `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa el
-  mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la entrada,
-  lo que se emitió y el texto del error, si una caja falló.
+- **Frontend**: TypeScript con Vite y [Lit](https://lit.dev): la interfaz son
+  componentes `LitElement` con Shadow DOM. Se comunica con el backend mediante
+  comandos (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar otro
+  framework de componentes (React, Vue, Svelte, etc.) sin que la persona
+  usuaria lo pida explícitamente. Todo se importa de `lit` (`lit/decorators.js`,
+  `lit/directives/…`), nunca de `lit-html`. Los decoradores son los *legacy*
+  (`experimentalDecorators` y `useDefineForClassFields: false` en
+  `tsconfig.json`): Oxc, el transformador de Vite 8, todavía no transforma los
+  estándar, y sin la segunda opción un campo con valor inicial pisaría la
+  propiedad reactiva del decorador. Cuando Oxc los soporte, pasar a los
+  estándar es agregar `accessor` a cada propiedad y sacar las dos opciones.
+- **Organización del código**: por área. Cada carpeta de primer nivel de
+  `src/` es un módulo: `ventana/`, `conexion/`, `log/` y `workflow/` (con la
+  vista del editor en `workflow/editor/`), más `estado/`, `estilos/` y
+  `midi/`. Cada componente es un archivo con el nombre de su etiqueta
+  (`panel-conexion.ts` define `<panel-conexion>`) que exporta una sola clase;
+  las etiquetas van en castellano y sin prefijo, y a una palabra suelta se le
+  agrega contexto (`ventana-principal`, no `ventana`). La lógica que no dibuja
+  (las acciones que llaman al backend, los `inicializar<X>()` con sus
+  `listen`, el ejecutor, los tipos de nodo) queda en módulos sin componentes.
+  Los `inicializar<X>()` los llama `main.ts` al arrancar, no el ciclo de vida
+  de un componente: el flujo tiene que procesar mensajes aunque no haya una
+  vista montada.
+- **Estado de la interfaz**: en dos niveles. Lo que necesita más de un
+  componente, o la lógica, vive en `src/estado/estado.ts` y se modifica solo
+  con `actualizar()`; los componentes se enganchan con `ControladorDeEstado`
+  (`estado/controlador.ts`), que los vuelve a dibujar con cada cambio. Lo que
+  solo le importa a un componente y puede perderse si se desmonta (como el
+  texto a medio escribir en un campo) es estado local, con `@state`. Ante la
+  duda, va al store. Ningún componente lee el estado del DOM. El dibujado es
+  asíncrono: después de `actualizar()`, el DOM todavía no cambió, y hay que
+  esperar `elemento.updateComplete` para mirarlo.
+- **Componentes**: los de área (`panel-conexion`, `panel-workflow`,
+  `panel-de-configuracion`…) leen el store y llaman a las acciones. Los hoja
+  (`selector-de-puerto`, los `parametro-…`) reciben lo que necesitan por
+  propiedades y avisan con `CustomEvent` de nombre en castellano (`cambio`,
+  `agregar-caja`), sin conocer el store; un evento que tiene que cruzar una
+  raíz lleva `bubbles: true, composed: true`. Una plantilla sin estado,
+  estilos ni ciclo de vida propios sigue siendo una función: por ejemplo, el
+  indicador de estado de `conexion/conexion.ts`, que exporta también sus
+  estilos para el componente que lo dibuja. Un módulo es dueño de un
+  comportamiento, no de una región de la pantalla.
+- **Estilos y Shadow DOM**: cada componente encapsula sus estilos en
+  `static styles`. Lo único global es `estilos/global.css`: las variables (que
+  sí atraviesan el Shadow DOM), la letra que heredan todos y el `body`. Los
+  colores que cambian en modo oscuro son variables ahí, así los componentes no
+  repiten el `@media`. Lo que comparten los controles (botones, listas, campos,
+  foco, `box-sizing` y `[hidden]`) está en `estilos/compartidos.ts`, y cada
+  componente que los dibuja lo suma: `static styles = [compartidos, css`…`]`.
+  El CSS de afuera no entra: un componente que no suma `compartidos`, o que no
+  declara `box-sizing: border-box`, se ve distinto sin dar ningún error. Los
+  custom elements son `display: inline`, así que todo componente que participa
+  del layout declara su `display` en `:host` (y, si crece,
+  `flex: 1; min-height: 0`). Lo que se enlaza por `id` (`aria-controls`,
+  `aria-labelledby`, `<label for>`) tiene que quedar dentro de una misma raíz.
+- **`<ventana-principal>` es la raíz** (`src/ventana/`): `index.html` contiene
+  solo esa etiqueta, y `main.ts` solo la registra y llama a los
+  `inicializar<X>()`. Ningún módulo llama a `render` ni a
+  `document.querySelector`.
+- **Paneles y tabs**: la lista `PANELES` de `ventana-principal.ts` es la única
+  fuente; de ahí salen la barra, las `<section>` de los paneles y los
+  atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
+  `aria-selected`). La barra de tabs es una función (`ventana/barra-de-tabs.ts`)
+  y no un componente, para que quede en la misma raíz que los paneles a los
+  que apunta. Agregar un panel es agregar una entrada a esa lista y el módulo
+  con su componente. La barra va última en la raíz, después de los paneles,
+  para que el recorrido por teclado siga el orden visual. En el encabezado va
+  solo lo que aplica a todos los tabs. Ocultar un panel es `?hidden`,
+  **nunca** renderizado condicional (`${activo ? panel() : nothing}`):
+  desmontarlo le borraría al log los mensajes acumulados, que tiene que
+  seguir juntando mientras su tab no está a la vista.
+- **Layout de la ventana**: la ventana no se desplaza nunca.
+  `<ventana-principal>` va atada a la ventana con `position: fixed; inset: 0`
+  en su `:host` (no con `100dvh`: en WebKit, al entrar y salir de pantalla
+  completa, esa medida queda vieja y deja un margen o un desplazamiento). Los
+  tres tabs comparten la clase `.panel`, que ocupa todo el lugar entre el
+  encabezado y la barra; no hay reglas por panel. Cada tab estiliza solo lo
+  que dibuja adentro, y eso se confina al lugar que tiene: lo que crece va con
+  `flex: 1; min-height: 0` y desplaza su propio contenido, en vez de agrandar
+  el panel. No usar alturas fijas ni mínimas para que algo "entre".
+- **Log**: tiene su propio registro (`log/log.ts`: las últimas 500 entradas,
+  la más nueva primero, cada una con un `id` y sin cambios después de
+  creada), separado del store: si estuviera ahí, cada mensaje MIDI haría
+  volver a dibujar todos los componentes. `<panel-log>` lo dibuja con
+  `repeat` por `id` y `guard`, así un mensaje nuevo crea solo su fila, y
+  espera al próximo cuadro para dibujar (redefine `scheduleUpdate`), así una
+  ráfaga se dibuja una sola vez. Con la ventana minimizada no se dibuja: los
+  mensajes se acumulan en el registro y se dibujan al volver. El log no
+  escucha `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa
+  el mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la
+  entrada, lo que se emitió y el texto del error, si una caja falló.
 - **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
   - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
     el trigger y sale tal cual, salvo que llegue a al menos una caja sin
@@ -123,24 +164,39 @@ mergear).
     status. No agregar campos derivados que haya que mantener sincronizados.
   - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
     `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
-    Rete: es la segunda excepción a la regla de `estado.ts`, junto con el log.
-  - `lienzo.ts` es el **único** módulo que importa Rete. Ni los tipos de nodo,
-    ni el ejecutor, ni el panel de configuración dependen de la librería del
-    lienzo, y así tiene que seguir: cambiar de librería es reescribir ese
-    archivo y nada más.
+    Rete, y no pasa por el store.
+  - `editor/lienzo.ts` es el **único** módulo que importa Rete. Ni los tipos de
+    nodo, ni el ejecutor, ni el panel de configuración dependen de la librería
+    del lienzo, y así tiene que seguir: cambiar de librería es reescribir ese
+    archivo y nada más. Define `<lienzo-workflow>` y `<caja-del-flujo>` (la
+    caja conoce el protocolo de Rete, por eso va en el mismo archivo). El
+    lienzo se monta la primera vez que tiene tamaño (con un `ResizeObserver`),
+    porque Rete mide las cajas en pantalla y dentro de un panel oculto todo
+    mide cero. La barra de herramientas y el panel de configuración piden
+    agregar o borrar cajas con eventos, y `<panel-workflow>` llama a los
+    métodos del lienzo.
   - Cada tipo de nodo es un archivo en `src/workflow/nodos/` que se registra
     en la lista de `catalogo.ts` (el orden de la lista es el de la barra). La
     guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
     alcanzando para alguien que recién empieza a programar.
-  - Las cajas del lienzo son plantillas de `lit-html`, no componentes Lit:
-    Rete no las vuelve a dibujar, así que lo que cambie después de creadas
-    (como la selección) se marca desde `lienzo.ts`. Rete ubica las
-    conexiones sin tener en cuenta `transform` de CSS: los conectores no se
-    posicionan con `transform`.
+  - Cada tipo de parámetro (lo que se configura en una caja) es un archivo en
+    `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
+    `Parametro` y la lista `TIPOS_DE_PARAMETRO`, que el chequeo de tipos
+    mantiene de acuerdo. Cada uno define su control sobre `CampoDeParametro`
+    (que pone la etiqueta y los estilos de campo) y qué valores le sirven. El
+    panel de configuración no nombra ningún tipo. La guía está en
+    `parametros/LEEME.md`, para alguien con nociones básicas de programación.
+  - Cada caja del lienzo es un componente Lit (`<caja-del-flujo>`): Rete le
+    asigna `data` y `emit` al volver a dibujarla, y la selección se marca con
+    la propiedad `selected` del nodo más `area.update`. Rete ubica las
+    conexiones sumando `offsetLeft`/`offsetTop`, sin tener en cuenta
+    `transform` de CSS: los conectores no se posicionan con `transform`.
   - Rete sí le pone `transform` al contenedor de cada caja, y eso encierra
     todo lo de la caja en su propio contexto de apilamiento: para que algo
     que sobresale (como el globo con el nombre) quede encima de otra caja,
-    hay que subir el `z-index` de ese contenedor, no el de la caja.
+    hay que subir el `z-index` de ese contenedor, no el de la caja. Como la
+    caja tiene su propio shadow root, la regla va en el lienzo y apunta al
+    host: `:has(> rete-root > caja-del-flujo:hover)`.
   - El lienzo lleva `contain: strict`: Rete ubica las cajas con
     `position: absolute` y dibuja cada conexión en un SVG de 9999 px, y sin
     la contención eso puede agrandar el panel en WebKit (por ejemplo, con
@@ -189,7 +245,12 @@ mergear).
   navegador común, ya que ese navegador no tiene el puente de IPC de Tauri
   (`invoke`/`listen` van a fallar ahí). Sirve igual para revisar con las
   herramientas de navegador disponibles el layout, la conmutación de tabs,
-  los atributos ARIA y el orden de tabulación. Lo que no se puede verificar
+  los atributos ARIA y el orden de tabulación. Ojo: las herramientas que leen
+  la página (`read_page`, `find`, `get_page_text`) no entran en los shadow
+  roots y la ven vacía. Para leerla o revisarla se usa `javascript_tool`,
+  bajando por `shadowRoot`
+  (`document.querySelector('ventana-principal').shadowRoot.querySelector(…)`),
+  además de capturas, clics y teclas. Lo que no se puede verificar
   ahí es la activación de controles con el teclado: la inyección de teclas no
   dispara la activación de un botón nativo, así que Enter y barra
   espaciadora hay que probarlos en la ventana real.
@@ -197,10 +258,14 @@ mergear).
   el layout puede comportarse distinto. Un problema de tamaños que no se
   reproduce en el navegador, sobre todo al entrar o salir de pantalla
   completa, hay que probarlo en la ventana real antes de darlo por resuelto.
-- Como la interfaz se dibuja desde `src/estado.ts`, en el navegador se puede
-  manejar el estado a mano desde la consola
-  (`const m = await import('/src/estado.ts'); m.actualizar({ conectado: true })`)
+- Como la interfaz se dibuja desde `src/estado/estado.ts`, en el navegador se
+  puede manejar el estado a mano desde la consola
+  (`const m = await import('/src/estado/estado.ts'); m.actualizar({ conectado: true })`)
   y revisar cómo responde la pantalla sin el puente de IPC ni hardware MIDI.
+  Antes de mirar el DOM hay que esperar el dibujado:
+  `await document.querySelector('ventana-principal').updateComplete` (y el del
+  componente que interese, si está más adentro; el log, además, espera al
+  próximo cuadro).
   Ojo: después de editar archivos con el servidor corriendo, Vite puede servir
   un módulo con un sufijo `?t=…`, y un `import` sin ese sufijo trae **otra
   copia** del estado, que la aplicación no ve. Antes de manejar el estado a
@@ -241,7 +306,11 @@ mergear).
   helpers): es también el ejemplo que copia quien crea un nodo, así que tiene
   que poder leerse sin saber nada más del proyecto. Además,
   `catalogo.test.ts` revisa lo que todo nodo tiene que cumplir.
-- Queda afuera a propósito: la vista (plantillas, lienzo de Rete, tabs),
+- Cada tipo de parámetro que interpreta lo que se escribe (como `entero.ts`)
+  trae el test de esa interpretación al lado. Lit carga sin problemas en el
+  entorno `node`, así que se puede importar un archivo que define un
+  componente para probar sus funciones puras.
+- Queda afuera a propósito: la vista (componentes, lienzo de Rete, tabs),
   `conectar` y el vigilante (necesitan `midir` real) y la ventana real. Eso
   se sigue verificando como indica la sección anterior.
 - El CI (`.github/workflows/ci.yml`) corre en Ubuntu, en cada PR contra
