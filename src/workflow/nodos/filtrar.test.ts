@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "@/workflow/tipos";
+import { MensajeMidi } from "../tipos";
 import filtrar from "./filtrar";
 
 // Filtrar deja pasar el mensaje tal cual si su tipo está marcado, y si no, no

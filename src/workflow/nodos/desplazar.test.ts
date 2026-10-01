@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "@/workflow/tipos";
+import { MensajeMidi } from "../tipos";
 import desplazar from "./desplazar";
 
 // Cada `test` prueba una sola cosa: le pasa un mensaje y unos parámetros a

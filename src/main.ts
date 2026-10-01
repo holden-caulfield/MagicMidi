@@ -4,10 +4,10 @@ import {
   indicadorDeEstado,
   inicializarConexion,
   panelConexion,
-} from "./conexion";
-import { estado, suscribir } from "./estado";
-import { inicializarLog, panelLog } from "./log";
-import { barraDeTabs, type Panel } from "./tabs";
+} from "@/conexion";
+import { estado, suscribir } from "@/estado";
+import { inicializarLog, panelLog } from "@/log";
+import { barraDeTabs, type Panel } from "@/tabs";
 import { inicializarWorkflow } from "@/workflow/ejecutar";
 import { asegurarLienzo } from "@/workflow/lienzo";
 import { panelWorkflow } from "@/workflow/panel";

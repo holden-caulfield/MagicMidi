@@ -1,9 +1,9 @@
 import { Zap } from "lucide";
 
-import descartar from "@/workflow/nodos/descartar";
-import desplazar from "@/workflow/nodos/desplazar";
-import emitir from "@/workflow/nodos/emitir";
-import filtrar from "@/workflow/nodos/filtrar";
+import descartar from "./nodos/descartar";
+import desplazar from "./nodos/desplazar";
+import emitir from "./nodos/emitir";
+import filtrar from "./nodos/filtrar";
 import type { TipoDeNodo } from "./tipos";
 
 // Para sumar un tipo de nodo: importarlo arriba y agregarlo acá. El orden de

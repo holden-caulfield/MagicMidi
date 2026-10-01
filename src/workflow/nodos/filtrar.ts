@@ -1,6 +1,6 @@
 import { Filter } from "lucide";
 
-import { NOMBRES_DE_TIPO, type TipoDeNodo, TIPOS_ELEGIBLES } from "@/workflow/tipos";
+import { NOMBRES_DE_TIPO, type TipoDeNodo, TIPOS_ELEGIBLES } from "../tipos";
 
 export default {
   nombre: "Filtrar",
