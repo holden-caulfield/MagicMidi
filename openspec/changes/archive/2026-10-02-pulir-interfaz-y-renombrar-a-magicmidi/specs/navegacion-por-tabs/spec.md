@@ -1,136 +1,6 @@
-# navegacion-por-tabs Specification
+# Spec Delta
 
-## Purpose
-Organiza la ventana principal en tabs, de modo que cada área de la aplicación
-tenga su propio panel y la persona usuaria elija cuál mirar sin perder lo que
-pasa en los demás ni de vista el estado de la conexión.
-
-## Requirements
-
-### Requirement: Un solo panel visible a la vez
-
-La aplicación SHALL mostrar únicamente el panel del tab activo y ocultar los
-demás. El tab activo SHALL estar señalado visualmente en la navegación. Al
-abrir la aplicación, el tab activo SHALL ser **Conexión**.
-
-#### Scenario: Estado inicial
-
-- **WHEN** se abre la aplicación
-- **THEN** el tab activo es "Conexión", se ve el panel de conexión y no se ve
-  el panel de log
-
-#### Scenario: Cambio de tab
-
-- **WHEN** la persona usuaria activa el tab "Log"
-- **THEN** se ve el panel de log, se oculta el panel de conexión y "Log" queda
-  señalado como activo en la navegación
-
-#### Scenario: Volver a un tab ya visitado
-
-- **WHEN** la persona usuaria vuelve al tab "Conexión" después de haber estado
-  en "Log"
-- **THEN** el panel de conexión se ve tal como estaba, con los mismos puertos
-  seleccionados
-
-### Requirement: Contenido de cada tab
-
-El tab **Conexión** SHALL contener el texto de ayuda sobre la elección de
-puertos, los selectores de puerto de entrada y salida, los botones de
-actualizar puertos, conectar y desconectar, y la línea de mensajes de la
-conexión. El tab **Log** SHALL contener el listado de mensajes MIDI, con su
-fila de encabezados y el botón de limpiar en ella. El tab **Workflow** SHALL
-contener el editor de flujos: el lienzo, la barra de herramientas y el panel
-de configuración. Ningún panel SHALL tener un título que repita el nombre de
-su tab. El texto de ayuda sobre la elección de puertos SHALL verse solo en el
-tab Conexión.
-
-#### Scenario: Controles de conexión
-
-- **WHEN** el tab activo es "Conexión"
-- **THEN** se ven el texto de ayuda, los dos selectores de puerto y los
-  botones "Actualizar puertos", "Conectar" y "Desconectar"
-
-#### Scenario: Controles del log
-
-- **WHEN** el tab activo es "Log"
-- **THEN** se ven la fila de encabezados con el botón "Limpiar" y el listado
-  de mensajes MIDI
-
-#### Scenario: Editor de flujos
-
-- **WHEN** el tab activo es "Workflow"
-- **THEN** se ven el lienzo, la barra de herramientas y el panel de
-  configuración
-
-#### Scenario: El texto de ayuda acompaña a su panel
-
-- **WHEN** el tab activo es "Log"
-- **THEN** el texto que explica cómo elegir los puertos no se ve
-
-### Requirement: Los paneles ocultos siguen activos
-
-Ocultar un panel SHALL ser solo visual: su contenido y su estado se conservan,
-y sigue reaccionando a lo que pasa en el backend mientras está oculto. En
-particular, el log SHALL seguir recibiendo y acumulando los mensajes MIDI que
-llegan mientras su tab no está a la vista, respetando el mismo tope de
-mensajes en pantalla que cuando está visible. Y el flujo armado en el tab
-Workflow SHALL seguir procesando los mensajes que llegan aunque su tab no esté
-a la vista.
-
-#### Scenario: Llegan mensajes con el tab Log oculto
-
-- **GIVEN** hay una conexión MIDI activa y el tab activo es "Conexión"
-- **WHEN** llegan mensajes MIDI
-- **THEN** al activar el tab "Log" esos mensajes aparecen en la lista, en el
-  mismo orden que si el tab hubiera estado visible
-
-#### Scenario: La conexión no depende del tab activo
-
-- **GIVEN** hay una conexión MIDI activa y un flujo que lleva del trigger a un
-  "Emitir"
-- **WHEN** la persona usuaria cambia de tab
-- **THEN** la conexión se mantiene y el flujo sigue enviando mensajes al
-  puerto de salida
-
-#### Scenario: El lienzo se conserva oculto
-
-- **GIVEN** la persona usuaria armó un flujo en el tab "Workflow"
-- **WHEN** pasa a otro tab y vuelve
-- **THEN** el lienzo muestra el mismo flujo, con las cajas en los mismos
-  lugares
-
-### Requirement: Los tabs son accesibles por teclado y por lectores de pantalla
-
-Los controles de la navegación SHALL ser enfocables y activables con el
-teclado, SHALL distinguir visualmente cuál tiene el foco, y SHALL exponer su
-rol de tab, su nombre y cuál está seleccionado a las tecnologías de
-asistencia; el ícono no SHALL anunciarse. El recorrido con el teclado SHALL
-seguir el orden visual: primero la navegación y después el contenido del
-panel activo.
-
-#### Scenario: Activación por teclado
-
-- **WHEN** la persona usuaria enfoca un control de la navegación con el
-  teclado y lo activa con Enter o barra espaciadora
-- **THEN** ese tab pasa a ser el activo
-
-#### Scenario: Foco visible
-
-- **WHEN** el foco del teclado llega a un control de la navegación
-- **THEN** ese control se distingue de los demás, incluso si no es el tab
-  activo
-
-#### Scenario: Estado expuesto
-
-- **WHEN** hay un tab activo
-- **THEN** su control se anuncia por su nombre y como seleccionado, y los
-  demás como no seleccionados
-
-#### Scenario: Orden de tabulación
-
-- **WHEN** la persona usuaria recorre la ventana con Tab desde el principio
-- **THEN** pasa primero por los controles de la navegación y después por los
-  del panel activo
+## ADDED Requirements
 
 ### Requirement: Navegación arriba de los paneles
 
@@ -298,3 +168,133 @@ grande, y SHALL quedar centrados dentro del panel.
   en su panel
 - **THEN** ese contenido se desplaza dentro del panel, y la navegación y la
   barra de estado siguen a la vista
+
+## MODIFIED Requirements
+
+### Requirement: Un solo panel visible a la vez
+
+La aplicación SHALL mostrar únicamente el panel del tab activo y ocultar los
+demás. El tab activo SHALL estar señalado visualmente en la navegación. Al
+abrir la aplicación, el tab activo SHALL ser **Conexión**.
+
+#### Scenario: Estado inicial
+
+- **WHEN** se abre la aplicación
+- **THEN** el tab activo es "Conexión", se ve el panel de conexión y no se ve
+  el panel de log
+
+#### Scenario: Cambio de tab
+
+- **WHEN** la persona usuaria activa el tab "Log"
+- **THEN** se ve el panel de log, se oculta el panel de conexión y "Log" queda
+  señalado como activo en la navegación
+
+#### Scenario: Volver a un tab ya visitado
+
+- **WHEN** la persona usuaria vuelve al tab "Conexión" después de haber estado
+  en "Log"
+- **THEN** el panel de conexión se ve tal como estaba, con los mismos puertos
+  seleccionados
+
+### Requirement: Contenido de cada tab
+
+El tab **Conexión** SHALL contener el texto de ayuda sobre la elección de
+puertos, los selectores de puerto de entrada y salida, los botones de
+actualizar puertos, conectar y desconectar, y la línea de mensajes de la
+conexión. El tab **Log** SHALL contener el listado de mensajes MIDI, con su
+fila de encabezados y el botón de limpiar en ella. El tab **Workflow** SHALL
+contener el editor de flujos: el lienzo, la barra de herramientas y el panel
+de configuración. Ningún panel SHALL tener un título que repita el nombre de
+su tab. El texto de ayuda sobre la elección de puertos SHALL verse solo en el
+tab Conexión.
+
+#### Scenario: Controles de conexión
+
+- **WHEN** el tab activo es "Conexión"
+- **THEN** se ven el texto de ayuda, los dos selectores de puerto y los
+  botones "Actualizar puertos", "Conectar" y "Desconectar"
+
+#### Scenario: Controles del log
+
+- **WHEN** el tab activo es "Log"
+- **THEN** se ven la fila de encabezados con el botón "Limpiar" y el listado
+  de mensajes MIDI
+
+#### Scenario: Editor de flujos
+
+- **WHEN** el tab activo es "Workflow"
+- **THEN** se ven el lienzo, la barra de herramientas y el panel de
+  configuración
+
+#### Scenario: El texto de ayuda acompaña a su panel
+
+- **WHEN** el tab activo es "Log"
+- **THEN** el texto que explica cómo elegir los puertos no se ve
+
+### Requirement: Los tabs son accesibles por teclado y por lectores de pantalla
+
+Los controles de la navegación SHALL ser enfocables y activables con el
+teclado, SHALL distinguir visualmente cuál tiene el foco, y SHALL exponer su
+rol de tab, su nombre y cuál está seleccionado a las tecnologías de
+asistencia; el ícono no SHALL anunciarse. El recorrido con el teclado SHALL
+seguir el orden visual: primero la navegación y después el contenido del
+panel activo.
+
+#### Scenario: Activación por teclado
+
+- **WHEN** la persona usuaria enfoca un control de la navegación con el
+  teclado y lo activa con Enter o barra espaciadora
+- **THEN** ese tab pasa a ser el activo
+
+#### Scenario: Foco visible
+
+- **WHEN** el foco del teclado llega a un control de la navegación
+- **THEN** ese control se distingue de los demás, incluso si no es el tab
+  activo
+
+#### Scenario: Estado expuesto
+
+- **WHEN** hay un tab activo
+- **THEN** su control se anuncia por su nombre y como seleccionado, y los
+  demás como no seleccionados
+
+#### Scenario: Orden de tabulación
+
+- **WHEN** la persona usuaria recorre la ventana con Tab desde el principio
+- **THEN** pasa primero por los controles de la navegación y después por los
+  del panel activo
+
+## REMOVED Requirements
+
+### Requirement: Barra de tabs al pie de la ventana
+
+**Reason**: La navegación pasa arriba de los paneles, como selector
+segmentado, y el pie de la ventana lo ocupa la barra de estado.
+
+**Migration**: Ver "Navegación arriba de los paneles".
+
+### Requirement: El encabezado es común a todos los tabs
+
+**Reason**: Desaparece el encabezado: el nombre de la aplicación ya lo muestra
+el sistema en la barra de la ventana, y el estado de la conexión pasa a la
+barra de estado. Que el texto de ayuda viva en el tab Conexión queda en
+"Contenido de cada tab".
+
+**Migration**: Ver "La ventana no repite el nombre de la aplicación" y "Barra
+de estado al pie".
+
+### Requirement: Estado de conexión siempre visible
+
+**Reason**: El indicador del encabezado se reemplaza por la barra de estado,
+que además muestra los puertos conectados y los errores de conexión.
+
+**Migration**: Ver "Barra de estado al pie".
+
+### Requirement: El panel activo ocupa el espacio de la ventana
+
+**Reason**: Ya no hay encabezado con el que alinear los paneles, y los paneles
+dejan de verse como tarjetas. El resto del requisito sigue vigente, ahora
+entre la navegación y la barra de estado.
+
+**Migration**: Ver "El panel activo ocupa el espacio entre la navegación y la
+barra de estado".

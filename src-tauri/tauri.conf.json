@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-midi",
+  "productName": "MagicMidi",
   "version": "0.1.0",
-  "identifier": "com.jpsaraceno.tauri-midi",
+  "identifier": "com.jpsaraceno.magicmidi",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Tauri MIDI",
+        "title": "MagicMidi",
         "width": 800,
         "height": 600,
         "dragDropEnabled": false

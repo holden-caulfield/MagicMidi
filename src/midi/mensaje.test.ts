@@ -73,3 +73,28 @@ test("una copia no comparte los bytes con el original", () => {
   expect(original.bytes).toEqual([0x90, 60, 100]);
   expect(copia.bytes).toEqual([0x90, 72, 100]);
 });
+
+test("lee la nota de los mensajes que la llevan", () => {
+  expect(new MensajeMidi([0x90, 60, 100]).nota).toBe(60);
+  expect(new MensajeMidi([0x80, 61, 64]).nota).toBe(61);
+  expect(new MensajeMidi([0xa0, 62, 30]).nota).toBe(62);
+});
+
+test("los mensajes sin nota no la tienen", () => {
+  expect(new MensajeMidi([0xb0, 7, 127]).nota).toBeNull();
+  expect(new MensajeMidi([0xc0, 5]).nota).toBeNull();
+  expect(new MensajeMidi([0xfa]).nota).toBeNull();
+  expect(new MensajeMidi([]).nota).toBeNull();
+});
+
+test("un Nota On sin segundo byte tiene la nota 0", () => {
+  expect(new MensajeMidi([0x90]).nota).toBe(0);
+});
+
+test("la nota sigue a los bytes si cambian", () => {
+  const mensaje = new MensajeMidi([0x90, 60, 100]);
+  mensaje.bytes[1] = 64;
+  expect(mensaje.nota).toBe(64);
+  mensaje.bytes[0] = 0xb0;
+  expect(mensaje.nota).toBeNull();
+});

@@ -12,15 +12,15 @@ const [entrada, salida] = todos('select');
 entrada.value = 'b'; entrada.dispatchEvent(new Event('change')); salida.value = 'c'; salida.dispatchEvent(new Event('change')); await dibujado();
 r.elegidos = [m.estado.puertoEntradaElegido, m.estado.puertoSalidaElegido];
 m.actualizar({ conectado: true }); await dibujado();
-r.conectado = { indicador: uno('.estado').textContent.trim(), selects: todos('select').map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, actualizar: boton('Actualizar puertos').disabled };
+r.conectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: todos('select').map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, actualizar: boton('Actualizar puertos').disabled };
 m.actualizar({ panelActivo: 'log' }); await dibujado(); m.actualizar({ panelActivo: 'conexion', mensajeConexion: 'algo' }); await dibujado();
 r.trasRedibujar = { entrada: todos('select')[0].value, mensaje: todos('p').find((p) => p.className === 'mensaje')?.textContent.trim(), visible: visible(todos('p').find((p) => p.className === 'mensaje')) };
 m.actualizar({ conectado: false, mensajeConexion: '' }); await dibujado();
-r.desconectado = { indicador: uno('.estado').textContent.trim(), selects: todos('select').map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, mensajeVisible: visible(todos('p').find((p) => p.className === 'mensaje')) };
+r.desconectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: todos('select').map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, mensajeVisible: visible(todos('p').find((p) => p.className === 'mensaje')) };
 // 3.2: backend que falla
 window.__TAURI_INTERNALS__ = { transformCallback: () => 1, invoke: async (comando) => { if (comando.startsWith('plugin:event|')) return 1; throw 'fallo simulado'; } };
 boton('Actualizar puertos').click(); await espera(100); await dibujado();
 r.fallaPuertos = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), entradaSigue: todos('select')[0].value };
 boton('Conectar').click(); await espera(100); await dibujado();
-r.fallaConectar = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), indicador: uno('.estado').textContent.trim(), conectarHabilitado: !boton('Conectar').disabled, selectsHabilitados: todos('select').map((s) => !s.disabled) };
+r.fallaConectar = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), conectarHabilitado: !boton('Conectar').disabled, selectsHabilitados: todos('select').map((s) => !s.disabled) };
 return r;

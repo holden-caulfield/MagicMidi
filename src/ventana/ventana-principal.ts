@@ -1,7 +1,8 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
+import { List, Plug, Workflow } from "lucide";
 
-import { estilosDelIndicador, indicadorDeEstado } from "@/conexion/conexion";
+import { barraDeEstado, estilosDeLaBarraDeEstado } from "@/conexion/conexion";
 import "@/conexion/panel-conexion";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { estado } from "@/estado/estado";
@@ -13,16 +14,26 @@ import { barraDeTabs, estilosDeLaBarraDeTabs, type Panel } from "./barra-de-tabs
 // La única fuente de los paneles: de acá salen la barra, las secciones y los
 // atributos ARIA que los enlazan.
 const PANELES: Panel[] = [
-  { id: "conexion", titulo: "Conexión", contenido: () => html`<panel-conexion></panel-conexion>` },
-  { id: "log", titulo: "Log", contenido: () => html`<panel-log></panel-log>` },
-  { id: "workflow", titulo: "Workflow", contenido: () => html`<panel-workflow></panel-workflow>` },
+  {
+    id: "conexion",
+    titulo: "Conexión",
+    icono: Plug,
+    contenido: () => html`<panel-conexion></panel-conexion>`,
+  },
+  { id: "log", titulo: "Log", icono: List, contenido: () => html`<panel-log></panel-log>` },
+  {
+    id: "workflow",
+    titulo: "Workflow",
+    icono: Workflow,
+    contenido: () => html`<panel-workflow></panel-workflow>`,
+  },
 ];
 
 @customElement("ventana-principal")
 export class VentanaPrincipal extends LitElement {
   static styles = [
     compartidos,
-    estilosDelIndicador,
+    estilosDeLaBarraDeEstado,
     estilosDeLaBarraDeTabs,
     css`
       /* La ventana no se desplaza nunca: cada panel acomoda su contenido al
@@ -36,25 +47,10 @@ export class VentanaPrincipal extends LitElement {
         flex-direction: column;
       }
 
-      .encabezado {
-        padding: 1.25rem 1.5rem 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem 1rem;
-        justify-content: space-between;
-        align-items: baseline;
-      }
-
-      h1 {
-        margin: 0;
-        font-size: 1.6rem;
-      }
-
       .contenedor {
         flex: 1;
         min-height: 0;
         display: flex;
-        padding: 1.25rem 1.5rem 1.5rem;
       }
 
       .panel {
@@ -64,10 +60,6 @@ export class VentanaPrincipal extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
-        border: 1px solid rgba(127, 127, 127, 0.25);
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        background-color: rgba(127, 127, 127, 0.06);
       }
     `,
   ];
@@ -78,14 +70,11 @@ export class VentanaPrincipal extends LitElement {
   }
 
   // Un panel oculto se oculta con `hidden`, nunca dejando de dibujarlo: el log
-  // tiene que seguir juntando mensajes aunque no esté a la vista. La barra va
-  // última para que el recorrido con el teclado siga el orden visual.
+  // tiene que seguir juntando mensajes aunque no esté a la vista. La barra de
+  // tabs va primera para que el recorrido con el teclado siga el orden visual.
   render() {
     return html`
-      <header class="encabezado">
-        <h1>Tauri MIDI</h1>
-        ${indicadorDeEstado()}
-      </header>
+      ${barraDeTabs(PANELES, estado.panelActivo)}
 
       <main class="contenedor">
         ${PANELES.map(
@@ -103,7 +92,7 @@ export class VentanaPrincipal extends LitElement {
         )}
       </main>
 
-      ${barraDeTabs(PANELES, estado.panelActivo)}
+      ${barraDeEstado()}
     `;
   }
 }

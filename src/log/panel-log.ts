@@ -2,11 +2,11 @@ import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 import { guard } from "lit/directives/guard.js";
 import { repeat } from "lit/directives/repeat.js";
-import { Ban, CornerDownRight, Equal, type IconNode, TriangleAlert } from "lucide";
+import { Ban, CornerDownRight, Equal, type IconNode, Trash2, TriangleAlert } from "lucide";
 
 import { ControladorDeEstado } from "@/estado/controlador";
 import { compartidos } from "@/estilos/compartidos";
-import { describirMensaje } from "@/midi/describir";
+import { partesDeLaDescripcion } from "@/midi/describir";
 import type { MensajeMidi } from "@/midi/mensaje";
 import { dibujarIcono } from "@/workflow/iconos";
 import {
@@ -39,6 +39,17 @@ function marcaDelResultado({ resultado }: EntradaDelLog) {
   }
 }
 
+// Cada parte va en su sub-columna, así las partes equivalentes de filas
+// distintas quedan una debajo de la otra. Lo que tiene una sola parte (los
+// mensajes de sistema) ocupa todas.
+function descripcion(mensaje: MensajeMidi) {
+  const partes = partesDeLaDescripcion(mensaje);
+  if (partes.length === 1) {
+    return html`<span class="descripcion-entera">${partes[0]}</span>`;
+  }
+  return [0, 1, 2, 3].map((i) => html`<span class="parte">${partes[i] ?? ""}</span>`);
+}
+
 function filaDeSalida(mensaje: MensajeMidi) {
   return html`
     <div class="fila-mensaje fila-salida">
@@ -46,7 +57,7 @@ function filaDeSalida(mensaje: MensajeMidi) {
         ${dibujarIcono(CornerDownRight, 14)}<span class="texto-oculto">Salida</span>
       </span>
       <span class="columna-bytes">${formatearBytes(mensaje)}</span>
-      <span class="columna-descripcion">${describirMensaje(mensaje)}</span>
+      ${descripcion(mensaje)}
       <span class="columna-marca"></span>
     </div>
   `;
@@ -59,7 +70,7 @@ function grupo(entrada: EntradaDelLog) {
       <div class="fila-mensaje fila-entrada ${resultado.tipo}">
         <span class="columna-hora">${formatearHora(entrada.marcaTemporalMs)}</span>
         <span class="columna-bytes">${formatearBytes(mensaje)}</span>
-        <span class="columna-descripcion">${describirMensaje(mensaje)}</span>
+        ${descripcion(mensaje)}
         ${marcaDelResultado(entrada)}
       </div>
       ${resultado.tipo === "transformado" ? resultado.salidas.map(filaDeSalida) : null}
@@ -78,54 +89,73 @@ export class PanelLog extends LitElement {
         display: flex;
       }
 
-      /* Lo justo para que la fila más ancha de un mensaje de canal ("Cambio de
-         Control · canal 16 · controlador 127 · valor 127") entre en una
-         línea: más ancho solo aleja las marcas de la descripción. */
-      .contenido {
-        flex: 1;
-        min-height: 0;
-        width: 100%;
-        max-width: 51rem;
-        margin-inline: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .encabezado {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      h2 {
-        margin: 0;
-      }
-
+      /* La fila de encabezados va dentro de lo que se desplaza, pegada arriba:
+         así acompaña a las filas cuando se desplazan a lo ancho. */
       .lista {
         flex: 1;
         min-height: 0;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
+        overflow: auto;
         font-family: "SF Mono", "Fira Code", Consolas, monospace;
         font-size: 0.85em;
-        border-radius: 8px;
         background-color: var(--fondo-hundido);
+      }
+
+      /* La fila conserva la letra monoespaciada, porque las columnas se miden
+         en ch y con otra letra tendrían otro ancho: la de los títulos se
+         cambia en cada uno. Suma una columna que llega hasta el borde derecho,
+         para el botón de limpiar. */
+      .fila-mensaje.fila-encabezados {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        grid-template-columns: var(--columnas) minmax(0, 1fr);
+        color: var(--letra-secundaria);
+        background-color: var(--fondo-ventana);
+        border-bottom: 1px solid var(--borde-suave);
+      }
+
+      .fila-encabezados > span {
+        font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+        font-size: 0.95em;
+      }
+
+      .fila-encabezados .limpiar {
+        grid-column: -2;
+        justify-self: end;
+      }
+
+      .limpiar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2em;
+        border: none;
+        background-color: transparent;
+        color: inherit;
       }
 
       .grupo-mensaje {
         border-bottom: 1px solid rgba(127, 127, 127, 0.12);
       }
 
-      /* Todas las filas comparten las columnas, así los bytes y la descripción
-         de lo que salió quedan debajo de los de la entrada. */
+      /* Todas las filas comparten las columnas, así los bytes y cada parte de
+         la descripción de lo que salió quedan debajo de los de la entrada.
+         Las medidas van en ch (la letra es monoespaciada): las sub-columnas
+         de la descripción alcanzan para su parte más ancha ("Presión
+         Polifónica", "canal 16", "controlador 127", "velocidad 127"). Las
+         columnas no se estiran: lo que sobra queda a la derecha. */
       .fila-mensaje {
+        --columnas: 13.5ch 10.5ch 18ch 8ch 15ch 13ch 2em;
+        min-width: max-content;
         display: grid;
-        grid-template-columns: 7.5em 11em 1fr 1.5em;
-        gap: 0.75rem;
+        grid-template-columns: var(--columnas);
+        column-gap: 1ch;
         align-items: center;
         padding: 0.3rem 0.75rem;
+      }
+
+      .descripcion-entera {
+        grid-column: span 4;
       }
 
       .fila-entrada.transformado {
@@ -196,18 +226,26 @@ export class PanelLog extends LitElement {
     // Cada entrada se dibuja una sola vez: no cambia después de creada, así
     // que `guard` evita volver a armar las 500 filas con cada mensaje nuevo.
     return html`
-      <div class="contenido">
-        <div class="encabezado">
-          <h2>Mensajes MIDI</h2>
-          <button type="button" @click=${limpiarLog}>Limpiar</button>
+      <div class="lista">
+        <div class="fila-mensaje fila-encabezados">
+          <span>Hora</span>
+          <span>Bytes</span>
+          <span class="descripcion-entera">Descripción</span>
+          <button
+            type="button"
+            class="limpiar"
+            aria-label="Limpiar"
+            title="Limpiar"
+            @click=${limpiarLog}
+          >
+            ${dibujarIcono(Trash2, 14)}
+          </button>
         </div>
-        <div class="lista">
-          ${repeat(
-            entradasDelLog(),
-            (entrada) => entrada.id,
-            (entrada) => guard([entrada], () => grupo(entrada)),
-          )}
-        </div>
+        ${repeat(
+          entradasDelLog(),
+          (entrada) => entrada.id,
+          (entrada) => guard([entrada], () => grupo(entrada)),
+        )}
       </div>
     `;
   }

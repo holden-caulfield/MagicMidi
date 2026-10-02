@@ -346,8 +346,8 @@ mismo zoom, y las conexiones SHALL seguir unidas a sus conectores.
 
 - **WHEN** se abre la aplicación con la ventana en su tamaño por defecto y se
   activa el tab "Workflow"
-- **THEN** el panel entra entero entre el encabezado y la barra de tabs, sin
-  barra de desplazamiento
+- **THEN** el panel entra entero entre la navegación y la barra de estado,
+  sin barra de desplazamiento
 
 #### Scenario: Agrandar la ventana con el flujo a la vista
 
@@ -364,7 +364,7 @@ mismo zoom, y las conexiones SHALL seguir unidas a sus conectores.
   y la persona usuaria movió una caja cerca del borde derecho del lienzo
 - **WHEN** sale de pantalla completa y la ventana vuelve a su tamaño anterior
 - **THEN** el lienzo se achica, la caja queda fuera de la parte visible, y la
-  barra de tabs sigue pegada al pie de la ventana, sin barra de
+  barra de estado sigue pegada al pie de la ventana, sin barra de
   desplazamiento
 
 #### Scenario: Agregar una caja con clic en un lienzo grande

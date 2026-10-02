@@ -1,9 +1,10 @@
-# Tauri MIDI
+# MagicMidi
 
-Aplicación de escritorio hecha con [Tauri](https://tauri.app) para experimentar
-con mensajes MIDI. Su intención principal es educativa, orientada a músicos con
-ganas de aprender conceptos básicos de programación y profundizar su
-entendimiento del protocolo MIDI.
+Una herramienta para aprender MIDI: una aplicación de escritorio para ver,
+entender y transformar los mensajes MIDI que pasan entre tus instrumentos. Su
+intención principal es educativa, orientada a músicos con ganas de aprender
+conceptos básicos de programación y profundizar su entendimiento del
+protocolo MIDI.
 
 ## Qué hace hoy
 
@@ -20,7 +21,11 @@ entendimiento del protocolo MIDI.
 - Muestra en pantalla un log en tiempo real de los mensajes que entran y lo
   que el flujo hizo con cada uno (si salió igual, transformado, descartado o
   con error), con una descripción legible (Nota On/Off, Control Change, Pitch
-  Bend, etc.) pensada para gente que recién se acerca al protocolo.
+  Bend, etc.) pensada para gente que recién se acerca al protocolo. Las notas
+  se nombran con letra y octava además del número, como "C4 (60)": se usa la
+  notación científica, en la que el Do central (nota 60) es C4. Algunos
+  programas, como Ableton Live o los equipos Yamaha, llaman C3 a esa misma
+  nota.
 - Los mensajes de reloj MIDI (*Timing Clock*, `0xF8`) y de Sensor Activo
   (*Active Sensing*, `0xFE`) no pasan por el flujo ni aparecen en el log: se
   reenvían directo a la salida, para no sumarles demora ni saturar la
@@ -38,7 +43,7 @@ caja se van sumando de a uno.
 
 ## Arquitectura
 
-La app sigue el modelo estándar de Tauri: un backend en Rust con acceso al
+La app está hecha con [Tauri](https://tauri.app) y sigue su modelo estándar: un backend en Rust con acceso al
 sistema operativo, y un frontend web embebido que corre en un WebView nativo.
 
 ```
