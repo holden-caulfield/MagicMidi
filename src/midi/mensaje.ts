@@ -79,6 +79,18 @@ export class MensajeMidi {
     return (status & 0x0f) + 1;
   }
 
+  /**
+   * El número de nota en Nota On, Nota Off y Presión Polifónica; `null` en los
+   * demás. Si falta el byte, cuenta como 0.
+   */
+  get nota(): number | null {
+    const tipo = this.tipo;
+    if (tipo !== "nota-on" && tipo !== "nota-off" && tipo !== "presion-polifonica") {
+      return null;
+    }
+    return this.bytes[1] ?? 0;
+  }
+
   copiar(): MensajeMidi {
     return new MensajeMidi([...this.bytes]);
   }

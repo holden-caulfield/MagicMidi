@@ -14,6 +14,7 @@ export class PanelConexion extends LitElement {
     css`
       :host {
         display: block;
+        padding: 0.75rem;
       }
 
       /* Los selectores no ganan nada con más ancho: conservan el que tenían

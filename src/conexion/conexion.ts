@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { css, html } from "lit";
+import { CircleCheck, TriangleAlert, Unplug } from "lucide";
 
-import { actualizar, estado, type Puerto } from "@/estado/estado";
+import { actualizar, type Estado, estado, type Puerto } from "@/estado/estado";
+import { dibujarIcono } from "@/workflow/iconos";
 
 function puertoVigente(elegido: string, puertos: Puerto[]): string {
   return puertos.some((puerto) => puerto.id === elegido) ? elegido : "";
@@ -77,32 +79,100 @@ export async function desconectar() {
   }
 }
 
-/** Los estilos de `indicadorDeEstado`, para el componente que lo dibuja. */
-export const estilosDelIndicador = css`
-  .estado {
-    margin: 0;
-    font-weight: 600;
+export type EstadoDeLaConexion = "conectado" | "desconectado" | "error";
+
+/**
+ * Un error es estar desconectado con un mensaje en el panel de conexión: es el
+ * mismo dato que muestra el panel, así la barra y el panel no se contradicen.
+ */
+export function estadoDeLaConexion({
+  conectado,
+  mensajeConexion,
+}: Pick<Estado, "conectado" | "mensajeConexion">): EstadoDeLaConexion {
+  if (conectado) {
+    return "conectado";
+  }
+  return mensajeConexion === "" ? "desconectado" : "error";
+}
+
+/** Los estilos de `barraDeEstado`, para el componente que la dibuja. */
+export const estilosDeLaBarraDeEstado = css`
+  .barra-de-estado {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 1.5rem;
+    padding: 0 0.75rem;
+    font-size: 0.8em;
+    line-height: 1;
+    border-top: 1px solid var(--borde-suave);
+    color: var(--letra-secundaria);
   }
 
-  .estado-conectado {
-    color: #1b8a3d;
+  .barra-de-estado svg {
+    flex-shrink: 0;
   }
 
-  .estado-desconectado {
-    color: #b3261e;
+  .barra-de-estado.conectado {
+    color: var(--letra-estado-conectado);
+    background-color: var(--fondo-estado-conectado);
+  }
+
+  .barra-de-estado.error {
+    color: var(--letra-estado-error);
+    background-color: var(--fondo-estado-error);
+  }
+
+  .texto-de-estado {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .texto-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 `;
 
-export function indicadorDeEstado() {
+function contenidoDeLaBarra(estadoDeLaBarra: EstadoDeLaConexion) {
+  switch (estadoDeLaBarra) {
+    case "desconectado":
+      return { icono: Unplug, texto: "Desconectado", contenido: html`Desconectado` };
+    case "error":
+      return {
+        icono: TriangleAlert,
+        texto: `Desconectado · ${estado.mensajeConexion}`,
+        contenido: html`Desconectado · ${estado.mensajeConexion}`,
+      };
+    case "conectado": {
+      const entrada = puertoElegido(estado.puertoEntradaElegido, estado.puertosEntrada)?.nombre;
+      const salida = puertoElegido(estado.puertoSalidaElegido, estado.puertosSalida)?.nombre;
+      return {
+        icono: CircleCheck,
+        texto: `Conectado · entrada ${entrada}, salida ${salida}`,
+        contenido: html`Conectado ·
+          <span class="texto-oculto">entrada</span>${entrada}
+          <span aria-hidden="true">→</span>
+          <span class="texto-oculto">salida</span>${salida}`,
+      };
+    }
+  }
+}
+
+export function barraDeEstado() {
+  const estadoDeLaBarra = estadoDeLaConexion(estado);
+  const { icono, texto, contenido } = contenidoDeLaBarra(estadoDeLaBarra);
   return html`
-    <p
-      class="estado ${estado.conectado
-        ? "estado-conectado"
-        : "estado-desconectado"}"
-      aria-live="polite"
-    >
-      ${estado.conectado ? "Conectado" : "Desconectado"}
-    </p>
+    <footer class="barra-de-estado ${estadoDeLaBarra}" role="status" title=${texto}>
+      ${dibujarIcono(icono, 14)}
+      <span class="texto-de-estado">${contenido}</span>
+    </footer>
   `;
 }
 

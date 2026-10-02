@@ -69,8 +69,7 @@ fn se_reenvia_directo(datos: &[u8]) -> bool {
 
 #[tauri::command]
 fn listar_puertos_entrada() -> Result<Vec<Puerto>, String> {
-    let midi_in =
-        MidiInput::new("tauri-midi-listado-entrada").map_err(|error| error.to_string())?;
+    let midi_in = MidiInput::new("magicmidi-listado-entrada").map_err(|error| error.to_string())?;
     Ok(midi_in
         .ports()
         .iter()
@@ -86,7 +85,7 @@ fn listar_puertos_entrada() -> Result<Vec<Puerto>, String> {
 #[tauri::command]
 fn listar_puertos_salida() -> Result<Vec<Puerto>, String> {
     let midi_out =
-        MidiOutput::new("tauri-midi-listado-salida").map_err(|error| error.to_string())?;
+        MidiOutput::new("magicmidi-listado-salida").map_err(|error| error.to_string())?;
     Ok(midi_out
         .ports()
         .iter()
@@ -145,8 +144,8 @@ fn conectar(
 fn vigilar_conexion(app: AppHandle, numero: u64, puerto_entrada: Puerto, puerto_salida: Puerto) {
     thread::spawn(move || {
         let (Ok(midi_in), Ok(midi_out)) = (
-            MidiInput::new("tauri-midi-vigilancia-entrada"),
-            MidiOutput::new("tauri-midi-vigilancia-salida"),
+            MidiInput::new("magicmidi-vigilancia-entrada"),
+            MidiOutput::new("magicmidi-vigilancia-salida"),
         ) else {
             return;
         };
@@ -190,7 +189,7 @@ fn abrir_conexiones(
     puerto_entrada: Puerto,
     puerto_salida: Puerto,
 ) -> Result<(), String> {
-    let midi_out = MidiOutput::new("tauri-midi-salida").map_err(|error| error.to_string())?;
+    let midi_out = MidiOutput::new("magicmidi-salida").map_err(|error| error.to_string())?;
     let puerto_salida_encontrado =
         midi_out.find_port_by_id(&puerto_salida.id).ok_or_else(|| {
             format!(
@@ -199,11 +198,11 @@ fn abrir_conexiones(
             )
         })?;
     let conexion_salida = midi_out
-        .connect(&puerto_salida_encontrado, "tauri-midi-conexion-salida")
+        .connect(&puerto_salida_encontrado, "magicmidi-conexion-salida")
         .map_err(|error| error.to_string())?;
     *estado.conexion_salida.lock().unwrap() = Some(conexion_salida);
 
-    let mut midi_in = MidiInput::new("tauri-midi-entrada").map_err(|error| error.to_string())?;
+    let mut midi_in = MidiInput::new("magicmidi-entrada").map_err(|error| error.to_string())?;
     midi_in.ignore(Ignore::None);
     let puerto_entrada_encontrado =
         midi_in.find_port_by_id(&puerto_entrada.id).ok_or_else(|| {
@@ -220,7 +219,7 @@ fn abrir_conexiones(
     let conexion_entrada = midi_in
         .connect(
             &puerto_entrada_encontrado,
-            "tauri-midi-conexion-entrada",
+            "magicmidi-conexion-entrada",
             move |_marca_temporal_us, mensaje, _contexto| {
                 if se_reenvia_directo(mensaje) {
                     if let Ok(mut salida) = conexion_salida_compartida.lock() {

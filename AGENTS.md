@@ -36,9 +36,11 @@ mergear).
   bytes y la marca temporal) y envía a la salida lo que el frontend le pida
   con el comando `enviar_mensaje`. La descripción legible de un mensaje la
   arma el frontend (`src/midi/describir.ts`), porque también describe lo que
-  sale del flujo, que nunca vuelve del backend. El tipo y el canal de un mensaje
-  no se calculan ahí: los lee `MensajeMidi` (`src/midi/mensaje.ts`), y
-  cualquier otro módulo que los necesite usa esa misma lectura.
+  sale del flujo, que nunca vuelve del backend. El tipo, el canal y la nota de un
+  mensaje no se calculan ahí: los lee `MensajeMidi` (`src/midi/mensaje.ts`), y
+  cualquier otro módulo que los necesite usa esa misma lectura. Lo que es solo
+  presentación, como el nombre de la nota ("C4", con el Do central 60 como C4),
+  sí queda en `describir.ts`.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
   puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
@@ -92,9 +94,9 @@ mergear).
   propiedades y avisan con `CustomEvent` de nombre en castellano (`cambio`,
   `agregar-caja`), sin conocer el store; un evento que tiene que cruzar una
   raíz lleva `bubbles: true, composed: true`. Una plantilla sin estado,
-  estilos ni ciclo de vida propios sigue siendo una función: por ejemplo, el
-  indicador de estado de `conexion/conexion.ts`, que exporta también sus
-  estilos para el componente que lo dibuja. Un módulo es dueño de un
+  estilos ni ciclo de vida propios sigue siendo una función: por ejemplo, la
+  barra de estado de `conexion/conexion.ts`, que exporta también sus estilos
+  para el componente que la dibuja. Un módulo es dueño de un
   comportamiento, no de una región de la pantalla.
 - **Estilos y Shadow DOM**: cada componente encapsula sus estilos en
   `static styles`. Lo único global es `estilos/global.css`: las variables (que
@@ -118,10 +120,12 @@ mergear).
   atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
   `aria-selected`). La barra de tabs es una función (`ventana/barra-de-tabs.ts`)
   y no un componente, para que quede en la misma raíz que los paneles a los
-  que apunta. Agregar un panel es agregar una entrada a esa lista y el módulo
-  con su componente. La barra va última en la raíz, después de los paneles,
-  para que el recorrido por teclado siga el orden visual. En el encabezado va
-  solo lo que aplica a todos los tabs. Ocultar un panel es `?hidden`,
+  que apunta. Agregar un panel es agregar una entrada a esa lista (con su nombre y su
+  ícono) y el módulo con su componente. La barra de tabs va arriba y primera
+  en la raíz, antes de los paneles, para que el recorrido por teclado siga el
+  orden visual. No hay encabezado: el nombre de la aplicación lo muestra el
+  sistema en la barra de la ventana, y lo único que aplica a todos los tabs,
+  el estado de la conexión, va en la barra de estado, al pie. Ocultar un panel es `?hidden`,
   **nunca** renderizado condicional (`${activo ? panel() : nothing}`):
   desmontarlo le borraría al log los mensajes acumulados, que tiene que
   seguir juntando mientras su tab no está a la vista.
@@ -129,8 +133,11 @@ mergear).
   `<ventana-principal>` va atada a la ventana con `position: fixed; inset: 0`
   en su `:host` (no con `100dvh`: en WebKit, al entrar y salir de pantalla
   completa, esa medida queda vieja y deja un margen o un desplazamiento). Los
-  tres tabs comparten la clase `.panel`, que ocupa todo el lugar entre el
-  encabezado y la barra; no hay reglas por panel. Cada tab estiliza solo lo
+  tres tabs comparten la clase `.panel`, que ocupa todo el lugar entre la
+  barra de tabs y la barra de estado; no hay reglas por panel. Los paneles no
+  son tarjetas (sin borde, esquinas redondeadas ni fondo propio) y el
+  contenedor no tiene margen: cada componente de tab pone el suyo, y el log va
+  a ras del panel. Cada tab estiliza solo lo
   que dibuja adentro, y eso se confina al lugar que tiene: lo que crece va con
   `flex: 1; min-height: 0` y desplaza su propio contenido, en vez de agrandar
   el panel. No usar alturas fijas ni mínimas para que algo "entre".
@@ -141,7 +148,11 @@ mergear).
   `repeat` por `id` y `guard`, así un mensaje nuevo crea solo su fila, y
   espera al próximo cuadro para dibujar (redefine `scheduleUpdate`), así una
   ráfaga se dibuja una sola vez. Con la ventana minimizada no se dibuja: los
-  mensajes se acumulan en el registro y se dibujan al volver. El log no
+  mensajes se acumulan en el registro y se dibujan al volver. Cada fila parte
+  la descripción en sub-columnas de ancho fijo (`partesDeLaDescripcion` de
+  `describir.ts`), medidas en `ch` porque la letra es monoespaciada: por eso
+  la fila de encabezados conserva esa letra y cambia la de cada título, ya que
+  los `ch` de la grilla se miden con la letra del contenedor. El log no
   escucha `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa
   el mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la
   entrada, lo que se emitió y el texto del error, si una caja falló.
@@ -159,9 +170,9 @@ mergear).
   - Un error en una caja se lanza como `Error` (con el nombre de la caja y
     `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
     el único que lo atrapa: el recorrido no revisa marcas de error.
-  - `MensajeMidi` guarda solo los bytes; `tipo` y `canal` son getters que se
-    calculan en cada lectura, para que no queden viejos si una caja cambia el
-    status. No agregar campos derivados que haya que mantener sincronizados.
+  - `MensajeMidi` guarda solo los bytes; `tipo`, `canal` y `nota` son getters
+    que se calculan en cada lectura, para que no queden viejos si una caja
+    cambia los bytes. No agregar campos derivados que haya que mantener sincronizados.
   - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
     `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
     Rete, y no pasa por el store.
@@ -273,7 +284,10 @@ mergear).
   Antes de mirar el DOM hay que esperar el dibujado:
   `await document.querySelector('ventana-principal').updateComplete` (y el del
   componente que interese, si está más adentro; el log, además, espera al
-  próximo cuadro).
+  próximo cuadro). Si el panel del navegador está oculto
+  (`document.visibilityState` es `hidden`), no hay cuadros y `<panel-log>` no
+  se dibuja nunca: en ese caso, usar las herramientas de
+  `verificacion-para-agentes/`.
   Ojo: después de editar archivos con el servidor corriendo, Vite puede servir
   un módulo con un sufijo `?t=…`, y un `import` sin ese sufijo trae **otra
   copia** del estado, que la aplicación no ve. Antes de manejar el estado a
