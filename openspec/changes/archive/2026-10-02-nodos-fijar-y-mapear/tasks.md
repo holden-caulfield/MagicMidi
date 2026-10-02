@@ -147,13 +147,13 @@ Los íconos son `Pin` para Fijar y `AlignCenterHorizontal` para Mapear
       distingue del naranja de fin y convive con la señal de seleccionada; y
       corregirlo saca los dos. Revisar con `javascript_tool` que `#control`
       tiene `aria-invalid` y `aria-describedby` con el error
-- [ ] 7.3 En `npm run tauri dev` con dos buses del IAC Driver: Fijar (Canal 10)
+- [x] 7.3 En `npm run tauri dev` con dos buses del IAC Driver: Fijar (Canal 10)
       manda todo por el canal 10, Desplazar (Canal +1) pasa del canal 16 al 16
       sin overflow y al 1 con overflow, Filtrar (Nota On) → Fijar (datos 2,
       100) toca todas las notas con velocidad 100 sin dejarlas sonando, Mapear
       (0–127 → 127–0) invierte un CC, y una caja mal configurada hace que el log
       marque los mensajes con error
-- [ ] 7.4 Antes de archivar, proponerle a la persona usuaria el diff de
+- [x] 7.4 Antes de archivar, proponerle a la persona usuaria el diff de
       AGENTS.md (sección Workflow: los errores de configuración, de dónde
       salen y que el ejecutor no llama a `procesar` con errores; que los nodos
       sobre bytes ofrecen "Canal" y no el status entero, y no protegen el Nota

@@ -11,12 +11,14 @@ canal o correr el número de un controlador.
 
 Una caja **Desplazar** SHALL tener tres parámetros:
 
-- **Byte**: cuál de los tres primeros bytes del mensaje altera. Las opciones son
-  "1.º (status)", "2.º (datos 1)" y "3.º (datos 2)".
+- **Byte**: qué parte del mensaje altera. Las opciones son "Canal", "2.º
+  (datos 1)" y "3.º (datos 2)". No se ofrece el byte de status entero: el
+  status mezcla el tipo de mensaje con el canal, y desplazarlo como un todo
+  puede cambiar el tipo.
 - **Desplazamiento**: un número entero, positivo, negativo o cero, que se le
-  suma al byte elegido.
-- **Overflow**: sí o no. Dice qué pasa cuando el resultado se sale del rango del
-  byte.
+  suma a lo elegido.
+- **Overflow**: sí o no. Dice qué pasa cuando el resultado se sale del rango de
+  lo elegido.
 
 Una caja nueva SHALL arrancar con byte "2.º (datos 1)", desplazamiento 0 y
 overflow desactivado. Con esos valores deja pasar los mensajes sin cambios.
@@ -29,10 +31,11 @@ overflow desactivado. Con esos valores deja pasar los mensajes sin cambios.
 
 ### Requirement: Desplaza solo el byte elegido
 
-La caja SHALL producir un mensaje nuevo igual al recibido, salvo por el byte
+La caja SHALL producir un mensaje nuevo igual al recibido, salvo por lo
 elegido, que pasa a valer el original más el desplazamiento, ajustado a su
-rango según el overflow. Los demás bytes, y la cantidad de bytes, SHALL quedar
-igual.
+rango según el overflow. Con "Canal", SHALL cambiar solo el canal del status:
+el tipo de mensaje SHALL quedar igual. Los demás bytes, y la cantidad de bytes,
+SHALL quedar igual.
 
 #### Scenario: Transponer una tercera mayor
 
@@ -48,25 +51,31 @@ igual.
 
 #### Scenario: Cambiar de canal
 
-- **GIVEN** byte "1.º (status)", desplazamiento +1
+- **GIVEN** byte "Canal", desplazamiento +1
 - **WHEN** recibe `90 3C 64` (Nota On, canal 1)
 - **THEN** emite `91 3C 64` (Nota On, canal 2)
+
+#### Scenario: Cambiar de canal no cambia el tipo
+
+- **GIVEN** byte "Canal", desplazamiento +1, sin overflow
+- **WHEN** recibe `9F 3C 64` (Nota On, canal 16)
+- **THEN** emite `9F 3C 64`, y no `A0 3C 64`, que sería una Presión
+  Polifónica
 
 ### Requirement: Rango de cada byte
 
 En MIDI, el *leading bit* (el bit más significativo) de cada byte es fijo:
-vale 1 en el byte de status y 0 en los bytes de datos. Por eso, aunque todos
-sean bytes, la aritmética del nodo SHALL trabajar dentro del rango que deja
-libre ese bit, y nunca SHALL cambiarlo. El rango SHALL ser de 128 a 255 (`0x80`
-a `0xFF`) para el status y de 0 a 127 (`0x00` a `0x7F`) para los datos, no de 0
-a 255.
+vale 1 en el byte de status y 0 en los bytes de datos. Por eso la aritmética
+del nodo SHALL trabajar dentro del rango de lo elegido, y nunca SHALL cambiar
+ese bit. El rango SHALL ser de 0 a 127 (`0x00` a `0x7F`) para los datos, no de
+0 a 255, y de 1 a 16 para el canal, como lo muestra el log.
 
 - **Sin overflow**, un resultado mayor que el máximo SHALL quedar en el máximo, y
   uno menor que el mínimo SHALL quedar en el mínimo.
 - **Con overflow**, el resultado SHALL pegar la vuelta: lo que se pasa de un
   extremo sigue contando desde el otro, tantas vueltas como haga falta. Para los
-  datos, después de 127 viene 0 y antes de 0 viene 127. Para el status, después
-  de 255 viene 128 y antes de 128 viene 255.
+  datos, después de 127 viene 0 y antes de 0 viene 127. Para el canal, después
+  de 16 viene 1 y antes de 1 viene 16.
 
 #### Scenario: Tope sin overflow
 
@@ -101,21 +110,28 @@ a 255.
 
 #### Scenario: Status sin overflow
 
-- **GIVEN** byte "1.º (status)", desplazamiento +1, sin overflow
-- **WHEN** recibe un mensaje con status `FF`
-- **THEN** el mensaje emitido tiene status `FF`
+- **GIVEN** byte "Canal", desplazamiento +1, sin overflow
+- **WHEN** recibe un mensaje con status `9F` (Nota On, canal 16)
+- **THEN** el mensaje emitido tiene status `9F`: el canal queda en 16 y el
+  tipo no cambia
 
 #### Scenario: Status con overflow
 
-- **GIVEN** byte "1.º (status)", desplazamiento +1, con overflow
-- **WHEN** recibe un mensaje con status `FF`
-- **THEN** el mensaje emitido tiene status `80`
+- **GIVEN** byte "Canal", desplazamiento +1, con overflow
+- **WHEN** recibe `9F 3C 64` (Nota On, canal 16)
+- **THEN** emite `90 3C 64` (Nota On, canal 1)
+
+#### Scenario: Canal hacia abajo con overflow
+
+- **GIVEN** byte "Canal", desplazamiento -1, con overflow
+- **WHEN** recibe `B0 07 64` (Cambio de Control, canal 1)
+- **THEN** emite `BF 07 64` (Cambio de Control, canal 16)
 
 ### Requirement: Un mensaje sin el byte elegido pasa sin cambios
 
-Si el mensaje recibido no tiene el byte elegido, la caja no SHALL alterarlo:
-SHALL pasarlo tal cual a las cajas siguientes, sin descartarlo y sin agregarle
-bytes.
+Si el mensaje recibido no tiene lo elegido (el byte de datos, o el canal en un
+mensaje de sistema), la caja no SHALL alterarlo: SHALL pasarlo tal cual a las
+cajas siguientes, sin descartarlo y sin agregarle bytes.
 
 #### Scenario: Presión de canal y tercer byte
 
@@ -128,3 +144,9 @@ bytes.
 - **GIVEN** byte "2.º (datos 1)", desplazamiento +1
 - **WHEN** recibe `FA` (Inicio)
 - **THEN** emite `FA`
+
+#### Scenario: Un mensaje de sistema no tiene canal
+
+- **GIVEN** byte "Canal", desplazamiento +1
+- **WHEN** recibe `F8` o `FA`
+- **THEN** emite el mismo mensaje, sin cambios

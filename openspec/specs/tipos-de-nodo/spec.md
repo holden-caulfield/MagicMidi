@@ -56,9 +56,9 @@ arranque.
 #### Scenario: Los tipos de esta versión siguen el contrato
 
 - **WHEN** se revisa la carpeta de tipos de nodo
-- **THEN** "Filtrar", "Desplazar", "Emitir" y "Descartar" están definidos cada
-  uno en su propio archivo con la misma forma, y ninguno recibe un trato
-  especial fuera de él
+- **THEN** "Filtrar", "Desplazar", "Fijar", "Mapear", "Emitir" y "Descartar"
+  están definidos cada uno en su propio archivo con la misma forma, y ninguno
+  recibe un trato especial fuera de él
 
 ### Requirement: Qué declara un tipo de nodo
 
@@ -76,7 +76,19 @@ El archivo de un tipo de nodo SHALL declarar:
   parámetro disponibles SHALL ser los registrados en el catálogo de tipos de
   parámetro (ver "Un tipo de parámetro es un archivo registrado en su
   catálogo");
+- **reglas de validación** propias, que miran los valores de varios
+  parámetros juntos. Son opcionales: un tipo que no las declara se valida solo
+  con lo que revisa cada parámetro. Cada regla que no se cumple SHALL dar un
+  texto de error asociado a uno de los parámetros. Las reglas del tipo SHALL
+  revisarse solo cuando cada parámetro, por separado, tiene un valor que le
+  sirve, así no tienen que repetir lo que ya revisan los parámetros;
 - una única **función de procesamiento**.
+
+Los errores de configuración de una caja SHALL ser los de sus parámetros más
+los de las reglas de su tipo, y SHALL poder calcularse sin la interfaz, a
+partir del tipo y de los valores de la caja. Los valores iniciales de todo tipo
+de nodo SHALL estar libres de errores, y eso SHALL revisarlo un test que
+recorre todos los tipos.
 
 Un tipo de nodo no SHALL declarar su color: el color sale de la etapa de la caja
 en el flujo.
@@ -113,6 +125,22 @@ tipo de parámetro.
 - **WHEN** se agrega una caja de ese tipo al lienzo
 - **THEN** la caja tiene conector de entrada y conector de salida, y se ve con
   el color neutro de las cajas intermedias
+
+#### Scenario: Regla de validación del tipo
+
+- **GIVEN** un tipo de nodo declara una regla que dice que el parámetro
+  "Hasta" tiene que ser mayor que "Desde"
+- **WHEN** una caja de ese tipo tiene "Desde" 10 y "Hasta" 5
+- **THEN** la caja tiene un error de configuración asociado a "Hasta", con el
+  texto que dio la regla, sin que el archivo del tipo incluya nada de la
+  interfaz
+
+#### Scenario: Las reglas del tipo no repiten las de los parámetros
+
+- **GIVEN** un parámetro entero de 0 a 127 de una caja tiene el valor 200
+- **WHEN** se calculan los errores de configuración de la caja
+- **THEN** el error es el del rango del parámetro, y las reglas del tipo no se
+  revisan
 
 ### Requirement: La función de procesamiento
 
@@ -188,8 +216,9 @@ La carpeta de tipos de nodo SHALL incluir una guía breve, en castellano,
 pensada para quien recién empieza a programar. SHALL explicar qué archivo
 crear, cómo registrarlo en el catálogo, qué declarar, cómo elegir un ícono, qué
 recibe y qué devuelve la función de procesamiento (incluyendo cómo leer los
-bytes, el tipo y el canal del mensaje), y que un mensaje sale tal cual salvo
-que llegue a una caja sin salida o que una caja falle. SHALL incluir un
+bytes, el tipo y el canal del mensaje), cómo declarar reglas de validación
+y probarlas, y que un mensaje sale tal cual salvo que llegue a una caja sin
+salida o que una caja falle. SHALL incluir un
 ejemplo completo de una caja que transforma mensajes, con su test, que no sea
 algo que ya se resuelve combinando las cajas existentes.
 
@@ -202,9 +231,11 @@ algo que ya se resuelve combinando las cajas existentes.
 #### Scenario: El ejemplo no repite lo que ya hay
 
 - **WHEN** una persona desarrolladora lee el ejemplo completo de la guía
-- **THEN** es una caja "Velocidad fija", que pone a los Nota On una velocidad
-  configurable y deja pasar sin cambios los demás mensajes, y no una caja que
-  descarta mensajes, que ya se arma con "Filtrar" y "Descartar"
+- **THEN** es una caja "Nota Off real", que convierte cada Nota On con
+  velocidad 0 en un Nota Off del mismo canal y la misma nota con velocidad 64,
+  y deja pasar sin cambios los demás mensajes; no es una caja "Velocidad
+  fija", que ya se arma con "Filtrar" y "Fijar", ni una que descarta mensajes,
+  que ya se arma con "Filtrar" y "Descartar"
 
 ### Requirement: El mensaje dice su tipo y su canal
 
