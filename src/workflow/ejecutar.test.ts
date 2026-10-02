@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { actualizar, type Flujo } from "@/estado/estado";
-import { MensajeMidi } from "@/midi/mensaje";
+import { MensajeMidi, TIPOS_ELEGIBLES, type TipoDeMensaje } from "@/midi/mensaje";
 import { TIPOS_DE_NODO } from "./catalogo";
 import { procesarMensaje } from "./ejecutar";
 
@@ -21,6 +21,12 @@ function subirNota(id: string, cuanto: number): Flujo["nodos"][number] {
     tipo: "desplazar",
     parametros: { byte: 1, desplazamiento: cuanto, overflow: false },
   };
+}
+
+// Los parámetros de un Filtrar con solo esos tipos marcados: una caja real
+// tiene siempre todas sus casillas, marcadas o no.
+function soloTipos(...tipos: TipoDeMensaje[]): Record<string, boolean> {
+  return Object.fromEntries(TIPOS_ELEGIBLES.map((tipo) => [tipo, tipos.includes(tipo)]));
 }
 
 function m(...bytes: number[]): MensajeMidi {
@@ -357,7 +363,7 @@ test("Filtrar deja pasar el resto sin tener que ocuparse de él", () => {
   actualizar({
     flujo: flujo(
       [
-        { id: "notas", tipo: "filtrar", parametros: { "nota-on": true, "nota-off": true } },
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on", "nota-off") },
         subirNota("fundamental", 0),
         subirNota("tercera", 4),
         subirNota("quinta", 7),
@@ -389,7 +395,7 @@ test("Filtrar con Nota Off y Descartar saca los Nota Off", () => {
   actualizar({
     flujo: flujo(
       [
-        { id: "notas-off", tipo: "filtrar", parametros: { "nota-off": true } },
+        { id: "notas-off", tipo: "filtrar", parametros: soloTipos("nota-off") },
         { id: "descartar", tipo: "descartar", parametros: {} },
       ],
       [
@@ -401,4 +407,146 @@ test("Filtrar con Nota Off y Descartar saca los Nota Off", () => {
 
   expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 60, 100)]);
   expect(procesarMensaje(m(0x80, 60, 64)).salidas).toEqual([]);
+});
+
+test("una caja mal configurada falla sin llegar a procesar el mensaje", () => {
+  const procesar = vi.spyOn(TIPOS_DE_NODO.desplazar, "procesar");
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "mal", tipo: "desplazar", parametros: { byte: 1, desplazamiento: 2.5, overflow: false } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "mal" },
+        { desde: "mal", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [],
+    error: 'La caja "Desplazar" está mal configurada: Desplazamiento: Tiene que ser un número entero',
+  });
+  expect(procesar).not.toHaveBeenCalled();
+});
+
+test("Fijar con el canal fuera de rango hace que no salga nada", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "fijar", tipo: "fijar", parametros: { byte: 0, valor: 17 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [],
+    error: 'La caja "Fijar" está mal configurada: Valor: Con Canal, tiene que ir de 1 a 16',
+  });
+});
+
+test("al corregir la caja, el mensaje siguiente sale bien", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "fijar", tipo: "fijar", parametros: { byte: 0, valor: 17 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+  procesarMensaje(m(0x90, 60, 100));
+
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "fijar", tipo: "fijar", parametros: { byte: 0, valor: 10 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x99, 60, 100)], error: null });
+});
+
+test("una caja mal configurada a la que no llega el mensaje no afecta", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        {
+          id: "mapear",
+          tipo: "mapear",
+          parametros: { byte: 2, entradaDesde: 64, entradaHasta: 64, salidaDesde: 0, salidaHasta: 127 },
+        },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "mapear" },
+        { desde: "mapear", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 7, 100))).toEqual({ salidas: [m(0xb0, 7, 100)], error: null });
+});
+
+test("velocidad fija solo en las notas, con Filtrar y Fijar", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "fijar", tipo: "fijar", parametros: { byte: 2, valor: 100 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 40)).salidas).toEqual([m(0x90, 60, 100)]);
+  // Un Nota On con velocidad 0 es un Nota Off: no pasa el Filtrar y sale igual.
+  expect(procesarMensaje(m(0x90, 60, 0)).salidas).toEqual([m(0x90, 60, 0)]);
+  expect(procesarMensaje(m(0xb0, 7, 40)).salidas).toEqual([m(0xb0, 7, 40)]);
+});
+
+test("comprimir la velocidad solo en las notas no convierte un Nota Off en Nota On", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        {
+          id: "mapear",
+          tipo: "mapear",
+          parametros: { byte: 2, entradaDesde: 0, entradaHasta: 127, salidaDesde: 40, salidaHasta: 110 },
+        },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "mapear" },
+        { desde: "mapear", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 0)).salidas).toEqual([m(0x90, 60, 0)]);
+  expect(procesarMensaje(m(0x90, 60, 127)).salidas).toEqual([m(0x90, 60, 110)]);
 });

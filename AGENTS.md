@@ -170,6 +170,25 @@ mergear).
   - Un error en una caja se lanza como `Error` (con el nombre de la caja y
     `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
     el único que lo atrapa: el recorrido no revisa marcas de error.
+  - Los errores de configuración de una caja salen de un solo lugar,
+    `erroresDeConfiguracion` (`validacion.ts`): primero el `error` de cada
+    parámetro y, solo si ninguno tiene, el `validar` opcional del tipo de
+    nodo, que revisa reglas entre parámetros. Cada error va asociado a la
+    `clave` de un parámetro. Lo usan el panel (el error debajo del campo), el
+    lienzo (borde rojo con `outline`, para no pisar la etapa ni la
+    selección), el ejecutor y `catalogo.test.ts`. No se guardan en
+    `estado.flujo`: se calculan de los parámetros cada vez. Un valor que se
+    puede interpretar pero no sirve se guarda igual y se muestra con su
+    error; solo lo que no se puede interpretar (un "2.5" en un entero) se
+    rechaza en el control. Si a una caja con errores le llega un mensaje, el
+    ejecutor la hace fallar sin llamar a `procesar`, así que `procesar`
+    puede suponer que la configuración está bien.
+  - Los nodos que tocan bytes (Desplazar, Fijar, Mapear) ofrecen "Canal" y
+    no el byte de status entero: el status mezcla tipo y canal, y operar
+    sobre él como un número cambia el tipo (`9F` + 1 da `A0`). Tampoco miran
+    el tipo de mensaje: no protegen el Nota On con velocidad 0, que al
+    cambiarle la velocidad se vuelve un Nota On. Eso se resuelve poniendo
+    antes un Filtrar (Nota On), no con casos especiales en cada nodo.
   - `MensajeMidi` guarda solo los bytes; `tipo`, `canal` y `nota` son getters
     que se calculan en cada lectura, para que no queden viejos si una caja
     cambia los bytes. No agregar campos derivados que haya que mantener sincronizados.
@@ -194,7 +213,9 @@ mergear).
     `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
     `Parametro` y la lista `TIPOS_DE_PARAMETRO`, que el chequeo de tipos
     mantiene de acuerdo. Cada uno define su control sobre `CampoDeParametro`
-    (que pone la etiqueta y los estilos de campo) y qué valores le sirven. El
+    (que pone la etiqueta, el error debajo del control con `aria-invalid` y
+    `aria-describedby` sobre `#control`, y los estilos de campo) y, en
+    `error`, el texto si un valor no le sirve. El
     panel de configuración no nombra ningún tipo. La guía está en
     `parametros/LEEME.md`, para alguien con nociones básicas de programación.
   - Cada caja del lienzo es un componente Lit (`<caja-del-flujo>`): Rete le
@@ -326,10 +347,13 @@ mergear).
 - Cada tipo de nodo trae su `.test.ts`, con el estilo didáctico de
   `desplazar.test.ts` (un `test` por comportamiento, bytes literales, sin
   helpers): es también el ejemplo que copia quien crea un nodo, así que tiene
-  que poder leerse sin saber nada más del proyecto. Además,
+  que poder leerse sin saber nada más del proyecto. Si el nodo tiene
+  `validar`, sus casos van en el mismo archivo. Además,
   `catalogo.test.ts` revisa lo que todo nodo tiene que cumplir.
 - Cada tipo de parámetro que interpreta lo que se escribe (como `entero.ts`)
-  trae el test de esa interpretación al lado. Lit carga sin problemas en el
+  trae al lado el test de esa interpretación y, si su `error` revisa algo
+  más que el tipo del valor (como el rango del entero), también el de
+  `error`. Lit carga sin problemas en el
   entorno `node`, así que se puede importar un archivo que define un
   componente para probar sus funciones puras.
 - Queda afuera a propósito: la vista (componentes, lienzo de Rete, tabs),

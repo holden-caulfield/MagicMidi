@@ -92,7 +92,9 @@ test("con overflow, bajar de 0 vuelve a empezar desde 127", () => {
   expect(resultado).toEqual(new MensajeMidi([0x90, 113, 100]));
 });
 
-test("en el status, cambia el canal pero sigue siendo un status", () => {
+// El canal: se desplaza entre 1 y 16, sin tocar el tipo de mensaje.
+
+test("con Canal, cambia el canal", () => {
   // 0x90 es Nota On en el canal 1: sumarle 1 lo pasa al canal 2 (0x91).
   const resultado = desplazar.procesar(new MensajeMidi([0x90, 60, 100]), {
     byte: 0,
@@ -103,16 +105,48 @@ test("en el status, cambia el canal pero sigue siendo un status", () => {
   expect(resultado).toEqual(new MensajeMidi([0x91, 60, 100]));
 });
 
-test("en el status, nunca se pierde el bit alto", () => {
-  // Sin overflow, 0xFF se queda en 0xFF; si el bit alto se perdiera, el
-  // mensaje dejaría de empezar con un status.
-  const resultado = desplazar.procesar(new MensajeMidi([0xff]), {
+test("con Canal y sin overflow, pasarse del canal 16 se queda en 16", () => {
+  // 0x9F es Nota On en el canal 16. Si se sumara al byte entero daría 0xA0,
+  // que ya no es un Nota On sino una Presión Polifónica.
+  const resultado = desplazar.procesar(new MensajeMidi([0x9f, 60, 100]), {
     byte: 0,
-    desplazamiento: 10,
+    desplazamiento: 1,
     overflow: false,
   });
 
-  expect(resultado).toEqual(new MensajeMidi([0xff]));
+  expect(resultado).toEqual(new MensajeMidi([0x9f, 60, 100]));
+});
+
+test("con Canal y con overflow, después del canal 16 viene el 1", () => {
+  const resultado = desplazar.procesar(new MensajeMidi([0x9f, 60, 100]), {
+    byte: 0,
+    desplazamiento: 1,
+    overflow: true,
+  });
+
+  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 100]));
+});
+
+test("con Canal y con overflow, antes del canal 1 viene el 16", () => {
+  // 0xB0 es Cambio de Control en el canal 1; 0xBF, en el canal 16.
+  const resultado = desplazar.procesar(new MensajeMidi([0xb0, 7, 100]), {
+    byte: 0,
+    desplazamiento: -1,
+    overflow: true,
+  });
+
+  expect(resultado).toEqual(new MensajeMidi([0xbf, 7, 100]));
+});
+
+test("con Canal, un mensaje de sistema pasa sin cambios", () => {
+  // 0xF8 (reloj) no tiene canal.
+  const resultado = desplazar.procesar(new MensajeMidi([0xf8]), {
+    byte: 0,
+    desplazamiento: 1,
+    overflow: true,
+  });
+
+  expect(resultado).toEqual(new MensajeMidi([0xf8]));
 });
 
 test("en un byte de datos, nunca se prende el bit alto", () => {

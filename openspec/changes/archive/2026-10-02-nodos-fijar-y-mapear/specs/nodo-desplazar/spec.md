@@ -1,11 +1,6 @@
-# nodo-desplazar Specification
+# Spec Delta
 
-## Purpose
-Define el nodo Desplazar, que suma o resta un valor entero a un byte del
-mensaje MIDI. Es la base de transformaciones como transponer notas, cambiar de
-canal o correr el número de un controlador.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Parámetros del nodo Desplazar
 

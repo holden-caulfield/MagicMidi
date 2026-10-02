@@ -33,8 +33,14 @@ export class CampoDeOpciones extends CampoDeParametro<ParametroDeOpciones<Valor>
 }
 
 export default {
-  valido: (parametro: ParametroDeOpciones<Valor>, valor: Valor) =>
-    parametro.opciones.some((opcion) => opcion.valor === valor),
-  dibujar: (parametro: ParametroDeOpciones<Valor>, valor: Valor) =>
-    html`<parametro-opciones .parametro=${parametro} .valor=${valor}></parametro-opciones>`,
+  error: (parametro: ParametroDeOpciones<Valor>, valor: Valor) =>
+    parametro.opciones.some((opcion) => opcion.valor === valor)
+      ? null
+      : "Tiene que ser una de las opciones",
+  dibujar: (parametro: ParametroDeOpciones<Valor>, valor: Valor, error: string | null) =>
+    html`<parametro-opciones
+      .parametro=${parametro}
+      .valor=${valor}
+      .error=${error}
+    ></parametro-opciones>`,
 };
