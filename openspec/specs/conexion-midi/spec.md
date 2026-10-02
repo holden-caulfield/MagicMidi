@@ -171,8 +171,8 @@ Mientras haya una conexión activa, la aplicación SHALL comprobar al menos una
 vez por segundo que el puerto de entrada y el de salida siguen existiendo,
 buscándolos por su identificador igual que al conectar. Si alguno de los dos ya
 no está, SHALL cerrar los dos puertos y quedar desconectada, y el panel de
-conexión SHALL mostrar un mensaje que nombra cada puerto perdido y dice si era
-el de entrada o el de salida. La aplicación no SHALL volver a conectarse sola:
+conexión y la barra de estado SHALL mostrar un mensaje que nombra cada puerto
+perdido y dice si era el de entrada o el de salida. La aplicación no SHALL volver a conectarse sola:
 los puertos elegidos se conservan, y para seguir la persona usuaria vuelve a
 presionar "Conectar". La comprobación SHALL terminar al desconectar o al abrir
 una conexión nueva, de modo que nunca afecte a una conexión distinta de la que
@@ -183,9 +183,9 @@ estaba vigilando.
 - **GIVEN** hay una conexión activa con la entrada "Teclado" y la salida "IAC
   Driver Bus 2"
 - **WHEN** se desenchufa el dispositivo "Teclado"
-- **THEN** en menos de dos segundos el encabezado dice "Desconectado", el panel
-  de conexión muestra "Se perdió la conexión con el puerto de entrada
-  'Teclado'", y un envío a la salida falla con "No hay una conexión de salida
+- **THEN** en menos de dos segundos la barra de estado dice "Desconectado" y
+  se marca como error, el panel de conexión y la barra de estado muestran "Se
+  perdió la conexión con el puerto de entrada 'Teclado'", y un envío a la salida falla con "No hay una conexión de salida
   activa"
 
 #### Scenario: Se desenchufa la salida
@@ -217,8 +217,9 @@ estaba vigilando.
 
 - **GIVEN** hay una conexión activa y el tab activo es "Log"
 - **WHEN** se desenchufa uno de los dispositivos de la conexión
-- **THEN** el encabezado pasa a "Desconectado" sin cambiar de tab, y al ir al
-  tab "Conexión" está el mensaje que nombra el puerto perdido
+- **THEN** la barra de estado pasa a "Desconectado", marcada como error y con
+  el mensaje que nombra el puerto perdido, sin cambiar de tab; y al ir al tab
+  "Conexión" está el mismo mensaje
 
 #### Scenario: Volver a conectar cuando el dispositivo vuelve
 
@@ -226,8 +227,8 @@ estaba vigilando.
   "Teclado"
 - **WHEN** se vuelve a enchufar el dispositivo y la persona usuaria presiona
   "Conectar" sin tocar los selectores
-- **THEN** la conexión se abre con los mismos puertos y el mensaje anterior
-  desaparece
+- **THEN** la conexión se abre con los mismos puertos, y el mensaje anterior
+  desaparece del panel y de la barra de estado
 
 #### Scenario: Desenchufar después de desconectar
 
