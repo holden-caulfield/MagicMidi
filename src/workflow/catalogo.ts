@@ -4,6 +4,8 @@ import descartar from "./nodos/descartar";
 import desplazar from "./nodos/desplazar";
 import emitir from "./nodos/emitir";
 import filtrar from "./nodos/filtrar";
+import fijar from "./nodos/fijar";
+import mapear from "./nodos/mapear";
 import type { TipoDeNodo } from "./tipos";
 
 // Para sumar un tipo de nodo: importarlo arriba y agregarlo acá. El orden de
@@ -11,6 +13,8 @@ import type { TipoDeNodo } from "./tipos";
 const tipos = {
   filtrar,
   desplazar,
+  fijar,
+  mapear,
   emitir,
   descartar,
 } satisfies Record<string, TipoDeNodo>;

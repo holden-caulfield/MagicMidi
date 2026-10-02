@@ -5,6 +5,7 @@ import { agregarAlLog, type EventoMidi } from "@/log/log";
 import { MensajeMidi } from "@/midi/mensaje";
 import { tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import { enviarMensaje } from "./salida";
+import { erroresDeConfiguracion } from "./validacion";
 
 export interface ResultadoDelFlujo {
   /** Lo que hay que enviar al puerto de salida, en orden. */
@@ -49,6 +50,16 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
   }
 
   const tipo = TIPOS_DE_NODO[nodo.tipo];
+  // Una caja mal configurada no procesa nada: así `procesar` puede suponer
+  // que sus parámetros están bien.
+  const [primerError] = erroresDeConfiguracion(tipo, nodo.parametros);
+  if (primerError) {
+    const parametro = tipo.parametros.find((candidato) => candidato.clave === primerError.clave);
+    throw new Error(
+      `La caja "${tipo.nombre}" está mal configurada: ${parametro?.etiqueta ?? primerError.clave}: ${primerError.mensaje}`,
+    );
+  }
+
   let resultado;
   try {
     resultado = tipo.procesar(mensaje, nodo.parametros);

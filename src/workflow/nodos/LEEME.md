@@ -8,30 +8,32 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
 ## Los pasos
 
 1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
-   qué hace la caja: por ejemplo, `velocidad-fija.ts`. Lo más fácil es copiar
+   qué hace la caja: por ejemplo, `nota-off-real.ts`. Lo más fácil es copiar
    `desplazar.ts` y cambiarlo.
 2. **Registralo en el catálogo.** Abrí `src/workflow/catalogo.ts`, importá tu
    archivo arriba y agregalo a la lista `tipos`:
 
    ```ts
-   import velocidadFija from "./nodos/velocidad-fija";
+   import notaOffReal from "./nodos/nota-off-real";
 
    const tipos = {
      filtrar,
      desplazar,
-     velocidadFija,
+     fijar,
+     mapear,
+     notaOffReal,
      emitir,
      descartar,
    } satisfies Record<string, TipoDeNodo>;
    ```
 
-   El nombre que uses en la lista (`velocidadFija`) es el identificador del tipo:
+   El nombre que uses en la lista (`notaOffReal`) es el identificador del tipo:
    no puede repetirse. El orden de la lista es el orden de la barra.
 
    Si te olvidás de este paso, no aparece ningún error: la caja simplemente no
    aparece en la barra. Es lo primero que conviene revisar cuando "no anda".
 3. **Escribí el test.** Cada caja trae su test al lado, con el mismo nombre y
-   terminado en `.test.ts`: para `velocidad-fija.ts`, `velocidad-fija.test.ts`. Lo
+   terminado en `.test.ts`: para `nota-off-real.ts`, `nota-off-real.test.ts`. Lo
    más fácil es copiar `desplazar.test.ts` y cambiar los casos. Después corré,
    desde la raíz del proyecto:
 
@@ -66,7 +68,10 @@ Un tipo de nodo es un objeto con estos campos:
   parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
   (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
   disponibles son los de la carpeta `src/workflow/parametros/`. Por ejemplo:
-  - `"entero"`: un número entero (acepta negativos).
+  - `"entero"`: un número entero (acepta negativos). Si solo sirven algunos,
+    declarale `minimo`, `maximo` o los dos: por ejemplo, `minimo: 0, maximo:
+    127` para un byte de datos. Un número fuera de ese rango se guarda igual,
+    y el panel muestra el error debajo del campo.
   - `"si-no"`: una casilla para marcar o desmarcar.
   - `"opciones"`: una lista cerrada. Cada opción tiene un `valor` y un `texto`.
 
@@ -74,6 +79,9 @@ Un tipo de nodo es un objeto con estos campos:
   crear uno nuevo: la guía está en
   [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
   poné `parametros: []`.
+- **`validar(parametros)`**: opcional. Solo hace falta si algún valor depende
+  de otro parámetro: por ejemplo, en Mapear, los dos extremos del rango de
+  entrada no pueden ser iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
 - **`procesar(mensaje, parametros)`**: la función donde la caja hace su trabajo.
 
 Terminá el objeto con `satisfies TipoDeNodo`: así el editor de código te avisa
@@ -104,7 +112,10 @@ Se llama una vez por cada mensaje MIDI que llega a la caja, y recibe:
   afectar a las otras ramas del flujo.
 - **`parametros`**: los valores que tiene configurados esta caja, por `clave`.
   Por ejemplo, `parametros.desplazamiento`. Para usarlos como número, envolvelos
-  en `Number(...)`.
+  en `Number(...)`. Cuando `procesar` se llama, los valores ya cumplen todo lo
+  que revisan los parámetros (por ejemplo, el rango de un entero) y tu
+  `validar`, si tenés uno: si la caja está mal configurada, la aplicación no
+  llama a `procesar`.
 
 Lo que devuelve decide qué pasa después:
 
@@ -127,9 +138,18 @@ la aplicación se encarga de mandarlo al puerto y de mostrarlo en el log. Por
 eso se puede probar solo mirando qué devuelve.
 
 Tené en cuenta que la aplicación no verifica que el mensaje tenga sentido MIDI.
-Por ejemplo, si desplazás el status de un *Nota On* (tres bytes) hasta un
-*Program Change* (que usa dos), queda un byte de más, y el mensaje sale igual.
-Si tu caja puede generar casos así, conviene que los revise y los descarte.
+Por ejemplo, si tu caja cambia el status de un *Nota On* (tres bytes) por el
+de un *Program Change* (que usa dos), queda un byte de más, y el mensaje sale
+igual. Si tu caja puede generar casos así, conviene que los revise y los
+descarte.
+
+Lo mismo con la velocidad: en MIDI, un Nota On con velocidad 0 es un Nota Off.
+Si cambiás la velocidad de un mensaje así (como hacen Desplazar, Fijar o
+Mapear sobre el tercer byte), se convierte en un Nota On de verdad y la nota
+queda sonando. Las cajas que vienen con la aplicación tocan bytes sin mirar el
+tipo de mensaje; para usarlas sobre la velocidad, se pone antes un **Filtrar**
+con solo "Nota On", que no deja pasar un Nota On con velocidad 0 porque su
+tipo es `"nota-off"`.
 
 ## Qué sale por el puerto
 
@@ -150,92 +170,126 @@ cuando la uses en un flujo:
   pasar el puntero por el ícono se ve qué caja falló y por qué. Los mensajes
   que llegan después se siguen procesando normalmente.
 
-## Ejemplo completo: velocidad fija
+## Ejemplo completo: Nota Off real
 
-Esta caja les pone a todos los *Nota On* la misma velocidad, sin importar qué
-tan fuerte se tocó la tecla. Sirve, por ejemplo, para un teclado que no tiene
-sensibilidad, o para que todas las notas suenen parejas. Los demás mensajes
-pasan sin cambios.
+En MIDI hay dos formas de soltar una tecla: un *Nota Off* (`8n`) o un *Nota
+On* con velocidad 0 (`9n kk 00`). Muchos teclados mandan la segunda, porque
+ahorra bytes cuando se mandan muchas notas seguidas. Algunos sintetizadores
+viejos, en cambio, solo entienden la primera, y con ellos las notas quedan
+sonando. Esta caja convierte cada Nota On con velocidad 0 en un Nota Off del
+mismo canal y la misma nota, con velocidad 64 (la que se usa cuando no se
+mide qué tan rápido se soltó la tecla). Los demás mensajes pasan sin cambios.
 
-Hay dos detalles importantes, y los dos tienen que ver con que en MIDI un Nota
-On con velocidad 0 es un Nota Off:
-
-- Si la caja le cambiara la velocidad a un Nota On con velocidad 0, lo
-  convertiría en un Nota On de verdad, y la nota quedaría sonando para
-  siempre. Por eso solo se tocan los mensajes cuyo `tipo` es `"nota-on"`: un
-  Nota On con velocidad 0 tiene tipo `"nota-off"`, así que pasa sin cambios.
-- La velocidad configurada tiene que quedar entre 1 y 127: con 0, la caja
-  convertiría las notas en Nota Off, y con más de 127 el byte dejaría de ser
-  un byte de datos.
+El detalle está en que `mensaje.tipo` no alcanza: vale `"nota-off"` para las
+dos formas, así que hay que mirar el status para saber cuál llegó. Los 4 bits
+de arriba del status (`status & 0xf0`) son el tipo: `0x90` para Nota On, `0x80`
+para Nota Off.
 
 ```ts
-import { Gauge } from "lucide";
+import { BellOff } from "lucide";
 
+import { MensajeMidi } from "@/midi/mensaje";
 import type { TipoDeNodo } from "../tipos";
 
 export default {
-  nombre: "Velocidad fija",
-  icono: Gauge,
-  parametros: [{ clave: "velocidad", etiqueta: "Velocidad", tipo: "entero", inicial: 100 }],
-  procesar(mensaje, parametros) {
-    if (mensaje.tipo !== "nota-on") {
+  nombre: "Nota Off real",
+  icono: BellOff,
+  parametros: [],
+  procesar(mensaje) {
+    const esNotaOnConVelocidadCero =
+      mensaje.tipo === "nota-off" && (mensaje.bytes[0] & 0xf0) === 0x90;
+    // `mensaje.canal` nunca es `null` en una nota, pero TypeScript no lo sabe:
+    // la segunda condición es para él.
+    if (!esNotaOnConVelocidadCero || mensaje.canal === null) {
       return mensaje;
     }
-    // Entre 1 y 127: con 0 sería un Nota Off, y más de 127 no es un byte de datos.
-    const velocidad = Math.min(Math.max(Number(parametros.velocidad), 1), 127);
-    mensaje.bytes[2] = velocidad;
-    return mensaje;
+    // 0x80 es Nota Off en el canal 1: se le suma el canal menos 1.
+    return new MensajeMidi([0x80 + mensaje.canal - 1, mensaje.bytes[1], 64]);
   },
 } satisfies TipoDeNodo;
 ```
 
 No escribe `tieneSalida` porque la caja deja pasar los mensajes hacia las
-siguientes. Para usarla, se la pone entre el trigger y un Emitir.
+siguientes, ni `validar` porque no tiene parámetros. Para usarla, se la pone
+entre el trigger y un Emitir.
 
-Y su test, en `velocidad-fija.test.ts`. Además del caso normal, prueba los
-bordes: el Nota On con velocidad 0, las velocidades configuradas fuera de
-rango, y un mensaje que no es un Nota On.
+Y su test, en `nota-off-real.test.ts`. Además del caso normal, prueba los
+mensajes que tienen que pasar sin cambios: un Nota Off que ya era Nota Off, un
+Nota On que suena, y un mensaje de otro tipo.
 
 ```ts
 import { expect, test } from "vitest";
 
 import { MensajeMidi } from "@/midi/mensaje";
-import velocidadFija from "./velocidad-fija";
+import notaOffReal from "./nota-off-real";
 
-test("les pone la velocidad elegida a los Nota On", () => {
-  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 30]), { velocidad: 100 });
-
-  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 100]));
-});
-
-test("no toca un Nota On con velocidad 0, porque es un Nota Off", () => {
-  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 0]), { velocidad: 100 });
-
-  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 0]));
-});
-
-test("no toca los Nota Off", () => {
-  const resultado = velocidadFija.procesar(new MensajeMidi([0x80, 60, 64]), { velocidad: 100 });
+test("convierte un Nota On con velocidad 0 en un Nota Off", () => {
+  const resultado = notaOffReal.procesar(new MensajeMidi([0x90, 60, 0]));
 
   expect(resultado).toEqual(new MensajeMidi([0x80, 60, 64]));
 });
 
-test("con velocidad 0 configurada, usa 1 para no convertir la nota en Nota Off", () => {
-  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 30]), { velocidad: 0 });
+test("conserva el canal", () => {
+  // 0x9A es Nota On en el canal 11; 0x8A, Nota Off en el mismo canal.
+  const resultado = notaOffReal.procesar(new MensajeMidi([0x9a, 60, 0]));
 
-  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 1]));
+  expect(resultado).toEqual(new MensajeMidi([0x8a, 60, 64]));
 });
 
-test("con más de 127 configurado, usa 127", () => {
-  const resultado = velocidadFija.procesar(new MensajeMidi([0x90, 60, 30]), { velocidad: 200 });
+test("deja igual un Nota Off que ya era Nota Off", () => {
+  const resultado = notaOffReal.procesar(new MensajeMidi([0x80, 60, 30]));
 
-  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 127]));
+  expect(resultado).toEqual(new MensajeMidi([0x80, 60, 30]));
+});
+
+test("deja igual un Nota On con velocidad", () => {
+  const resultado = notaOffReal.procesar(new MensajeMidi([0x90, 60, 100]));
+
+  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 100]));
 });
 
 test("deja pasar sin cambios los mensajes que no son notas", () => {
-  const resultado = velocidadFija.procesar(new MensajeMidi([0xb0, 7, 30]), { velocidad: 100 });
+  const resultado = notaOffReal.procesar(new MensajeMidi([0xb0, 7, 0]));
 
-  expect(resultado).toEqual(new MensajeMidi([0xb0, 7, 30]));
+  expect(resultado).toEqual(new MensajeMidi([0xb0, 7, 0]));
+});
+```
+
+## Reglas entre parámetros: `validar`
+
+Cada parámetro ya revisa lo suyo: un entero declarado con `minimo: 0, maximo:
+127` marca un 200 como error. Pero a veces un valor está bien o mal según otro
+parámetro. En Mapear, por ejemplo, "Entrada desde" y "Entrada hasta" pueden
+valer cualquier cosa de 0 a 127, pero no lo mismo los dos: con un solo valor de
+entrada no hay cómo repartir. Para eso está `validar`:
+
+```ts
+validar(parametros) {
+  if (parametros.entradaDesde === parametros.entradaHasta) {
+    return [{ clave: "entradaHasta", mensaje: "Tiene que ser distinto de Entrada desde" }];
+  }
+  return [];
+},
+```
+
+- Recibe los mismos `parametros` que `procesar`, y devuelve una **lista de
+  errores**: cada uno dice la `clave` del parámetro debajo del cual se
+  muestra, y el `mensaje`. Si está todo bien, devuelve una lista vacía.
+- Se llama **solo si cada parámetro ya está bien por separado**: no hace falta
+  revisar que un número esté en su rango, eso ya lo hizo el parámetro.
+- La aplicación guarda igual el valor con error, lo muestra debajo del campo y
+  marca la caja con un borde rojo. Si llega un mensaje a una caja así, la caja
+  falla (como si `procesar` tirara un error) y nunca se llama a `procesar`: por
+  eso `procesar` puede suponer que la configuración está bien.
+
+`validar` se prueba en el mismo `.test.ts` que `procesar`, llamándolo con
+valores:
+
+```ts
+test("una entrada de un solo valor es un error", () => {
+  expect(
+    mapear.validar({ byte: 2, entradaDesde: 64, entradaHasta: 64, salidaDesde: 0, salidaHasta: 127 }),
+  ).toEqual([{ clave: "entradaHasta", mensaje: "Tiene que ser distinto de Entrada desde" }]);
 });
 ```
 
@@ -266,9 +320,10 @@ cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
 
 Además de tu test, hay uno que revisa **todas** las cajas del catálogo
 (`src/workflow/catalogo.test.ts`). Si falla con el nombre de tu caja, quiere
-decir que algo no cumple lo que toda caja tiene que cumplir: un valor `inicial`
-que no le sirve a su `tipo` (un entero con decimales, o uno que no está entre
-las `opciones`), dos
+decir que algo no cumple lo que toda caja tiene que cumplir: valores
+`inicial` con errores de configuración (un entero con decimales o fuera de su
+rango, uno que no está entre las `opciones`, o una combinación que tu
+`validar` marca), dos
 parámetros con la misma `clave`, o un `procesar` que tira un error o devuelve
 bytes fuera de 0 a 255 con un mensaje común.
 

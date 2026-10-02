@@ -17,9 +17,13 @@ export type Parametro =
 export type ValorDeParametro = Parametro["inicial"];
 
 interface TipoDeParametro<P extends Parametro> {
-  /** Si el valor le sirve a este parámetro. El chequeo de tipos no alcanza a ver, por ejemplo, que un entero no tenga decimales. */
-  valido(parametro: P, valor: P["inicial"]): boolean;
-  dibujar(parametro: P, valor: P["inicial"]): TemplateResult;
+  /**
+   * El texto del error si el valor no le sirve a este parámetro, o `null` si
+   * le sirve. El chequeo de tipos no alcanza a ver, por ejemplo, que un entero
+   * no tenga decimales o que esté fuera de su rango.
+   */
+  error(parametro: P, valor: P["inicial"]): string | null;
+  dibujar(parametro: P, valor: P["inicial"], error: string | null): TemplateResult;
 }
 
 const TIPOS_DE_PARAMETRO = {
@@ -34,11 +38,15 @@ function tipoDe(parametro: Parametro) {
   return TIPOS_DE_PARAMETRO[parametro.tipo] as TipoDeParametro<Parametro>;
 }
 
-export function esValorValido(parametro: Parametro, valor: ValorDeParametro): boolean {
-  return tipoDe(parametro).valido(parametro, valor);
+export function errorDelParametro(parametro: Parametro, valor: ValorDeParametro): string | null {
+  return tipoDe(parametro).error(parametro, valor);
 }
 
-/** El control de un parámetro, el que corresponde a su tipo. */
-export function dibujarParametro(parametro: Parametro, valor: ValorDeParametro) {
-  return tipoDe(parametro).dibujar(parametro, valor);
+/** El control de un parámetro, el que corresponde a su tipo, con su error si tiene. */
+export function dibujarParametro(
+  parametro: Parametro,
+  valor: ValorDeParametro,
+  error: string | null,
+) {
+  return tipoDe(parametro).dibujar(parametro, valor, error);
 }

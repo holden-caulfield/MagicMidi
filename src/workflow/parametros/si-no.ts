@@ -25,7 +25,8 @@ export class CampoSiNo extends CampoDeParametro<ParametroSiNo, boolean> {
 }
 
 export default {
-  valido: (_parametro: ParametroSiNo, valor: boolean) => typeof valor === "boolean",
-  dibujar: (parametro: ParametroSiNo, valor: boolean) =>
-    html`<parametro-si-no .parametro=${parametro} .valor=${valor}></parametro-si-no>`,
+  error: (_parametro: ParametroSiNo, valor: boolean) =>
+    typeof valor === "boolean" ? null : "Tiene que ser sí o no",
+  dibujar: (parametro: ParametroSiNo, valor: boolean, error: string | null) =>
+    html`<parametro-si-no .parametro=${parametro} .valor=${valor} .error=${error}></parametro-si-no>`,
 };

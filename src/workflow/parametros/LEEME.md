@@ -65,7 +65,8 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
   el tipo del valor entre `<>` (por ejemplo `ParametroBase<number>`) y un
   campo `tipo` con el nombre del tipo. `ParametroBase` ya trae la `clave`, la
   `etiqueta` y el valor `inicial`. Si tu tipo necesita algo más, va acá: el de
-  opciones, por ejemplo, agrega la lista de opciones.
+  opciones, por ejemplo, agrega la lista de opciones, y el entero, un `minimo`
+  y un `maximo` opcionales.
 - **`interpretar(texto)`**, si lo que se escribe en el control puede no ser un
   valor válido: devuelve el valor, o `null` si no sirve. Es una función común,
   sin nada de la interfaz, y por eso se puede probar con un test. Una casilla
@@ -88,12 +89,35 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
   - si el control va antes de la etiqueta y en la misma línea, como una
     casilla, poné `protected enLinea = true;` (ver `si-no.ts`).
 - **La entrada para el catálogo** (el `export default`), con dos funciones:
-  - **`valido(parametro, valor)`**: si un valor le sirve a este parámetro. El
-    test que revisa todas las cajas (`src/workflow/catalogo.test.ts`) la usa
-    para comprobar que el valor `inicial` de cada parámetro tenga sentido.
-  - **`dibujar(parametro, valor)`**: devuelve tu etiqueta HTML con
-    `.parametro` y `.valor`. Es siempre igual: copiala y cambiá el nombre de
-    la etiqueta.
+  - **`error(parametro, valor)`**: si un valor le sirve a este parámetro.
+    Devuelve `null` si le sirve, o el texto que se muestra debajo del campo si
+    no: el entero, por ejemplo, devuelve "Tiene que ir de 0 a 127" para un
+    200 cuando el parámetro se declaró con ese rango. El panel lo muestra, el
+    lienzo marca la caja en rojo, y el test que revisa todas las cajas
+    (`src/workflow/catalogo.test.ts`) lo usa para comprobar que el valor
+    `inicial` de cada parámetro no tenga errores.
+  - **`dibujar(parametro, valor, error)`**: devuelve tu etiqueta HTML con
+    `.parametro`, `.valor` y `.error`. Es siempre igual: copiala y cambiá el
+    nombre de la etiqueta.
+
+### Lo que no se puede interpretar y lo que no sirve
+
+Son dos cosas distintas, y cada una tiene su lugar:
+
+- **Lo que no se puede interpretar** (un "2.5" en un entero, o el campo vacío)
+  no es un valor que se pueda guardar: `interpretar` devuelve `null`, el
+  control llama a `this.requestUpdate()` y la caja conserva el valor que
+  tenía.
+- **Lo que se interpreta pero no sirve** (un 200 en un entero de 0 a 127) sí
+  se guarda: el control llama a `this.avisarCambio(…)` igual, y `error` dice
+  qué está mal. Así la persona ve el problema debajo del campo, y una regla
+  que mira dos parámetros (ver
+  [`validar`](../nodos/LEEME.md#reglas-entre-parámetros-validar)) puede
+  marcar una combinación aunque cada valor, solo, esté bien.
+
+El texto del error lo dibuja `CampoDeParametro` debajo del control, y además
+le pone al elemento con `id="control"` los atributos que usan los lectores de
+pantalla para anunciarlo. Por eso es importante que tu control lleve ese `id`.
 
 No hace falta ocuparse de la etiqueta, de los estilos del campo, ni de
 guardar el valor en la caja: de eso se encargan `CampoDeParametro` y el panel
@@ -167,9 +191,10 @@ export class CampoReal extends CampoDeParametro<ParametroReal, number> {
 }
 
 export default {
-  valido: (_parametro: ParametroReal, valor: number) => Number.isFinite(valor),
-  dibujar: (parametro: ParametroReal, valor: number) =>
-    html`<parametro-real .parametro=${parametro} .valor=${valor}></parametro-real>`,
+  error: (_parametro: ParametroReal, valor: number) =>
+    Number.isFinite(valor) ? null : "Tiene que ser un número",
+  dibujar: (parametro: ParametroReal, valor: number, error: string | null) =>
+    html`<parametro-real .parametro=${parametro} .valor=${valor} .error=${error}></parametro-real>`,
 };
 ```
 
@@ -245,7 +270,10 @@ en el paso 4.
 Es igual que el de un tipo de nodo (ver
 [Cómo escribir el test](../nodos/LEEME.md#cómo-escribir-el-test)), pero lo
 que se prueba es `interpretar`: se le pasa lo que alguien podría escribir y se
-revisa qué valor devuelve, o que devuelva `null`. Para elegir los casos:
+revisa qué valor devuelve, o que devuelva `null`. Si tu `error` revisa algo
+más que el tipo del valor (como el rango del entero), probalo igual: se le pasa
+una declaración y un valor, y se revisa el texto que devuelve, o que devuelva
+`null`. Para elegir los casos:
 
 - **El caso normal**: algo que se escribe todos los días.
 - **Las variantes que tienen que funcionar**: mayúsculas y minúsculas,

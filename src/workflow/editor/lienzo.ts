@@ -9,6 +9,7 @@ import { ClassicPreset, NodeEditor, type GetSchemes } from "rete";
 import { AreaPlugin } from "rete-area-plugin";
 import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-plugin";
 
+import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado, type Conexion, type NodoDelFlujo } from "@/estado/estado";
 import {
   etapaDelTipo,
@@ -19,6 +20,7 @@ import {
   type Etapa,
 } from "../catalogo";
 import { dibujarIcono } from "../iconos";
+import { erroresDeConfiguracion } from "../validacion";
 import { estilosDelGlobo } from "./globo";
 
 /** Con este formato la barra de herramientas pone, al arrastrar, el tipo de la caja. */
@@ -29,6 +31,8 @@ const LADO_ICONO = 36;
 const SEPARACION_INICIAL = 180;
 
 class Caja extends ClassicPreset.Node {
+  conErrores = false;
+
   constructor(
     id: string,
     public nombre: string,
@@ -49,12 +53,19 @@ type Enlace = ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>;
 type Esquema = GetSchemes<Caja, Enlace>;
 type Senales = LitArea2D<Esquema>;
 
+function tieneErrores(nodo: NodoDelFlujo): boolean {
+  if (nodo.tipo === "trigger") return false;
+  return erroresDeConfiguracion(TIPOS_DE_NODO[nodo.tipo], nodo.parametros).length > 0;
+}
+
 function crearCaja(nodo: NodoDelFlujo): Caja {
   if (nodo.tipo === "trigger") {
     return new Caja(nodo.id, TRIGGER.nombre, TRIGGER.icono, "inicio", false, true);
   }
   const tipo = TIPOS_DE_NODO[nodo.tipo];
-  return new Caja(nodo.id, tipo.nombre, tipo.icono, etapaDelTipo(tipo), true, tieneSalida(tipo));
+  const caja = new Caja(nodo.id, tipo.nombre, tipo.icono, etapaDelTipo(tipo), true, tieneSalida(tipo));
+  caja.conErrores = tieneErrores(nodo);
+  return caja;
 }
 
 /**
@@ -97,6 +108,13 @@ export class CajaDelFlujo extends LitElement {
         box-shadow: 0 0 0 3px rgba(57, 108, 216, 0.3);
       }
 
+      /* Por fuera del borde, que ya dice la etapa y la selección: así el error
+         no tapa ninguna de las dos. */
+      .con-errores {
+        outline: 2px solid var(--letra-error);
+        outline-offset: 4px;
+      }
+
       /* Rete ubica las conexiones sumando offsetLeft/offsetTop, sin tener en
          cuenta transform: por eso los conectores se ubican con top y left. */
       .conector {
@@ -131,7 +149,9 @@ export class CajaDelFlujo extends LitElement {
       ></rete-ref>
     `;
     return html`
-      <div class="caja caja-${caja.etapa} ${caja.selected ? "seleccionada" : ""}">
+      <div
+        class="caja caja-${caja.etapa} ${caja.selected ? "seleccionada" : ""} ${caja.conErrores ? "con-errores" : ""}"
+      >
         ${caja.inputs.entrada ? conector("input", "entrada", caja.inputs.entrada.socket) : null}
         ${dibujarIcono(caja.icono, LADO_ICONO)}
         <span class="globo">${caja.nombre}</span>
@@ -223,6 +243,12 @@ export class LienzoWorkflow extends LitElement {
   // del editor no se tienen que volver a volcar al estado.
   private copiandoDesdeElEstado = false;
 
+  constructor() {
+    super();
+    // Para marcar las cajas mal configuradas cada vez que cambia el flujo.
+    new ControladorDeEstado(this);
+  }
+
   render() {
     return html`
       <div
@@ -243,6 +269,22 @@ export class LienzoWorkflow extends LitElement {
       }
     });
     observador.observe(this.contenedor);
+  }
+
+  updated() {
+    this.marcarErrores();
+  }
+
+  private marcarErrores() {
+    if (!this.editor) return;
+    for (const caja of this.editor.getNodes()) {
+      const nodo = estado.flujo.nodos.find((candidato) => candidato.id === caja.id);
+      const conErrores = nodo ? tieneErrores(nodo) : false;
+      if (caja.conErrores !== conErrores) {
+        caja.conErrores = conErrores;
+        this.area.update("node", caja.id);
+      }
+    }
   }
 
   async agregarCaja(id: IdDeTipo, posicion?: { x: number; y: number }) {

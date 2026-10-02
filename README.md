@@ -13,8 +13,13 @@ protocolo MIDI.
 - Pasa cada mensaje que llega por la entrada por un **flujo** que se arma
   en el tab Workflow, conectando cajas en un editor visual: **Filtrar**
   (deja seguir solo los tipos de mensaje elegidos), **Desplazar** (suma o
-  resta un valor a un byte, por ejemplo para transponer), **Emitir** (manda
-  el mensaje a la salida) y **Descartar** (hace que no salga).
+  resta un valor al canal o a un byte de datos, por ejemplo para transponer),
+  **Fijar** (pone siempre el mismo canal o el mismo valor en un byte de datos,
+  por ejemplo una velocidad pareja), **Mapear** (lleva un rango de valores de
+  un byte de datos a otro, por ejemplo para invertir un pedal o comprimir la
+  velocidad), **Emitir** (manda el mensaje a la salida) y **Descartar** (hace
+  que no salga). Una caja mal configurada (por ejemplo, un canal que no va de
+  1 a 16) muestra el error en el panel y se marca en rojo en el lienzo.
 - Si un mensaje no llega a ninguna caja de fin (Emitir o Descartar), sale tal
   cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
   caja falla, no sale nada de ese mensaje.

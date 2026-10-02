@@ -6,6 +6,7 @@ import { actualizar, estado } from "@/estado/estado";
 import { compartidos } from "@/estilos/compartidos";
 import { TIPOS_DE_NODO, TRIGGER } from "../catalogo";
 import { dibujarParametro, type ValorDeParametro } from "../parametros/catalogo";
+import { erroresDeConfiguracion } from "../validacion";
 
 function cambiarParametro(nodoId: string, clave: string, valor: ValorDeParametro) {
   actualizar({
@@ -71,6 +72,10 @@ export class PanelDeConfiguracion extends LitElement {
     const tipo = nodo.tipo === "trigger" ? null : TIPOS_DE_NODO[nodo.tipo];
     const nombre = tipo ? tipo.nombre : TRIGGER.nombre;
     const parametros = tipo ? tipo.parametros : [];
+    const errores = tipo ? erroresDeConfiguracion(tipo, nodo.parametros) : [];
+    // Si un parámetro tiene varios errores, se muestra el primero.
+    const errorDe = (clave: string) =>
+      errores.find((error) => error.clave === clave)?.mensaje ?? null;
 
     return html`
       <aside aria-label="Configuración de la caja">
@@ -84,7 +89,11 @@ export class PanelDeConfiguracion extends LitElement {
                   @cambio=${(evento: CustomEvent<ValorDeParametro>) =>
                     cambiarParametro(nodo.id, parametro.clave, evento.detail)}
                 >
-                  ${dibujarParametro(parametro, nodo.parametros[parametro.clave])}
+                  ${dibujarParametro(
+                    parametro,
+                    nodo.parametros[parametro.clave],
+                    errorDe(parametro.clave),
+                  )}
                 </div>
               `,
             )}

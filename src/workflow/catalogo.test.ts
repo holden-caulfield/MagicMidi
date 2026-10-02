@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { MensajeMidi } from "@/midi/mensaje";
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
-import { esValorValido } from "./parametros/catalogo";
+import { erroresDeConfiguracion } from "./validacion";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
@@ -17,10 +17,11 @@ const MENSAJES_TIPICOS = [
 ];
 
 describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => {
-  test("tiene valores iniciales coherentes con sus parámetros", () => {
-    for (const parametro of tipo.parametros) {
-      expect(esValorValido(parametro, parametro.inicial), parametro.clave).toBe(true);
-    }
+  test("sus valores iniciales no tienen errores de configuración", () => {
+    const iniciales = Object.fromEntries(
+      tipo.parametros.map((parametro) => [parametro.clave, parametro.inicial]),
+    );
+    expect(erroresDeConfiguracion(tipo, iniciales)).toEqual([]);
   });
 
   test("no repite claves de parámetro", () => {
@@ -47,11 +48,13 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => 
   );
 });
 
-test("Emitir y Descartar cierran el flujo; Filtrar y Desplazar quedan en el medio", () => {
+test("Emitir y Descartar cierran el flujo; las demás cajas quedan en el medio", () => {
   expect(etapaDelTipo(TIPOS_DE_NODO.emitir)).toBe("fin");
   expect(etapaDelTipo(TIPOS_DE_NODO.descartar)).toBe("fin");
   expect(etapaDelTipo(TIPOS_DE_NODO.filtrar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
+  expect(etapaDelTipo(TIPOS_DE_NODO.fijar)).toBe("intermedia");
+  expect(etapaDelTipo(TIPOS_DE_NODO.mapear)).toBe("intermedia");
 });
 
 test.each(Object.entries(TIPOS_DE_NODO))("la etapa de %s coincide con su salida", (_, tipo) => {
