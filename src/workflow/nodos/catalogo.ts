@@ -1,5 +1,6 @@
 import { Zap } from "lucide";
 
+import convertir from "./convertir";
 import descartar from "./descartar";
 import desplazar from "./desplazar";
 import emitir from "./emitir";
@@ -12,8 +13,9 @@ import type { TipoDeNodo } from "../tipos";
 // esta lista es el orden de la barra de herramientas.
 const tipos = {
   filtrar,
-  desplazar,
+  convertir,
   fijar,
+  desplazar,
   mapear,
   emitir,
   descartar,

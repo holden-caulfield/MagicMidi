@@ -7,7 +7,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 1. Nodo Convertir
 
-- [ ] 1.1 Crear `src/workflow/nodos/convertir.ts` con el ícono `RefreshCw`, el
+- [x] 1.1 Crear `src/workflow/nodos/convertir.ts` con el ícono `RefreshCw`, el
       parámetro "Convertir a" (lista de los catorce tipos de la spec, en su
       orden, textos de `NOMBRES_DE_TIPO`, inicial "cambio-de-control"), una
       tabla por tipo con su status y la posición de cada rol que tiene
@@ -17,11 +17,11 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       velocidad 64 y parte gruesa del Pitch Bend 64; canal conservado, 1 desde
       sistema, ninguno hacia sistema (design.md, "Los datos se ubican por su
       rol" y siguientes); verificar con `npx tsc --noEmit`
-- [ ] 1.2 En `nodos/catalogo.ts`, registrar `convertir` y dejar la lista en
+- [x] 1.2 En `nodos/catalogo.ts`, registrar `convertir` y dejar la lista en
       el orden Filtrar, Convertir, Fijar, Desplazar, Mapear, Emitir,
       Descartar; verificar con `npx tsc --noEmit` y que `catalogo.test.ts`
       pasa sin cambios, con `npm test`
-- [ ] 1.3 Crear `convertir.test.ts`, en el estilo de `desplazar.test.ts` (un
+- [x] 1.3 Crear `convertir.test.ts`, en el estilo de `desplazar.test.ts` (un
       `test` por comportamiento, bytes literales, sin helpers), con un caso
       por escenario de la spec `nodo-convertir` que mira una sola caja: los
       cinco del pedido (Nota → PC, CC → PB, PB → CC, Aftertouch → CC, CC →
@@ -29,7 +29,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       a sistema), PC → Selección de Canción, Pitch Bend → Posición de Canción
       con los 14 bits, el dato que no cambia de rol, los rellenos, el mensaje
       incompleto y los que pasan sin cambios; verificar con `npm test`
-- [ ] 1.4 Sumar a `ejecutar.test.ts` los escenarios de flujo de la spec
+- [x] 1.4 Sumar a `ejecutar.test.ts` los escenarios de flujo de la spec
       ("Otro controlador con un Fijar", "Aftertouch a CC sin tocar las
       notas", "Cambiar de programa con un pad", "Siempre el mismo
       programa", "Una fila de botones elige programas", "Arrancar un
@@ -37,10 +37,10 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 2. Documentación
 
-- [ ] 2.1 Actualizar la sección "Qué hace hoy" de `README.md` con Convertir
+- [x] 2.1 Actualizar la sección "Qué hace hoy" de `README.md` con Convertir
       (qué hace, la regla de roles en una oración y el ejemplo de Filtrar
       antes) y el orden nuevo de las cajas; verificar releyéndola
-- [ ] 2.2 En `src/workflow/nodos/LEEME.md`, donde explica que las cajas tocan
+- [x] 2.2 En `src/workflow/nodos/LEEME.md`, donde explica que las cajas tocan
       bytes sin mirar el tipo y que cambiar un status puede dejar un byte de
       más, aclarar que Convertir es la excepción: mira el tipo y arma el
       mensaje con la cantidad de bytes correcta; y avisar que un pad o un
@@ -50,10 +50,10 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 3. Verificación
 
-- [ ] 3.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`, y desde
+- [x] 3.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`, y desde
       `src-tauri/` `cargo check`, `cargo test`, `cargo fmt --check` y
       `cargo clippy --all-targets -- -D warnings`; todo tiene que pasar
-- [ ] 3.2 En el navegador, revisar que la barra muestra las siete cajas en el
+- [x] 3.2 En el navegador, revisar que la barra muestra las siete cajas en el
       orden de la spec, que Convertir tiene entrada y salida con el color de
       las intermedias y el ícono `RefreshCw`, y que su panel muestra
       "Convertir a" con las catorce opciones y "Cambio de Control" elegido

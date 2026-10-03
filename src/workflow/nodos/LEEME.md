@@ -18,8 +18,9 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
 
    const tipos = {
      filtrar,
-     desplazar,
+     convertir,
      fijar,
+     desplazar,
      mapear,
      notaOffReal,
      emitir,
@@ -150,7 +151,8 @@ Tené en cuenta que la aplicación no verifica que el mensaje tenga sentido MIDI
 Por ejemplo, si tu caja cambia el status de un *Nota On* (tres bytes) por el
 de un *Program Change* (que usa dos), queda un byte de más, y el mensaje sale
 igual. Si tu caja puede generar casos así, conviene que los revise y los
-descarte.
+descarte. Para cambiar el tipo de un mensaje ya está la caja **Convertir**,
+que arma el mensaje nuevo con la cantidad de bytes que corresponde.
 
 Lo mismo con la velocidad: en MIDI, un Nota On con velocidad 0 es un Nota Off.
 Si cambiás la velocidad de un mensaje así (como hacen Desplazar, Fijar o
@@ -159,6 +161,14 @@ queda sonando. Las cajas que vienen con la aplicación tocan bytes sin mirar el
 tipo de mensaje; para usarlas sobre la velocidad, se pone antes un **Filtrar**
 con solo "Nota On", que no deja pasar un Nota On con velocidad 0 porque su
 tipo es `"nota-off"`.
+
+La excepción es **Convertir**, porque su trabajo es justamente cambiar el
+tipo: lo mira para saber dónde está cada dato. También es la única que cambia
+la cantidad de bytes de un mensaje (de una nota a un Cambio de Programa, por
+ejemplo, pasa de tres a dos). Pero no elige a qué mensajes aplicarse: un pad o
+un pedal manda dos mensajes, uno al apretarlo y otro al soltarlo, y sin un
+Filtrar antes se convierten los dos (con un Convertir a Inicio, el secuenciador
+arrancaría dos veces).
 
 ## Qué sale por el puerto
 
