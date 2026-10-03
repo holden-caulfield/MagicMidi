@@ -45,33 +45,33 @@ export function partesDeLaDescripcion(mensaje: MensajeMidi): string[] {
         : `Mensaje MIDI sin reconocer: [${bytes.map(hexadecimal).join(", ")}]`,
     ];
   }
-  if (tipo === "sistema") {
-    return [
-      MENSAJES_DE_SISTEMA[bytes[0]] ??
-        `Mensaje de sistema sin reconocer (0x${hexadecimal(bytes[0])})`,
-    ];
-  }
-
-  const inicio = [NOMBRES_DE_TIPO[tipo], `canal ${mensaje.canal}`];
   // Un mensaje incompleto no tiene que hacer fallar la descripción: los bytes
   // que faltan cuentan como 0.
   const dato1 = bytes[1] ?? 0;
   const dato2 = bytes[2] ?? 0;
+  const canal = `canal ${mensaje.canal}`;
 
   switch (tipo) {
     case "nota-off":
     case "nota-on":
-      return [...inicio, nota(dato1), `velocidad ${dato2}`];
+      return [NOMBRES_DE_TIPO[tipo], canal, nota(dato1), `velocidad ${dato2}`];
     case "presion-polifonica":
-      return [...inicio, nota(dato1), `presión ${dato2}`];
+      return [NOMBRES_DE_TIPO[tipo], canal, nota(dato1), `presión ${dato2}`];
     case "cambio-de-control":
-      return [...inicio, `controlador ${dato1}`, `valor ${dato2}`];
+      return [NOMBRES_DE_TIPO[tipo], canal, `controlador ${dato1}`, `valor ${dato2}`];
     case "cambio-de-programa":
-      return [...inicio, `programa ${dato1}`];
+      return [NOMBRES_DE_TIPO[tipo], canal, `programa ${dato1}`];
     case "presion-de-canal":
-      return [...inicio, `presión ${dato1}`];
+      return [NOMBRES_DE_TIPO[tipo], canal, `presión ${dato1}`];
     case "pitch-bend":
-      return [...inicio, `valor ${(dato2 << 7) | dato1}`];
+      return [NOMBRES_DE_TIPO[tipo], canal, `valor ${(dato2 << 7) | dato1}`];
+    default:
+      // Los de sistema se describen con su nombre largo, que es presentación:
+      // por eso la tabla está acá y no en `MensajeMidi`.
+      return [
+        MENSAJES_DE_SISTEMA[bytes[0]] ??
+          `Mensaje de sistema sin reconocer (0x${hexadecimal(bytes[0])})`,
+      ];
   }
 }
 

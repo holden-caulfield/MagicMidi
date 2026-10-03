@@ -34,7 +34,18 @@ est.actualizar({
     nodos: [
       ...est.estado.flujo.nodos,
       { id: "d", tipo: "desplazar", parametros: { byte: 2, desplazamiento: -3, overflow: true } },
-      { id: "f", tipo: "filtrar", parametros: { "nota-on": true } },
+      {
+        id: "f",
+        tipo: "filtrar",
+        parametros: {
+          tipos: ["nota-on", "nota-off"],
+          canales: [1, 10],
+          datos1Desde: 60,
+          datos1Hasta: 72,
+          datos2Desde: 0,
+          datos2Hasta: 127,
+        },
+      },
     ],
   },
   nodoSeleccionado: "d",

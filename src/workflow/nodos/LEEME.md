@@ -73,7 +73,12 @@ Un tipo de nodo es un objeto con estos campos:
     127` para un byte de datos. Un número fuera de ese rango se guarda igual,
     y el panel muestra el error debajo del campo.
   - `"si-no"`: una casilla para marcar o desmarcar.
-  - `"opciones"`: una lista cerrada. Cada opción tiene un `valor` y un `texto`.
+  - `"lista"`: una opción de una lista cerrada. Cada opción tiene un `valor` y
+    un `texto`.
+  - `"opciones"` y `"autocompletar"`: varias opciones de una lista cerrada (o
+    ninguna). El valor es una lista con los valores elegidos. El primero
+    muestra todas como píldoras, para pocas opciones cortas; el segundo las
+    busca escribiendo, para listas largas.
 
   Los que hay están en `parametros/catalogo.ts`. Si ninguno te sirve, se puede
   crear uno nuevo: la guía está en
@@ -99,8 +104,10 @@ Se llama una vez por cada mensaje MIDI que llega a la caja, y recibe:
   - **`mensaje.tipo`**: qué clase de mensaje es, sin que tengas que hacer
     cuentas con los bits del primer byte. Vale uno de estos textos:
     `"nota-on"`, `"nota-off"`, `"presion-polifonica"`, `"cambio-de-control"`,
-    `"cambio-de-programa"`, `"presion-de-canal"`, `"pitch-bend"`, `"sistema"`
-    o `"desconocido"`. Un Nota On con velocidad 0 cuenta como `"nota-off"`,
+    `"cambio-de-programa"`, `"presion-de-canal"` o `"pitch-bend"` en los de
+    canal; uno por cada mensaje de sistema (`"sysex"`, `"inicio"`,
+    `"detener"`, …: la lista completa está en `src/midi/mensaje.ts`); o
+    `"desconocido"`. Un Nota On con velocidad 0 cuenta como `"nota-off"`,
     porque en MIDI es otra forma de soltar la tecla.
   - **`mensaje.canal`**: el canal, de 1 a 16, en los mensajes de canal (notas,
     controles, etc.). En los mensajes de sistema vale `null`, porque no tienen
@@ -112,7 +119,9 @@ Se llama una vez por cada mensaje MIDI que llega a la caja, y recibe:
   afectar a las otras ramas del flujo.
 - **`parametros`**: los valores que tiene configurados esta caja, por `clave`.
   Por ejemplo, `parametros.desplazamiento`. Para usarlos como número, envolvelos
-  en `Number(...)`. Cuando `procesar` se llama, los valores ya cumplen todo lo
+  en `Number(...)`. Un parámetro de varias opciones es una lista: para usarlo
+  como tal, decíselo a TypeScript con `as` (en Filtrar,
+  `parametros.canales as number[]`). Cuando `procesar` se llama, los valores ya cumplen todo lo
   que revisan los parámetros (por ejemplo, el rango de un entero) y tu
   `validar`, si tenés uno: si la caja está mal configurada, la aplicación no
   llama a `procesar`.
@@ -163,7 +172,14 @@ cuando la uses en un flujo:
 - **Si llega a al menos una caja sin salida** (Emitir, Descartar o una tuya),
   el original ya no sale por su cuenta: sale solo lo que devuelvan esas cajas.
   Para sacar los Nota Off, por ejemplo, no hace falta escribir una caja: se
-  conecta un **Filtrar** con solo "Nota Off" marcado a un **Descartar**.
+  conecta un **Filtrar** con solo "Nota Off" elegido a un **Descartar**.
+- **Si un mensaje llega a una caja por dos caminos**, la caja lo procesa dos
+  veces. Por ejemplo, Filtrar combina sus criterios con "y" (Nota On *y* en el
+  canal 1); para un "o" (Nota On, *o* cualquier cosa del canal 10) se ponen
+  dos Filtrar en paralelo, conectados a la misma caja. Un Nota On del canal 10
+  pasa los dos y sale dos veces. Para que no pase, armá los filtros para que
+  no se pisen: en el segundo, elegí el canal 10 y todos los tipos menos Nota
+  On.
 - **Si una caja tira un error, o devuelve algo que no es un mensaje válido**
   (algún byte que no sea un entero entre 0 y 255, o ningún byte), no sale
   nada de ese mensaje, ni por las otras ramas. En el log aparece en rojo, y al

@@ -23,7 +23,7 @@ export default {
     {
       clave: "byte",
       etiqueta: "Byte",
-      tipo: "opciones",
+      tipo: "lista",
       inicial: 1,
       opciones: [
         { valor: BYTE_CANAL, texto: "Canal" },

@@ -24,10 +24,34 @@ test("un Nota On con velocidad 1 sigue siendo Nota On", () => {
   expect(new MensajeMidi([0x90, 60, 1]).tipo).toBe("nota-on");
 });
 
+test("lee el tipo de cada mensaje de sistema", () => {
+  expect(new MensajeMidi([0xf0, 0x7e, 0x7f, 0x06, 0x01, 0xf7]).tipo).toBe("sysex");
+  expect(new MensajeMidi([0xf1, 0x10]).tipo).toBe("cuadro-de-tiempo");
+  expect(new MensajeMidi([0xf2, 0x00, 0x08]).tipo).toBe("posicion-de-cancion");
+  expect(new MensajeMidi([0xf3, 0x02]).tipo).toBe("seleccion-de-cancion");
+  expect(new MensajeMidi([0xf6]).tipo).toBe("solicitud-de-afinacion");
+  expect(new MensajeMidi([0xf8]).tipo).toBe("reloj");
+  expect(new MensajeMidi([0xfa]).tipo).toBe("inicio");
+  expect(new MensajeMidi([0xfb]).tipo).toBe("continuar");
+  expect(new MensajeMidi([0xfc]).tipo).toBe("detener");
+  expect(new MensajeMidi([0xfe]).tipo).toBe("sensor-activo");
+  expect(new MensajeMidi([0xff]).tipo).toBe("reset");
+});
+
+test("los status de sistema no definidos tienen su propio tipo", () => {
+  expect(new MensajeMidi([0xf4]).tipo).toBe("sistema-no-definido");
+  expect(new MensajeMidi([0xf5]).tipo).toBe("sistema-no-definido");
+  expect(new MensajeMidi([0xf7]).tipo).toBe("sistema-no-definido");
+  expect(new MensajeMidi([0xf9]).tipo).toBe("sistema-no-definido");
+  expect(new MensajeMidi([0xfd]).tipo).toBe("sistema-no-definido");
+});
+
 test("los mensajes de sistema no tienen canal", () => {
-  expect(new MensajeMidi([0xfa]).tipo).toBe("sistema");
   expect(new MensajeMidi([0xfa]).canal).toBeNull();
-  expect(new MensajeMidi([0xf0, 0x7e, 0xf7]).tipo).toBe("sistema");
+  expect(new MensajeMidi([0xf0, 0x7e, 0xf7]).canal).toBeNull();
+  expect(new MensajeMidi([0xf8]).canal).toBeNull();
+  expect(new MensajeMidi([0xfe]).canal).toBeNull();
+  expect(new MensajeMidi([0xf9]).canal).toBeNull();
 });
 
 test("un mensaje que no empieza con un status es desconocido y no tiene canal", () => {
