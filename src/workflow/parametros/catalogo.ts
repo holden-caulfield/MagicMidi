@@ -1,6 +1,8 @@
 import type { TemplateResult } from "lit";
 
+import autocompletar, { type ParametroAutocompletar } from "./autocompletar";
 import entero, { type ParametroEntero } from "./entero";
+import lista, { type ParametroLista } from "./lista";
 import opciones, { type ParametroDeOpciones } from "./opciones";
 import siNo, { type ParametroSiNo } from "./si-no";
 
@@ -10,9 +12,13 @@ import siNo, { type ParametroSiNo } from "./si-no";
 export type Parametro =
   | ParametroEntero
   | ParametroSiNo
+  | ParametroLista<number>
+  | ParametroLista<string>
+  | ParametroLista<boolean>
   | ParametroDeOpciones<number>
   | ParametroDeOpciones<string>
-  | ParametroDeOpciones<boolean>;
+  | ParametroAutocompletar<number>
+  | ParametroAutocompletar<string>;
 
 export type ValorDeParametro = Parametro["inicial"];
 
@@ -29,7 +35,9 @@ interface TipoDeParametro<P extends Parametro> {
 const TIPOS_DE_PARAMETRO = {
   entero,
   "si-no": siNo,
+  lista,
   opciones,
+  autocompletar,
 } satisfies { [T in Parametro["tipo"]]: TipoDeParametro<Extract<Parametro, { tipo: T }>> };
 
 // TypeScript no sabe que la entrada que se busca con `parametro.tipo` es la de

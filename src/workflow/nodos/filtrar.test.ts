@@ -1,73 +1,67 @@
 import { expect, test } from "vitest";
 
-import { MensajeMidi } from "@/midi/mensaje";
+import { MensajeMidi, TIPOS_ELEGIBLES } from "@/midi/mensaje";
 import filtrar from "./filtrar";
 
-// Filtrar deja pasar el mensaje tal cual si su tipo está marcado, y si no, no
-// devuelve nada: esa rama del flujo termina ahí.
-
-const NADA_MARCADO = {
-  "nota-on": false,
-  "nota-off": false,
-  "presion-polifonica": false,
-  "cambio-de-control": false,
-  "cambio-de-programa": false,
-  "presion-de-canal": false,
-  "pitch-bend": false,
-  "sistema": false,
+// Filtrar deja pasar el mensaje tal cual si cumple todos sus criterios, y si
+// no, no devuelve nada: esa rama del flujo termina ahí.
+//
+// Así arranca una caja nueva: sin tipos ni canales elegidos y con los dos
+// rangos completos, deja pasar todo. Cada `test` cambia solo lo que prueba.
+const CAJA_NUEVA = {
+  tipos: [],
+  canales: [],
+  datos1Desde: 0,
+  datos1Hasta: 127,
+  datos2Desde: 0,
+  datos2Hasta: 127,
 };
 
-test("deja pasar un Nota On si Nota On está marcado", () => {
-  const resultado = filtrar.procesar(new MensajeMidi([0x90, 60, 100]), {
-    ...NADA_MARCADO,
-    "nota-on": true,
-  });
-
-  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 100]));
+test("una caja nueva deja pasar cualquier mensaje", () => {
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), CAJA_NUEVA)).toEqual(
+    new MensajeMidi([0x90, 60, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0xb0, 7, 100]), CAJA_NUEVA)).toEqual(
+    new MensajeMidi([0xb0, 7, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0xfa]), CAJA_NUEVA)).toEqual(new MensajeMidi([0xfa]));
 });
 
-test("no deja pasar un Cambio de Control si solo están marcadas las notas", () => {
+// Tipos de mensaje: si hay alguno elegido, pasa el mensaje que sea de uno de
+// ellos.
+
+test("con las notas elegidas, deja pasar un Nota On y un Nota Off", () => {
+  const parametros = { ...CAJA_NUEVA, tipos: ["nota-on", "nota-off"] };
+
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
+    new MensajeMidi([0x90, 60, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x80, 60, 64]), parametros)).toEqual(
+    new MensajeMidi([0x80, 60, 64]),
+  );
+});
+
+test("con las notas elegidas, no deja pasar un Cambio de Control", () => {
   const resultado = filtrar.procesar(new MensajeMidi([0xb0, 7, 100]), {
-    ...NADA_MARCADO,
-    "nota-on": true,
-    "nota-off": true,
+    ...CAJA_NUEVA,
+    tipos: ["nota-on", "nota-off"],
   });
 
   expect(resultado).toBeUndefined();
 });
 
-test("con las notas marcadas, deja pasar el Nota Off", () => {
-  const resultado = filtrar.procesar(new MensajeMidi([0x80, 60, 64]), {
-    ...NADA_MARCADO,
-    "nota-on": true,
-    "nota-off": true,
-  });
-
-  expect(resultado).toEqual(new MensajeMidi([0x80, 60, 64]));
-});
-
-// El caso límite de las notas: un Nota On con velocidad 0 es un Nota Off.
-
-test("un Nota On con velocidad 0 no pasa si solo está marcado Nota On", () => {
+test("un Nota On con velocidad 0 no pasa si solo está elegido Nota On", () => {
+  // Es un Nota Off.
   const resultado = filtrar.procesar(new MensajeMidi([0x90, 60, 0]), {
-    ...NADA_MARCADO,
-    "nota-on": true,
+    ...CAJA_NUEVA,
+    tipos: ["nota-on"],
   });
 
   expect(resultado).toBeUndefined();
 });
 
-test("un Nota On con velocidad 0 pasa si está marcado Nota Off", () => {
-  const resultado = filtrar.procesar(new MensajeMidi([0x90, 60, 0]), {
-    ...NADA_MARCADO,
-    "nota-off": true,
-  });
-
-  expect(resultado).toEqual(new MensajeMidi([0x90, 60, 0]));
-});
-
-test("no le importa el canal", () => {
-  const parametros = { ...NADA_MARCADO, "cambio-de-control": true };
+test("el tipo sirve en cualquier canal", () => {
+  const parametros = { ...CAJA_NUEVA, tipos: ["cambio-de-control"] };
 
   expect(filtrar.procesar(new MensajeMidi([0xb0, 7, 100]), parametros)).toEqual(
     new MensajeMidi([0xb0, 7, 100]),
@@ -77,40 +71,157 @@ test("no le importa el canal", () => {
   );
 });
 
-test("con Mensajes de sistema marcado, deja pasar un Inicio", () => {
-  const resultado = filtrar.procesar(new MensajeMidi([0xfa]), {
-    ...NADA_MARCADO,
-    "sistema": true,
-  });
+test("los mensajes de sistema se eligen de a uno", () => {
+  const parametros = { ...CAJA_NUEVA, tipos: ["inicio", "detener"] };
 
-  expect(resultado).toEqual(new MensajeMidi([0xfa]));
+  expect(filtrar.procesar(new MensajeMidi([0xfa]), parametros)).toEqual(new MensajeMidi([0xfa]));
+  expect(filtrar.procesar(new MensajeMidi([0xfc]), parametros)).toEqual(new MensajeMidi([0xfc]));
+  expect(filtrar.procesar(new MensajeMidi([0xfb]), parametros)).toBeUndefined();
+  expect(
+    filtrar.procesar(new MensajeMidi([0xf0, 0x7e, 0x7f, 0x06, 0x01, 0xf7]), parametros),
+  ).toBeUndefined();
 });
 
-test("con Mensajes de sistema marcado, no deja pasar una nota", () => {
-  const resultado = filtrar.procesar(new MensajeMidi([0x90, 60, 100]), {
-    ...NADA_MARCADO,
-    "sistema": true,
+test("un status de sistema no definido no pasa si hay tipos elegidos", () => {
+  const resultado = filtrar.procesar(new MensajeMidi([0xf9]), {
+    ...CAJA_NUEVA,
+    // Todos los que se pueden elegir.
+    tipos: [...TIPOS_ELEGIBLES],
   });
 
   expect(resultado).toBeUndefined();
 });
 
-test("sin nada marcado, no deja pasar nada", () => {
-  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), NADA_MARCADO)).toBeUndefined();
-  expect(filtrar.procesar(new MensajeMidi([0xfa]), NADA_MARCADO)).toBeUndefined();
+// Canales: si hay alguno elegido, pasa el mensaje que sea de uno de ellos.
+
+test("con el canal 10 elegido, deja pasar solo lo del canal 10", () => {
+  const parametros = { ...CAJA_NUEVA, canales: [10] };
+
+  expect(filtrar.procesar(new MensajeMidi([0x99, 36, 100]), parametros)).toEqual(
+    new MensajeMidi([0x99, 36, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0xb9, 7, 100]), parametros)).toEqual(
+    new MensajeMidi([0xb9, 7, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toBeUndefined();
 });
 
-test("un mensaje que no empieza con un status no pasa nunca", () => {
-  const todoMarcado = {
-    "nota-on": true,
-    "nota-off": true,
-    "presion-polifonica": true,
-    "cambio-de-control": true,
-    "cambio-de-programa": true,
-    "presion-de-canal": true,
-    "pitch-bend": true,
-    "sistema": true,
+test("con los canales 1 y 2 elegidos, no deja pasar el 3", () => {
+  const parametros = { ...CAJA_NUEVA, canales: [1, 2] };
+
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
+    new MensajeMidi([0x90, 60, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x91, 60, 100]), parametros)).toEqual(
+    new MensajeMidi([0x91, 60, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x92, 60, 100]), parametros)).toBeUndefined();
+});
+
+test("un mensaje de sistema no pasa si hay canales elegidos", () => {
+  // No tiene canal.
+  const resultado = filtrar.procesar(new MensajeMidi([0xfa]), { ...CAJA_NUEVA, canales: [1] });
+
+  expect(resultado).toBeUndefined();
+});
+
+// Rangos: el 2.º y el 3.º byte tienen que estar entre "desde" y "hasta", los
+// dos incluidos.
+
+test("una zona del teclado: notas de 60 a 72", () => {
+  const parametros = { ...CAJA_NUEVA, datos1Desde: 60, datos1Hasta: 72 };
+
+  expect(filtrar.procesar(new MensajeMidi([0x90, 59, 100]), parametros)).toBeUndefined();
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
+    new MensajeMidi([0x90, 60, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x90, 72, 100]), parametros)).toEqual(
+    new MensajeMidi([0x90, 72, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x90, 73, 100]), parametros)).toBeUndefined();
+});
+
+test("un valor exacto: solo el CC 7", () => {
+  const parametros = { ...CAJA_NUEVA, tipos: ["cambio-de-control"], datos1Desde: 7, datos1Hasta: 7 };
+
+  expect(filtrar.procesar(new MensajeMidi([0xb0, 7, 100]), parametros)).toEqual(
+    new MensajeMidi([0xb0, 7, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0xb0, 1, 100]), parametros)).toBeUndefined();
+});
+
+test("el rango completo deja pasar mensajes que no tienen ese byte", () => {
+  // Un Cambio de Programa y un Inicio no tienen 3.er byte.
+  expect(filtrar.procesar(new MensajeMidi([0xc0, 5]), CAJA_NUEVA)).toEqual(
+    new MensajeMidi([0xc0, 5]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0xfa]), CAJA_NUEVA)).toEqual(new MensajeMidi([0xfa]));
+});
+
+test("un rango más chico no deja pasar un mensaje sin ese byte", () => {
+  const resultado = filtrar.procesar(new MensajeMidi([0xc0, 5]), {
+    ...CAJA_NUEVA,
+    datos2Desde: 0,
+    datos2Hasta: 100,
+  });
+
+  expect(resultado).toBeUndefined();
+});
+
+// Todos los criterios juntos: el mensaje tiene que cumplirlos todos.
+
+test("Nota On, en el canal 1, de 60 a 72", () => {
+  const parametros = {
+    ...CAJA_NUEVA,
+    tipos: ["nota-on"],
+    canales: [1],
+    datos1Desde: 60,
+    datos1Hasta: 72,
   };
 
-  expect(filtrar.procesar(new MensajeMidi([0x3c, 0x40]), todoMarcado)).toBeUndefined();
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
+    new MensajeMidi([0x90, 60, 100]),
+  );
+  // Del canal 2.
+  expect(filtrar.procesar(new MensajeMidi([0x91, 60, 100]), parametros)).toBeUndefined();
+  // Fuera de la zona.
+  expect(filtrar.procesar(new MensajeMidi([0x90, 48, 100]), parametros)).toBeUndefined();
+  // Un Nota Off.
+  expect(filtrar.procesar(new MensajeMidi([0x80, 60, 64]), parametros)).toBeUndefined();
+});
+
+test("una capa de velocidad: Nota On de 100 a 127", () => {
+  const parametros = { ...CAJA_NUEVA, tipos: ["nota-on"], datos2Desde: 100, datos2Hasta: 127 };
+
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 99]), parametros)).toBeUndefined();
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
+    new MensajeMidi([0x90, 60, 100]),
+  );
+  expect(filtrar.procesar(new MensajeMidi([0x90, 60, 120]), parametros)).toEqual(
+    new MensajeMidi([0x90, 60, 120]),
+  );
+});
+
+// `validar` revisa lo que depende de más de un parámetro: en cada rango,
+// "desde" no puede ser mayor que "hasta". Devuelve la lista de errores (vacía
+// si está todo bien).
+
+test("una caja nueva no tiene errores", () => {
+  expect(filtrar.validar(CAJA_NUEVA)).toEqual([]);
+});
+
+test("un rango de datos 1 al revés es un error", () => {
+  expect(filtrar.validar({ ...CAJA_NUEVA, datos1Desde: 72, datos1Hasta: 60 })).toEqual([
+    { clave: "datos1Hasta", mensaje: "Tiene que ser igual o mayor que Datos 1 desde" },
+  ]);
+});
+
+test("un rango de datos 2 al revés es un error", () => {
+  expect(filtrar.validar({ ...CAJA_NUEVA, datos2Desde: 100, datos2Hasta: 50 })).toEqual([
+    { clave: "datos2Hasta", mensaje: "Tiene que ser igual o mayor que Datos 2 desde" },
+  ]);
+});
+
+test("un rango de un solo valor está bien", () => {
+  expect(filtrar.validar({ ...CAJA_NUEVA, datos2Desde: 64, datos2Hasta: 64 })).toEqual([]);
 });

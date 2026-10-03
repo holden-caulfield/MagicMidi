@@ -12,7 +12,11 @@ protocolo MIDI.
   disponibles en el sistema.
 - Pasa cada mensaje que llega por la entrada por un **flujo** que se arma
   en el tab Workflow, conectando cajas en un editor visual: **Filtrar**
-  (deja seguir solo los tipos de mensaje elegidos), **Desplazar** (suma o
+  (deja seguir solo lo que cumple todos sus criterios: los tipos de mensaje
+  elegidos, incluido cada mensaje de sistema por separado, los canales
+  elegidos, y un rango para cada byte de datos, por ejemplo una zona del
+  teclado o una capa de velocidad; lo que no se configura no restringe),
+  **Desplazar** (suma o
   resta un valor al canal o a un byte de datos, por ejemplo para transponer),
   **Fijar** (pone siempre el mismo canal o el mismo valor en un byte de datos,
   por ejemplo una velocidad pareja), **Mapear** (lleva un rango de valores de
@@ -23,6 +27,9 @@ protocolo MIDI.
 - Si un mensaje no llega a ninguna caja de fin (Emitir o Descartar), sale tal
   cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
   caja falla, no sale nada de ese mensaje.
+- Un mensaje que llega a una caja por dos caminos se procesa dos veces. Por
+  eso, para dejar pasar una cosa *o* la otra con dos Filtrar en paralelo, lo
+  que cumple los dos sale dos veces: conviene armarlos para que no se pisen.
 - Muestra en pantalla un log en tiempo real de los mensajes que entran y lo
   que el flujo hizo con cada uno (si salió igual, transformado, descartado o
   con error), con una descripción legible (Nota On/Off, Control Change, Pitch

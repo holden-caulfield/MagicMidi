@@ -33,6 +33,12 @@ export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends Li
         align-items: center;
       }
 
+      .etiqueta {
+        font-size: 0.85em;
+        font-weight: 600;
+        opacity: 0.8;
+      }
+
       .error {
         margin: 0;
         font-size: 0.85em;
@@ -49,6 +55,14 @@ export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends Li
   /** Con `true`, el control va antes de la etiqueta y en la misma línea, como una casilla. */
   protected enLinea = false;
 
+  /**
+   * Con `true`, el control es un grupo de varios controles, cada uno con su
+   * texto: la etiqueta nombra al grupo en lugar de apuntar a un control, porque
+   * un `<label for>` solo puede apuntar a uno. El control tiene que llevar
+   * `id="control"` igual, en el elemento que agrupa.
+   */
+  protected esGrupo = false;
+
   protected abstract control(): TemplateResult;
 
   protected avisarCambio(valor: V) {
@@ -56,7 +70,9 @@ export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends Li
   }
 
   render() {
-    const etiqueta = html`<label for="control">${this.parametro.etiqueta}</label>`;
+    const etiqueta = this.esGrupo
+      ? html`<span id="etiqueta" class="etiqueta">${this.parametro.etiqueta}</span>`
+      : html`<label for="control">${this.parametro.etiqueta}</label>`;
     const error = this.error ? html`<p id="error" class="error">${this.error}</p>` : nothing;
     return this.enLinea
       ? html`<div class="campo en-linea">${this.control()}${etiqueta}</div>${error}`
@@ -69,6 +85,10 @@ export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends Li
     const control = this.renderRoot.querySelector("#control");
     if (!control) {
       return;
+    }
+    if (this.esGrupo) {
+      control.setAttribute("role", "group");
+      control.setAttribute("aria-labelledby", "etiqueta");
     }
     if (this.error) {
       control.setAttribute("aria-invalid", "true");

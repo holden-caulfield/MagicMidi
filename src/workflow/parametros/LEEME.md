@@ -17,6 +17,23 @@ la lógica, hay que escribir el control que se ve en el panel. Pero lo común
 (la etiqueta, los estilos, guardar el valor en la caja) ya está resuelto, y
 tu archivo solo dice qué control dibujar y qué valores acepta.
 
+## Los que hay
+
+- `entero`: un número entero, con un rango opcional.
+- `si-no`: una casilla.
+- `lista`: una sola opción de una lista cerrada, con un desplegable. Sirve
+  para pocas opciones (en Mapear, qué byte se mapea).
+- `opciones`: varias opciones de una lista cerrada, todas a la vista como
+  píldoras que se encienden y se apagan. Sirve para pocas opciones de texto
+  corto (en Filtrar, los canales).
+- `autocompletar`: varias opciones de una lista cerrada, que se buscan
+  escribiendo en un campo; las elegidas quedan debajo, cada una con un botón
+  para quitarla. Sirve para listas largas (en Filtrar, los tipos de mensaje),
+  y puede declarar un `textoDeAyuda` para cuando no hay ninguna elegida.
+
+En `opciones` y `autocompletar` el valor es una lista con los valores
+elegidos, en el orden de las opciones, y no elegir ninguna también vale.
+
 ## Los pasos
 
 1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
@@ -64,8 +81,8 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
   un parámetro de tu tipo. Es una `interface` que extiende `ParametroBase`, con
   el tipo del valor entre `<>` (por ejemplo `ParametroBase<number>`) y un
   campo `tipo` con el nombre del tipo. `ParametroBase` ya trae la `clave`, la
-  `etiqueta` y el valor `inicial`. Si tu tipo necesita algo más, va acá: el de
-  opciones, por ejemplo, agrega la lista de opciones, y el entero, un `minimo`
+  `etiqueta` y el valor `inicial`. Si tu tipo necesita algo más, va acá: la
+  lista, por ejemplo, agrega sus opciones, y el entero, un `minimo`
   y un `maximo` opcionales.
 - **`interpretar(texto)`**, si lo que se escribe en el control puede no ser un
   valor válido: devuelve el valor, o `null` si no sirve. Es una función común,
@@ -87,7 +104,15 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
     distinto de como se guarda, armá el texto con una función aparte (como
     `mostrar` en el ejemplo de abajo), que también se puede probar;
   - si el control va antes de la etiqueta y en la misma línea, como una
-    casilla, poné `protected enLinea = true;` (ver `si-no.ts`).
+    casilla, poné `protected enLinea = true;` (ver `si-no.ts`);
+  - si el control son varios controles, cada uno con su texto (como las
+    píldoras de `opciones.ts`), poné `protected esGrupo = true;` y ponele
+    `id="control"` al elemento que los agrupa: la etiqueta pasa a nombrar al
+    grupo, que es lo que anuncia un lector de pantalla al entrar en él, porque
+    una etiqueta común solo puede apuntar a un control;
+  - si el valor es una lista, avisá siempre una lista nueva, nunca la misma
+    modificada: la caja se da cuenta de que algo cambió porque el valor es
+    otro.
 - **La entrada para el catálogo** (el `export default`), con dos funciones:
   - **`error(parametro, valor)`**: si un valor le sirve a este parámetro.
     Devuelve `null` si le sirve, o el texto que se muestra debajo del campo si

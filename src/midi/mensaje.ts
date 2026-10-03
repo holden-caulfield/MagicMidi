@@ -6,10 +6,24 @@ export type TipoDeMensaje =
   | "cambio-de-programa"
   | "presion-de-canal"
   | "pitch-bend"
-  | "sistema"
+  | "sysex"
+  | "cuadro-de-tiempo"
+  | "posicion-de-cancion"
+  | "seleccion-de-cancion"
+  | "solicitud-de-afinacion"
+  | "reloj"
+  | "inicio"
+  | "continuar"
+  | "detener"
+  | "sensor-activo"
+  | "reset"
+  | "sistema-no-definido"
   | "desconocido";
 
-/** Los tipos que se pueden elegir, por ejemplo en Filtrar, en este orden. */
+/**
+ * Los tipos que se pueden elegir, por ejemplo en Filtrar, en este orden. El
+ * reloj y el Sensor Activo no están porque nunca llegan al flujo.
+ */
 export const TIPOS_ELEGIBLES = [
   "nota-on",
   "nota-off",
@@ -18,7 +32,15 @@ export const TIPOS_ELEGIBLES = [
   "cambio-de-programa",
   "presion-de-canal",
   "pitch-bend",
-  "sistema",
+  "sysex",
+  "cuadro-de-tiempo",
+  "posicion-de-cancion",
+  "seleccion-de-cancion",
+  "solicitud-de-afinacion",
+  "inicio",
+  "continuar",
+  "detener",
+  "reset",
 ] as const satisfies readonly TipoDeMensaje[];
 
 export const NOMBRES_DE_TIPO: Record<(typeof TIPOS_ELEGIBLES)[number], string> = {
@@ -29,7 +51,15 @@ export const NOMBRES_DE_TIPO: Record<(typeof TIPOS_ELEGIBLES)[number], string> =
   "cambio-de-programa": "Cambio de Programa",
   "presion-de-canal": "Presión de Canal",
   "pitch-bend": "Pitch Bend",
-  "sistema": "Mensajes de sistema",
+  "sysex": "SysEx",
+  "cuadro-de-tiempo": "Cuadro de Tiempo (MTC)",
+  "posicion-de-cancion": "Posición de Canción",
+  "seleccion-de-cancion": "Selección de Canción",
+  "solicitud-de-afinacion": "Solicitud de Afinación",
+  "inicio": "Inicio",
+  "continuar": "Continuar",
+  "detener": "Detener",
+  "reset": "Reset del Sistema",
 };
 
 const TIPOS_DE_CANAL: Record<number, TipoDeMensaje> = {
@@ -40,6 +70,20 @@ const TIPOS_DE_CANAL: Record<number, TipoDeMensaje> = {
   0xc0: "cambio-de-programa",
   0xd0: "presion-de-canal",
   0xe0: "pitch-bend",
+};
+
+const TIPOS_DE_SISTEMA: Record<number, TipoDeMensaje> = {
+  0xf0: "sysex",
+  0xf1: "cuadro-de-tiempo",
+  0xf2: "posicion-de-cancion",
+  0xf3: "seleccion-de-cancion",
+  0xf6: "solicitud-de-afinacion",
+  0xf8: "reloj",
+  0xfa: "inicio",
+  0xfb: "continuar",
+  0xfc: "detener",
+  0xfe: "sensor-activo",
+  0xff: "reset",
 };
 
 /**
@@ -60,7 +104,7 @@ export class MensajeMidi {
       return "desconocido";
     }
     if (status >= 0xf0) {
-      return "sistema";
+      return TIPOS_DE_SISTEMA[status] ?? "sistema-no-definido";
     }
     // Un Nota On con velocidad 0 es un Nota Off; si le falta el tercer byte,
     // cuenta como velocidad 0.

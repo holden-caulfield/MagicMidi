@@ -1,11 +1,6 @@
-# nodo-filtrar Specification
+# Spec Delta
 
-## Purpose
-Define el nodo Filtrar, que deja seguir por el flujo solo los mensajes que
-cumplen todos sus criterios: el tipo de mensaje, el canal y un rango para cada
-byte de datos.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Parámetros del nodo Filtrar
 
@@ -97,6 +92,8 @@ cancela el reenvío del original.
   → "Emitir"
 - **WHEN** llega `B0 07 64`
 - **THEN** sale `B0 07 64` tal como llegó
+
+## ADDED Requirements
 
 ### Requirement: Deja pasar solo los canales elegidos
 

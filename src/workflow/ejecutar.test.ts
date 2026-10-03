@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { actualizar, type Flujo } from "@/estado/estado";
-import { MensajeMidi, TIPOS_ELEGIBLES, type TipoDeMensaje } from "@/midi/mensaje";
+import { MensajeMidi, type TipoDeMensaje } from "@/midi/mensaje";
 import { TIPOS_DE_NODO } from "./catalogo";
 import { procesarMensaje } from "./ejecutar";
 
@@ -23,10 +23,23 @@ function subirNota(id: string, cuanto: number): Flujo["nodos"][number] {
   };
 }
 
-// Los parámetros de un Filtrar con solo esos tipos marcados: una caja real
-// tiene siempre todas sus casillas, marcadas o no.
-function soloTipos(...tipos: TipoDeMensaje[]): Record<string, boolean> {
-  return Object.fromEntries(TIPOS_ELEGIBLES.map((tipo) => [tipo, tipos.includes(tipo)]));
+// Los parámetros de un Filtrar con solo esos tipos, o solo esos canales,
+// elegidos; lo demás, como en una caja nueva.
+const FILTRAR_NUEVO = {
+  tipos: [],
+  canales: [],
+  datos1Desde: 0,
+  datos1Hasta: 127,
+  datos2Desde: 0,
+  datos2Hasta: 127,
+};
+
+function soloTipos(...tipos: TipoDeMensaje[]) {
+  return { ...FILTRAR_NUEVO, tipos };
+}
+
+function soloCanales(...canales: number[]) {
+  return { ...FILTRAR_NUEVO, canales };
 }
 
 function m(...bytes: number[]): MensajeMidi {
@@ -407,6 +420,50 @@ test("Filtrar con Nota Off y Descartar saca los Nota Off", () => {
 
   expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 60, 100)]);
   expect(procesarMensaje(m(0x80, 60, 64)).salidas).toEqual([]);
+});
+
+test("dos Filtrar en paralelo hacia la misma caja dejan pasar lo de uno o lo del otro", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas-on", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "canal-10", tipo: "filtrar", parametros: soloCanales(10) },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas-on" },
+        { desde: "trigger", hacia: "canal-10" },
+        { desde: "notas-on", hacia: "emitir" },
+        { desde: "canal-10", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 60, 100)]);
+  expect(procesarMensaje(m(0xb9, 7, 100)).salidas).toEqual([m(0xb9, 7, 100)]);
+  // No llegó a ninguna caja de fin: se reenvía tal cual.
+  expect(procesarMensaje(m(0xb0, 7, 100)).salidas).toEqual([m(0xb0, 7, 100)]);
+});
+
+test("lo que pasa los dos Filtrar en paralelo llega dos veces", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas-on", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "canal-10", tipo: "filtrar", parametros: soloCanales(10) },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas-on" },
+        { desde: "trigger", hacia: "canal-10" },
+        { desde: "notas-on", hacia: "emitir" },
+        { desde: "canal-10", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  // Un Nota On en el canal 10.
+  expect(procesarMensaje(m(0x99, 36, 100)).salidas).toEqual([m(0x99, 36, 100), m(0x99, 36, 100)]);
 });
 
 test("una caja mal configurada falla sin llegar a procesar el mensaje", () => {
