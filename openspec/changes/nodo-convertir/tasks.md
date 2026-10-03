@@ -57,7 +57,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       orden de la spec, que Convertir tiene entrada y salida con el color de
       las intermedias y el ícono `RefreshCw`, y que su panel muestra
       "Convertir a" con las catorce opciones y "Cambio de Control" elegido
-- [ ] 3.3 En `npm run tauri dev`, con dos buses del IAC Driver, probar
+- [x] 3.3 En `npm run tauri dev`, con dos buses del IAC Driver, probar
       Filtrar (Presión de Canal) → Convertir (CC) → Emitir, Filtrar (Nota On)
       → Convertir (Cambio de Programa) → Fijar → Emitir, CC ↔ Pitch Bend y
       Filtrar (CC, datos 2 desde 64) → Convertir (Inicio) → Emitir,
