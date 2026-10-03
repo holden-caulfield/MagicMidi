@@ -103,7 +103,7 @@ sistema no definidos, así que esos casos quedan cubiertos por los tests).
       "Ninguna coincide", que la lista flota por encima de los canales sin
       moverlos, el error y el borde rojo con un rango al revés, y con
       `javascript_tool` los atributos ARIA del grupo y del combobox
-- [ ] 5.3 En `npm run tauri dev`, con dos buses del IAC Driver, probar un
+- [x] 5.3 En `npm run tauri dev`, con dos buses del IAC Driver, probar un
       Filtrar con "Nota On", canal 1 y datos 1 de 60 a 72 hacia un Emitir, y
       el "o" con dos Filtrar, revisando en el log lo que sale; en la ventana
       real, probar Tab y barra espaciadora sobre los canales, y flechas,
