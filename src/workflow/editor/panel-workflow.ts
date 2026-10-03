@@ -1,7 +1,7 @@
 import { css, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 
-import type { IdDeTipo } from "../catalogo";
+import type { IdDeTipo } from "../nodos/catalogo";
 import "./barra-de-herramientas";
 import type { LienzoWorkflow } from "./lienzo";
 import "./lienzo";

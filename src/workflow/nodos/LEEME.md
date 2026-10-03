@@ -10,11 +10,11 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
 1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
    qué hace la caja: por ejemplo, `nota-off-real.ts`. Lo más fácil es copiar
    `desplazar.ts` y cambiarlo.
-2. **Registralo en el catálogo.** Abrí `src/workflow/catalogo.ts`, importá tu
-   archivo arriba y agregalo a la lista `tipos`:
+2. **Registralo en el catálogo.** Abrí `catalogo.ts`, en esta misma carpeta,
+   importá tu archivo arriba y agregalo a la lista `tipos`:
 
    ```ts
-   import notaOffReal from "./nodos/nota-off-real";
+   import notaOffReal from "./nota-off-real";
 
    const tipos = {
      filtrar,
@@ -72,7 +72,7 @@ Un tipo de nodo es un objeto con estos campos:
     declarale `minimo`, `maximo` o los dos: por ejemplo, `minimo: 0, maximo:
     127` para un byte de datos. Un número fuera de ese rango se guarda igual,
     y el panel muestra el error debajo del campo.
-  - `"si-no"`: una casilla para marcar o desmarcar.
+  - `"interruptor"`: una casilla para prender o apagar algo.
   - `"lista"`: una opción de una lista cerrada. Cada opción tiene un `valor` y
     un `texto`.
   - `"opciones"` y `"autocompletar"`: varias opciones de una lista cerrada (o
@@ -335,8 +335,8 @@ cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
   hace con un Cambio de Control, o con un mensaje de un solo byte.
 
 Además de tu test, hay uno que revisa **todas** las cajas del catálogo
-(`src/workflow/catalogo.test.ts`). Si falla con el nombre de tu caja, quiere
-decir que algo no cumple lo que toda caja tiene que cumplir: valores
+(`src/workflow/nodos/catalogo.test.ts`). Si falla con el nombre de tu caja,
+quiere decir que algo no cumple lo que toda caja tiene que cumplir: valores
 `inicial` con errores de configuración (un entero con decimales o fuera de su
 rango, uno que no está entre las `opciones`, o una combinación que tu
 `validar` marca), dos

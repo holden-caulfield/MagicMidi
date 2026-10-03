@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { actualizar, type Flujo } from "@/estado/estado";
 import { MensajeMidi, type TipoDeMensaje } from "@/midi/mensaje";
-import { TIPOS_DE_NODO } from "./catalogo";
+import { TIPOS_DE_NODO } from "./nodos/catalogo";
 import { procesarMensaje } from "./ejecutar";
 
 // `procesarMensaje` no envía nada: devuelve lo que tiene que salir por el

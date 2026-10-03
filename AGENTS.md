@@ -182,7 +182,7 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     nodo, que revisa reglas entre parámetros. Cada error va asociado a la
     `clave` de un parámetro. Lo usan el panel (el error debajo del campo), el
     lienzo (borde rojo con `outline`, para no pisar la etapa ni la
-    selección), el ejecutor y `catalogo.test.ts`. No se guardan en
+    selección), el ejecutor y `nodos/catalogo.test.ts`. No se guardan en
     `estado.flujo`: se calculan de los parámetros cada vez. Un valor que se
     puede interpretar pero no sirve se guarda igual y se muestra con su
     error; solo lo que no se puede interpretar (un "2.5" en un entero) se
@@ -212,8 +212,8 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     agregar o borrar cajas con eventos, y `<panel-workflow>` llama a los
     métodos del lienzo.
   - Cada tipo de nodo es un archivo en `src/workflow/nodos/` que se registra
-    en la lista de `catalogo.ts` (el orden de la lista es el de la barra). La
-    guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
+    en la lista de `nodos/catalogo.ts` (el orden de la lista es el de la
+    barra). La guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
     alcanzando para alguien que recién empieza a programar.
   - Cada tipo de parámetro (lo que se configura en una caja) es un archivo en
     `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
@@ -255,8 +255,8 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     la contención eso puede agrandar el panel en WebKit (por ejemplo, con
     una caja que queda fuera de la vista al achicar la ventana).
   - El color de una caja sale de su etapa en el flujo (`etapaDelTipo` en
-    `catalogo.ts`: inicio, intermedia o fin), no de algo que declare el tipo
-    de nodo. Sumar un color por tipo es una decisión a consultar con la
+    `nodos/catalogo.ts`: inicio, intermedia o fin), no de algo que declare el
+    tipo de nodo. Sumar un color por tipo es una decisión a consultar con la
     persona usuaria, no un campo para agregar al pasar.
   - La ventana tiene `"dragDropEnabled": false` en `tauri.conf.json`: sin eso,
     Tauri captura los arrastres y el drag and drop de HTML5 (arrastrar cajas
@@ -370,7 +370,7 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   helpers): es también el ejemplo que copia quien crea un nodo, así que tiene
   que poder leerse sin saber nada más del proyecto. Si el nodo tiene
   `validar`, sus casos van en el mismo archivo. Además,
-  `catalogo.test.ts` revisa lo que todo nodo tiene que cumplir.
+  `nodos/catalogo.test.ts` revisa lo que todo nodo tiene que cumplir.
 - Cada tipo de parámetro que interpreta lo que se escribe (como `entero.ts`)
   trae al lado el test de esa interpretación y, si su `error` revisa algo
   más que el tipo del valor (como el rango del entero), también el de
