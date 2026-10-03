@@ -23,6 +23,8 @@ Todo cambio se hace en una rama local nueva, nunca directamente sobre
 `main`; una vez mergeado, hay que volver a `main`, actualizar con
 `git pull` y borrar la rama local (y la remota, si no se borró sola al
 mergear).
+Si un check del CI falla, se avisa y se espera: no se activan correcciones
+automáticas del CI, porque la persona usuaria prefiere revisar los errores.
 
 ## Arquitectura y convenciones técnicas
 
@@ -40,7 +42,11 @@ mergear).
   mensaje no se calculan ahí: los lee `MensajeMidi` (`src/midi/mensaje.ts`), y
   cualquier otro módulo que los necesite usa esa misma lectura. Lo que es solo
   presentación, como el nombre de la nota ("C4", con el Do central 60 como C4),
-  sí queda en `describir.ts`.
+  sí queda en `describir.ts`. El tipo distingue cada mensaje de sistema
+  (`"inicio"`, `"sysex"`, …, y `"sistema-no-definido"`), y no hay un tipo
+  `"sistema"`: un mensaje de sistema es el que no es desconocido y no tiene
+  canal. Los nombres largos del log ("Inicio (Start)") son presentación y
+  siguen en `describir.ts`.
   `midir` no avisa cuando un puerto desaparece, así que cada conexión
   exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
   puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
@@ -218,6 +224,21 @@ mergear).
     `error`, el texto si un valor no le sirve. El
     panel de configuración no nombra ningún tipo. La guía está en
     `parametros/LEEME.md`, para alguien con nociones básicas de programación.
+    Para elegir de una lista hay tres: `lista` (una, con `<select>`),
+    `opciones` (varias, como píldoras, para pocas y cortas) y `autocompletar`
+    (varias, buscándolas, para listas largas). Son tipos distintos y no uno
+    con modos, porque un tipo es su control; tampoco comparten código. Un
+    valor que es una lista se avisa siempre como una lista nueva, en el orden
+    de las opciones. Un control de varias partes pone `esGrupo = true`: la
+    etiqueta nombra al grupo (`role="group"` + `aria-labelledby`), porque un
+    `<label for>` apunta a un solo control.
+  - Lo que flota sobre los parámetros siguientes (la lista del
+    autocompletar) va con `position: absolute` y un `z-index` en el `:host`
+    del control: los parámetros son hermanos en la raíz del panel, y sin eso
+    los de después se dibujan encima. `compartidos` estiliza todo `label`
+    dentro de `.campo` (y todo `button`): un control que dibuja sus propios
+    `label` o botones necesita selectores más específicos
+    (`.pildoras .pildora`) para que no se los pise.
   - Cada caja del lienzo es un componente Lit (`<caja-del-flujo>`): Rete le
     asigna `data` y `emit` al volver a dibujarla, y la selección se marca con
     la propiedad `selected` del nodo más `area.update`. Rete ubica las
