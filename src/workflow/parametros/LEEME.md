@@ -4,9 +4,9 @@ Un *parámetro* es algo que la persona usuaria configura en una caja, desde el
 panel que aparece a la derecha del lienzo al seleccionarla: el desplazamiento
 de Desplazar, por ejemplo. Cada parámetro tiene un *tipo*, que decide qué
 control se ve en el panel y qué valores acepta: por ejemplo, `"entero"` (un
-campo para escribir un número entero) o `"si-no"` (una casilla). Cada tipo es
-un archivo de esta carpeta, y los que hay son los que figuran en
-`catalogo.ts`.
+campo para escribir un número entero) o `"interruptor"` (una casilla para
+prender o apagar algo). Cada tipo es un archivo de esta carpeta, y los que hay
+son los que figuran en `catalogo.ts`.
 
 Hace falta un tipo nuevo cuando una caja necesita que se configure algo que
 los que hay no expresan bien. Si alcanza con uno de los que hay, usá ese: ver
@@ -20,7 +20,7 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
 ## Los que hay
 
 - `entero`: un número entero, con un rango opcional.
-- `si-no`: una casilla.
+- `interruptor`: una casilla, para prender o apagar algo.
 - `lista`: una sola opción de una lista cerrada, con un desplegable. Sirve
   para pocas opciones (en Mapear, qué byte se mapea).
 - `opciones`: varias opciones de una lista cerrada, todas a la vista como
@@ -104,7 +104,7 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
     distinto de como se guarda, armá el texto con una función aparte (como
     `mostrar` en el ejemplo de abajo), que también se puede probar;
   - si el control va antes de la etiqueta y en la misma línea, como una
-    casilla, poné `protected enLinea = true;` (ver `si-no.ts`);
+    casilla, poné `protected enLinea = true;` (ver `interruptor.ts`);
   - si el control son varios controles, cada uno con su texto (como las
     píldoras de `opciones.ts`), poné `protected esGrupo = true;` y ponele
     `id="control"` al elemento que los agrupa: la etiqueta pasa a nombrar al
@@ -119,7 +119,7 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
     no: el entero, por ejemplo, devuelve "Tiene que ir de 0 a 127" para un
     200 cuando el parámetro se declaró con ese rango. El panel lo muestra, el
     lienzo marca la caja en rojo, y el test que revisa todas las cajas
-    (`src/workflow/catalogo.test.ts`) lo usa para comprobar que el valor
+    (`src/workflow/nodos/catalogo.test.ts`) lo usa para comprobar que el valor
     `inicial` de cada parámetro no tenga errores.
   - **`dibujar(parametro, valor, error)`**: devuelve tu etiqueta HTML con
     `.parametro`, `.valor` y `.error`. Es siempre igual: copiala y cambiá el

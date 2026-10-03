@@ -1,12 +1,12 @@
 import { Zap } from "lucide";
 
-import descartar from "./nodos/descartar";
-import desplazar from "./nodos/desplazar";
-import emitir from "./nodos/emitir";
-import filtrar from "./nodos/filtrar";
-import fijar from "./nodos/fijar";
-import mapear from "./nodos/mapear";
-import type { TipoDeNodo } from "./tipos";
+import descartar from "./descartar";
+import desplazar from "./desplazar";
+import emitir from "./emitir";
+import filtrar from "./filtrar";
+import fijar from "./fijar";
+import mapear from "./mapear";
+import type { TipoDeNodo } from "../tipos";
 
 // Para sumar un tipo de nodo: importarlo arriba y agregarlo acá. El orden de
 // esta lista es el orden de la barra de herramientas.

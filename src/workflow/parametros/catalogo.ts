@@ -4,14 +4,14 @@ import autocompletar, { type ParametroAutocompletar } from "./autocompletar";
 import entero, { type ParametroEntero } from "./entero";
 import lista, { type ParametroLista } from "./lista";
 import opciones, { type ParametroDeOpciones } from "./opciones";
-import siNo, { type ParametroSiNo } from "./si-no";
+import interruptor, { type ParametroInterruptor } from "./interruptor";
 
 // Para sumar un tipo de parámetro: importarlo arriba, agregar su declaración a
 // esta unión y su entrada a la lista de abajo. Si falta alguna de las dos, el
 // chequeo de tipos lo marca.
 export type Parametro =
   | ParametroEntero
-  | ParametroSiNo
+  | ParametroInterruptor
   | ParametroLista<number>
   | ParametroLista<string>
   | ParametroLista<boolean>
@@ -34,7 +34,7 @@ interface TipoDeParametro<P extends Parametro> {
 
 const TIPOS_DE_PARAMETRO = {
   entero,
-  "si-no": siNo,
+  interruptor,
   lista,
   opciones,
   autocompletar,

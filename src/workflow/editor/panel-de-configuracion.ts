@@ -4,7 +4,7 @@ import { customElement } from "lit/decorators.js";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado } from "@/estado/estado";
 import { compartidos } from "@/estilos/compartidos";
-import { TIPOS_DE_NODO, TRIGGER } from "../catalogo";
+import { TIPOS_DE_NODO, TRIGGER } from "../nodos/catalogo";
 import { dibujarParametro, type ValorDeParametro } from "../parametros/catalogo";
 import { erroresDeConfiguracion } from "../validacion";
 

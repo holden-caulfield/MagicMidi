@@ -32,7 +32,7 @@ export default {
       ],
     },
     { clave: "desplazamiento", etiqueta: "Desplazamiento", tipo: "entero", inicial: 0 },
-    { clave: "overflow", etiqueta: "Overflow", tipo: "si-no", inicial: false },
+    { clave: "overflow", etiqueta: "Overflow", tipo: "interruptor", inicial: false },
   ],
   procesar(mensaje, parametros) {
     const bytes = mensaje.bytes;

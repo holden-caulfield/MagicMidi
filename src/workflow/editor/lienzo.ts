@@ -18,7 +18,7 @@ import {
   TRIGGER,
   type IdDeTipo,
   type Etapa,
-} from "../catalogo";
+} from "../nodos/catalogo";
 import { dibujarIcono } from "../iconos";
 import { erroresDeConfiguracion } from "../validacion";
 import { estilosDelGlobo } from "./globo";

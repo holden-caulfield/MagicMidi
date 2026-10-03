@@ -1,4 +1,4 @@
-import type { IdDeTipo } from "@/workflow/catalogo";
+import type { IdDeTipo } from "@/workflow/nodos/catalogo";
 import type { ValorDeParametro } from "@/workflow/parametros/catalogo";
 
 export interface NodoDelFlujo {

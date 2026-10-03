@@ -4,12 +4,12 @@ import { live } from "lit/directives/live.js";
 
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
-export interface ParametroSiNo extends ParametroBase<boolean> {
-  tipo: "si-no";
+export interface ParametroInterruptor extends ParametroBase<boolean> {
+  tipo: "interruptor";
 }
 
-@customElement("parametro-si-no")
-export class CampoSiNo extends CampoDeParametro<ParametroSiNo, boolean> {
+@customElement("parametro-interruptor")
+export class CampoInterruptor extends CampoDeParametro<ParametroInterruptor, boolean> {
   protected enLinea = true;
 
   protected control() {
@@ -25,8 +25,8 @@ export class CampoSiNo extends CampoDeParametro<ParametroSiNo, boolean> {
 }
 
 export default {
-  error: (_parametro: ParametroSiNo, valor: boolean) =>
+  error: (_parametro: ParametroInterruptor, valor: boolean) =>
     typeof valor === "boolean" ? null : "Tiene que ser sí o no",
-  dibujar: (parametro: ParametroSiNo, valor: boolean, error: string | null) =>
-    html`<parametro-si-no .parametro=${parametro} .valor=${valor} .error=${error}></parametro-si-no>`,
+  dibujar: (parametro: ParametroInterruptor, valor: boolean, error: string | null) =>
+    html`<parametro-interruptor .parametro=${parametro} .valor=${valor} .error=${error}></parametro-interruptor>`,
 };
