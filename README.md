@@ -16,10 +16,15 @@ protocolo MIDI.
   elegidos, incluido cada mensaje de sistema por separado, los canales
   elegidos, y un rango para cada byte de datos, por ejemplo una zona del
   teclado o una capa de velocidad; lo que no se configura no restringe),
-  **Desplazar** (suma o
-  resta un valor al canal o a un byte de datos, por ejemplo para transponer),
+  **Convertir** (cambia el tipo de mensaje, por ejemplo el aftertouch a un
+  CC, un CC a Pitch Bend o una nota a un Cambio de Programa; cada dato va al
+  lugar que significa lo mismo en el tipo nuevo, como el número de la nota al
+  número de programa, y lo que falta se rellena; para convertir solo algunos
+  mensajes, se pone antes un Filtrar),
   **Fijar** (pone siempre el mismo canal o el mismo valor en un byte de datos,
-  por ejemplo una velocidad pareja), **Mapear** (lleva un rango de valores de
+  por ejemplo una velocidad pareja), **Desplazar** (suma o
+  resta un valor al canal o a un byte de datos, por ejemplo para transponer),
+  **Mapear** (lleva un rango de valores de
   un byte de datos a otro, por ejemplo para invertir un pedal o comprimir la
   velocidad), **Emitir** (manda el mensaje a la salida) y **Descartar** (hace
   que no salga). Una caja mal configurada (por ejemplo, un canal que no va de

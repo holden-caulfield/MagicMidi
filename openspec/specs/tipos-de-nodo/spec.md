@@ -56,8 +56,8 @@ arranque.
 #### Scenario: Los tipos de esta versión siguen el contrato
 
 - **WHEN** se revisa la carpeta de tipos de nodo
-- **THEN** "Filtrar", "Desplazar", "Fijar", "Mapear", "Emitir" y "Descartar"
-  están definidos cada uno en su propio archivo con la misma forma, y ninguno
+- **THEN** "Filtrar", "Convertir", "Fijar", "Desplazar", "Mapear", "Emitir" y
+  "Descartar" están definidos cada uno en su propio archivo con la misma forma, y ninguno
   recibe un trato especial fuera de él
 
 ### Requirement: Qué declara un tipo de nodo

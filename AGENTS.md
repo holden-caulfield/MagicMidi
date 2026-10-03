@@ -195,6 +195,11 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     el tipo de mensaje: no protegen el Nota On con velocidad 0, que al
     cambiarle la velocidad se vuelve un Nota On. Eso se resuelve poniendo
     antes un Filtrar (Nota On), no con casos especiales en cada nodo.
+  - Convertir es el único nodo que mira el tipo y cambia la cantidad de
+    bytes de un mensaje: cada byte de datos tiene un rol (ordinal, cardinal o
+    cardinal-fino, en `FORMAS` de `nodos/convertir.ts`) y pasa al lugar del
+    mismo rol en el tipo elegido; lo que falta se rellena. Tampoco elige a
+    qué mensajes aplicarse: eso sigue siendo trabajo de un Filtrar antes.
   - `MensajeMidi` guarda solo los bytes; `tipo`, `canal` y `nota` son getters
     que se calculan en cada lectura, para que no queden viejos si una caja
     cambia los bytes. No agregar campos derivados que haya que mantener sincronizados.
@@ -437,10 +442,18 @@ npx openspec validate <nombre>             # validar
 npx openspec archive <nombre>              # archivar y actualizar las specs
 ```
 
-El archivado va en la misma rama y el mismo PR que la implementación, como
-último commit, una vez que la persona usuaria revisó el código. No se abre un
-PR aparte solo para archivar. Si el archivado trae cambios a este archivo (ver
-"Devolver el conocimiento a este archivo"), van en ese mismo commit.
+Después de `/opsx:apply`, el cambio sigue estos pasos, cada uno recién cuando
+la persona usuaria avisa:
+
+1. Se sube la rama y se abre el PR, con la propuesta, la implementación y las
+   pruebas, pero sin archivar.
+2. La persona usuaria revisa el código en el PR.
+3. Cuando avisa, se archiva el cambio en la misma rama, como último commit.
+   Si trae cambios a este archivo (ver "Devolver el conocimiento a este
+   archivo"), van en ese mismo commit. No se abre un PR aparte solo para
+   archivar.
+4. La persona usuaria mergea el PR.
+5. Cuando avisa, se limpian las ramas (ver "Flujo de git").
 
 En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
 mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,

@@ -607,3 +607,132 @@ test("comprimir la velocidad solo en las notas no convierte un Nota Off en Nota 
   expect(procesarMensaje(m(0x90, 60, 0)).salidas).toEqual([m(0x90, 60, 0)]);
   expect(procesarMensaje(m(0x90, 60, 127)).salidas).toEqual([m(0x90, 60, 110)]);
 });
+
+test("otro controlador con Convertir y Fijar", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-control" } },
+        { id: "fijar", tipo: "fijar", parametros: { byte: 1, valor: 74 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "convertir" },
+        { desde: "convertir", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xd0, 0x50)).salidas).toEqual([m(0xb0, 0x4a, 0x50)]);
+});
+
+test("aftertouch a CC sin tocar las notas", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "presion", tipo: "filtrar", parametros: soloTipos("presion-de-canal") },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-control" } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "presion" },
+        { desde: "presion", hacia: "convertir" },
+        { desde: "convertir", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 0x3c, 0x64)).salidas).toEqual([m(0x90, 0x3c, 0x64)]);
+  expect(procesarMensaje(m(0xd0, 0x50)).salidas).toEqual([m(0xb0, 0x01, 0x50)]);
+});
+
+test("un pad cambia de programa una sola vez", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-programa" } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "convertir" },
+        { desde: "convertir", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x99, 0x24, 0x64)).salidas).toEqual([m(0xc9, 0x24)]);
+  // Al soltar el pad, el Nota Off no pasa el Filtrar y sale tal como llegó.
+  expect(procesarMensaje(m(0x89, 0x24, 0x40)).salidas).toEqual([m(0x89, 0x24, 0x40)]);
+});
+
+test("cualquier nota elige siempre el mismo programa", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-programa" } },
+        { id: "fijar", tipo: "fijar", parametros: { byte: 1, valor: 5 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "convertir" },
+        { desde: "convertir", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 0x3c, 0x64)).salidas).toEqual([m(0xc0, 0x05)]);
+});
+
+test("una fila de botones elige programas", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        {
+          id: "apretados",
+          tipo: "filtrar",
+          parametros: { ...soloTipos("cambio-de-control"), datos2Desde: 64 },
+        },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-programa" } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "apretados" },
+        { desde: "apretados", hacia: "convertir" },
+        { desde: "convertir", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 0x14, 0x7f)).salidas).toEqual([m(0xc0, 0x14)]);
+  expect(procesarMensaje(m(0xb0, 0x14, 0x00)).salidas).toEqual([m(0xb0, 0x14, 0x00)]);
+});
+
+test("un pedal arranca el secuenciador", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        {
+          id: "apretado",
+          tipo: "filtrar",
+          parametros: { ...soloTipos("cambio-de-control"), datos2Desde: 64 },
+        },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "inicio" } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "apretado" },
+        { desde: "apretado", hacia: "convertir" },
+        { desde: "convertir", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 0x50, 0x7f)).salidas).toEqual([m(0xfa)]);
+  expect(procesarMensaje(m(0xb0, 0x50, 0x00)).salidas).toEqual([m(0xb0, 0x50, 0x00)]);
+});
