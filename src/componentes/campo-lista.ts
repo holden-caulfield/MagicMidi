@@ -19,7 +19,7 @@ export class CampoLista extends Campo<Valor> {
         display: flex;
       }
 
-      select {
+      select.control {
         flex: 1;
         min-width: 0;
         appearance: none;

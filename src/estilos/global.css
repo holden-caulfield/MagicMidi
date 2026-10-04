@@ -35,6 +35,8 @@
   --ambar: #f2a634;
   --ambar-claro: #f6bb5f;
   --letra-sobre-ambar: #1c1c1b;
+  /* La letra de un botón mientras se aprieta, sobre el ámbar. */
+  --letra-apretado: #5f5a52;
 
   /* Las cajas del lienzo, y los controles de la barra que las agregan, son
      claras en los dos modos. */

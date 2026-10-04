@@ -35,8 +35,8 @@ herramientas del workflow o en el panel de configuración de una caja.
 ### Requirement: La interfaz es fina y compacta, sin efectos de profundidad
 
 La letra base de la interfaz SHALL ser de 12 px, y la de las etiquetas de los
-campos, de 11 px. Los botones, listas, campos y búsquedas SHALL medir 20 px de
-alto, y las píldoras, chips y el rango, 18 px. Las esquinas de los controles
+campos, de 11 px. Los botones SHALL medir 22 px de alto; las listas, campos y
+búsquedas, 20 px, y las píldoras, chips y el rango, 18 px. Las esquinas de los controles
 SHALL ser de 2 px. Los campos SHALL distinguirse del panel por un fondo gris
 de relleno, sin borde. Ningún control, caja ni panel SHALL tener sombras,
 degradés de profundidad ni halos difuminados. La barra de tabs y la barra de
@@ -87,6 +87,8 @@ puntero encima, el deshabilitado y el de error de cada control SHALL
 distinguirse entre sí y mantener su texto legible en el modo claro y en el
 oscuro. El puntero encima de un control encendido SHALL aclarar el ámbar y
 conservar la letra oscura, en lugar de pasar al gris del estado normal.
+Mientras se aprieta, un botón SHALL pasar a fondo ámbar con letra gris, así
+responde al clic.
 
 #### Scenario: Puntero sobre un botón activo
 
@@ -94,6 +96,12 @@ conservar la letra oscura, en lugar de pasar al gris del estado normal.
 - **WHEN** la persona usuaria pasa el puntero por encima
 - **THEN** el control se ve en un ámbar más claro y su texto sigue oscuro y
   legible
+
+#### Scenario: Apretar un botón
+
+- **WHEN** la persona usuaria aprieta el botón "Actualizar puertos" y lo
+  mantiene apretado
+- **THEN** el botón se ve con fondo ámbar y letra gris hasta que lo suelta
 
 #### Scenario: Deshabilitado
 
@@ -108,6 +116,14 @@ Todo control enfocable SHALL mostrar, mientras tiene el foco del teclado, un
 contorno ámbar fino separado del control, que se distinga también sobre un
 control encendido. El foco que llega con el mouse no SHALL mostrar el
 contorno.
+
+#### Scenario: El contorno de foco no se corta
+
+- **GIVEN** una caja "Filtrar" seleccionada
+- **WHEN** la persona usuaria recorre con Tab los controles del panel de
+  configuración
+- **THEN** el contorno de foco de cada control se ve entero, también en los
+  que llegan a los bordes del panel
 
 #### Scenario: Foco sobre una píldora elegida
 

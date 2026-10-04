@@ -22,19 +22,21 @@ export class BotonDeAccion extends LitElement {
         display: inline-flex;
       }
 
-      button {
+      /* Con la clase, para ganarle al alto y al padding comunes de .control. */
+      button.control {
         flex: 1;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 5px;
-        padding: 0 8px;
+        height: 22px;
+        padding: 0 10px;
         white-space: nowrap;
         cursor: pointer;
       }
 
       button.solo-icono {
-        width: 20px;
+        width: 22px;
         padding: 0;
       }
 
@@ -48,6 +50,13 @@ export class BotonDeAccion extends LitElement {
          encendido no se leería en modo oscuro. */
       button.activo:hover:not(:disabled) {
         background-color: var(--ambar-claro);
+      }
+
+      /* Mientras se aprieta, como un botón de Live que se enciende. Va al
+         final y con la clase, para ganarle al puntero encima. */
+      button.control:active:not(:disabled) {
+        background-color: var(--ambar);
+        color: var(--letra-apretado);
       }
     `,
   ];

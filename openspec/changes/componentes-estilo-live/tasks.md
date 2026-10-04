@@ -131,6 +131,20 @@ final.
       `npx tauri icon src-tauri/icons/icono.svg`; verificar mirando los PNG
       de 32px y 128px y el ícono en el Dock con `npm run tauri dev`
 
+## 8. Ajustes de la primera revisión
+
+- [x] 8.1 Darle margen al contorno de foco en el panel de configuración
+      (padding del `aside` desplazable); verificar en WebKit que el contorno
+      de la primera píldora queda dentro del panel
+- [x] 8.2 Botones de Conexión en su propia línea, con ícono (`RefreshCw`,
+      `Plug`, `Unplug`) y del mismo ancho; verificar en WebKit con la
+      ventana ancha y con un nombre de puerto largo
+- [x] 8.3 `boton-de-accion` de 22px, con fondo ámbar y letra gris mientras
+      se aprieta (`--letra-apretado`), ganándole al hover; corregir la
+      especificidad de los estilos propios de `boton-de-accion` y
+      `campo-lista` frente a `.control`; verificar midiendo en WebKit el
+      alto y el padding
+
 ## 7. Verificación final
 
 - [x] 7.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`; verificar

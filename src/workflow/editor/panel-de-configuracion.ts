@@ -33,12 +33,15 @@ export class PanelDeConfiguracion extends LitElement {
         display: flex;
       }
 
+      /* El padding deja lugar al contorno de foco de los controles, que el
+         desplazamiento cortaría contra los bordes. */
       aside {
         flex: 1;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        padding: 0 4px 4px;
       }
 
       h3 {

@@ -1,6 +1,6 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
-import { RefreshCw } from "lucide";
+import { Plug, RefreshCw, Unplug } from "lucide";
 
 import "@/componentes/boton-de-accion";
 import "@/componentes/campo-lista";
@@ -45,10 +45,18 @@ export class PanelConexion extends LitElement {
         flex: 1 1 220px;
       }
 
+      /* Siempre en su propia línea, debajo de los selectores, y los tres del
+         ancho del más ancho. */
       .fila-botones {
+        flex-basis: 100%;
         display: flex;
+      }
+
+      .botones {
+        display: inline-grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
         gap: 1px;
-        flex-wrap: wrap;
       }
 
       .mensaje {
@@ -99,19 +107,25 @@ export class PanelConexion extends LitElement {
         ></campo-lista>
 
         <div class="fila-botones">
-          <boton-de-accion
-            .icono=${RefreshCw}
-            ?deshabilitado=${estado.conectado}
-            @click=${actualizarListaDePuertos}
-          >
-            Actualizar puertos
-          </boton-de-accion>
-          <boton-de-accion ?deshabilitado=${estado.conectado} @click=${conectar}>
-            Conectar
-          </boton-de-accion>
-          <boton-de-accion ?deshabilitado=${!estado.conectado} @click=${desconectar}>
-            Desconectar
-          </boton-de-accion>
+          <div class="botones">
+            <boton-de-accion
+              .icono=${RefreshCw}
+              ?deshabilitado=${estado.conectado}
+              @click=${actualizarListaDePuertos}
+            >
+              Actualizar puertos
+            </boton-de-accion>
+            <boton-de-accion .icono=${Plug} ?deshabilitado=${estado.conectado} @click=${conectar}>
+              Conectar
+            </boton-de-accion>
+            <boton-de-accion
+              .icono=${Unplug}
+              ?deshabilitado=${!estado.conectado}
+              @click=${desconectar}
+            >
+              Desconectar
+            </boton-de-accion>
+          </div>
         </div>
 
         <p class="mensaje">${estado.mensajeConexion}</p>

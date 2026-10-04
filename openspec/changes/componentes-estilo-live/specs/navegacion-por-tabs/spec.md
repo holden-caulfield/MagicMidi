@@ -27,3 +27,24 @@ visible: no se desplaza con el contenido del panel activo.
 - **WHEN** el contenido del panel activo es más alto que el lugar que tiene y
   la persona usuaria lo desplaza
 - **THEN** la navegación sigue visible arriba
+
+## ADDED Requirements
+
+### Requirement: Los botones de Conexión van debajo de los selectores
+
+En el tab Conexión, los botones "Actualizar puertos", "Conectar" y
+"Desconectar" SHALL ir siempre juntos en su propia línea, debajo de los dos
+selectores de puerto, en cualquier ancho de la ventana. Cada uno SHALL tener
+un ícono y su nombre, y los tres SHALL tener el mismo ancho.
+
+#### Scenario: Ventana ancha
+
+- **WHEN** la ventana está en pantalla completa y el tab activo es "Conexión"
+- **THEN** los tres botones están en una línea debajo de los selectores, no al
+  lado
+
+#### Scenario: Botones parejos
+
+- **WHEN** el tab activo es "Conexión"
+- **THEN** "Actualizar puertos", "Conectar" y "Desconectar" tienen cada uno
+  su ícono y los tres miden lo mismo de ancho
