@@ -80,14 +80,22 @@ Un tipo de nodo es un objeto con estos campos:
     ninguna). El valor es una lista con los valores elegidos. El primero
     muestra todas como píldoras, para pocas opciones cortas; el segundo las
     busca escribiendo, para listas largas.
+  - `"rango"`: dos extremos, "desde" y "hasta", entre un `minimo` y un
+    `maximo`, con una barra de dos perillas. Se declara si se puede invertir
+    (`invertible: true`, "desde" mayor que "hasta"). El valor es un objeto
+    `{ desde, hasta }`: en `procesar` se lee como
+    `const datos1 = parametros.datos1 as Rango;` (el tipo `Rango` se importa
+    de `@/componentes/campo-rango`), y después `datos1.desde` y
+    `datos1.hasta`.
 
   Los que hay están en `parametros/catalogo.ts`. Si ninguno te sirve, se puede
   crear uno nuevo: la guía está en
   [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
   poné `parametros: []`.
 - **`validar(parametros)`**: opcional. Solo hace falta si algún valor depende
-  de otro parámetro: por ejemplo, en Mapear, los dos extremos del rango de
-  entrada no pueden ser iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
+  de otro, o si dentro de un parámetro hay una regla que el tipo no conoce:
+  por ejemplo, en Mapear, los dos extremos del rango de entrada no pueden ser
+  iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
 - **`procesar(mensaje, parametros)`**: la función donde la caja hace su trabajo.
 
 Terminá el objeto con `satisfies TipoDeNodo`: así el editor de código te avisa
@@ -284,15 +292,17 @@ test("deja pasar sin cambios los mensajes que no son notas", () => {
 ## Reglas entre parámetros: `validar`
 
 Cada parámetro ya revisa lo suyo: un entero declarado con `minimo: 0, maximo:
-127` marca un 200 como error. Pero a veces un valor está bien o mal según otro
-parámetro. En Mapear, por ejemplo, "Entrada desde" y "Entrada hasta" pueden
-valer cualquier cosa de 0 a 127, pero no lo mismo los dos: con un solo valor de
-entrada no hay cómo repartir. Para eso está `validar`:
+127` marca un 200 como error, y un rango que no se puede invertir marca un
+"desde" mayor que "hasta". Pero a veces hay una regla que solo conoce la caja.
+En Mapear, por ejemplo, los dos extremos de la entrada pueden valer cualquier
+cosa de 0 a 127, pero no lo mismo los dos: con un solo valor de entrada no hay
+cómo repartir. Para eso está `validar`:
 
 ```ts
 validar(parametros) {
-  if (parametros.entradaDesde === parametros.entradaHasta) {
-    return [{ clave: "entradaHasta", mensaje: "Tiene que ser distinto de Entrada desde" }];
+  const entrada = parametros.entrada as Rango;
+  if (entrada.desde === entrada.hasta) {
+    return [{ clave: "entrada", mensaje: "Desde tiene que ser distinto de hasta" }];
   }
   return [];
 },
@@ -314,8 +324,8 @@ valores:
 ```ts
 test("una entrada de un solo valor es un error", () => {
   expect(
-    mapear.validar({ byte: 2, entradaDesde: 64, entradaHasta: 64, salidaDesde: 0, salidaHasta: 127 }),
-  ).toEqual([{ clave: "entradaHasta", mensaje: "Tiene que ser distinto de Entrada desde" }]);
+    mapear.validar({ byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } }),
+  ).toEqual([{ clave: "entrada", mensaje: "Desde tiene que ser distinto de hasta" }]);
 });
 ```
 

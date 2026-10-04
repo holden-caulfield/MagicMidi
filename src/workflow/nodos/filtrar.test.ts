@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import { MensajeMidi, TIPOS_ELEGIBLES } from "@/midi/mensaje";
+import { erroresDeConfiguracion } from "../validacion";
 import filtrar from "./filtrar";
 
 // Filtrar deja pasar el mensaje tal cual si cumple todos sus criterios, y si
@@ -11,10 +12,8 @@ import filtrar from "./filtrar";
 const CAJA_NUEVA = {
   tipos: [],
   canales: [],
-  datos1Desde: 0,
-  datos1Hasta: 127,
-  datos2Desde: 0,
-  datos2Hasta: 127,
+  datos1: { desde: 0, hasta: 127 },
+  datos2: { desde: 0, hasta: 127 },
 };
 
 test("una caja nueva deja pasar cualquier mensaje", () => {
@@ -129,7 +128,7 @@ test("un mensaje de sistema no pasa si hay canales elegidos", () => {
 // dos incluidos.
 
 test("una zona del teclado: notas de 60 a 72", () => {
-  const parametros = { ...CAJA_NUEVA, datos1Desde: 60, datos1Hasta: 72 };
+  const parametros = { ...CAJA_NUEVA, datos1: { desde: 60, hasta: 72 } };
 
   expect(filtrar.procesar(new MensajeMidi([0x90, 59, 100]), parametros)).toBeUndefined();
   expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
@@ -142,7 +141,7 @@ test("una zona del teclado: notas de 60 a 72", () => {
 });
 
 test("un valor exacto: solo el CC 7", () => {
-  const parametros = { ...CAJA_NUEVA, tipos: ["cambio-de-control"], datos1Desde: 7, datos1Hasta: 7 };
+  const parametros = { ...CAJA_NUEVA, tipos: ["cambio-de-control"], datos1: { desde: 7, hasta: 7 } };
 
   expect(filtrar.procesar(new MensajeMidi([0xb0, 7, 100]), parametros)).toEqual(
     new MensajeMidi([0xb0, 7, 100]),
@@ -161,8 +160,7 @@ test("el rango completo deja pasar mensajes que no tienen ese byte", () => {
 test("un rango más chico no deja pasar un mensaje sin ese byte", () => {
   const resultado = filtrar.procesar(new MensajeMidi([0xc0, 5]), {
     ...CAJA_NUEVA,
-    datos2Desde: 0,
-    datos2Hasta: 100,
+    datos2: { desde: 0, hasta: 100 },
   });
 
   expect(resultado).toBeUndefined();
@@ -175,8 +173,7 @@ test("Nota On, en el canal 1, de 60 a 72", () => {
     ...CAJA_NUEVA,
     tipos: ["nota-on"],
     canales: [1],
-    datos1Desde: 60,
-    datos1Hasta: 72,
+    datos1: { desde: 60, hasta: 72 },
   };
 
   expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
@@ -191,7 +188,7 @@ test("Nota On, en el canal 1, de 60 a 72", () => {
 });
 
 test("una capa de velocidad: Nota On de 100 a 127", () => {
-  const parametros = { ...CAJA_NUEVA, tipos: ["nota-on"], datos2Desde: 100, datos2Hasta: 127 };
+  const parametros = { ...CAJA_NUEVA, tipos: ["nota-on"], datos2: { desde: 100, hasta: 127 } };
 
   expect(filtrar.procesar(new MensajeMidi([0x90, 60, 99]), parametros)).toBeUndefined();
   expect(filtrar.procesar(new MensajeMidi([0x90, 60, 100]), parametros)).toEqual(
@@ -202,26 +199,32 @@ test("una capa de velocidad: Nota On de 100 a 127", () => {
   );
 });
 
-// `validar` revisa lo que depende de más de un parámetro: en cada rango,
-// "desde" no puede ser mayor que "hasta". Devuelve la lista de errores (vacía
-// si está todo bien).
+// Un rango al revés es un error del parámetro (los rangos de Filtrar no se
+// pueden invertir), no una regla del nodo: lo encuentra `erroresDeConfiguracion`,
+// igual que en el panel y en el ejecutor.
 
 test("una caja nueva no tiene errores", () => {
-  expect(filtrar.validar(CAJA_NUEVA)).toEqual([]);
+  expect(erroresDeConfiguracion(filtrar, CAJA_NUEVA)).toEqual([]);
 });
 
 test("un rango de datos 1 al revés es un error", () => {
-  expect(filtrar.validar({ ...CAJA_NUEVA, datos1Desde: 72, datos1Hasta: 60 })).toEqual([
-    { clave: "datos1Hasta", mensaje: "Tiene que ser igual o mayor que Datos 1 desde" },
+  const parametros = { ...CAJA_NUEVA, datos1: { desde: 72, hasta: 60 } };
+
+  expect(erroresDeConfiguracion(filtrar, parametros)).toEqual([
+    { clave: "datos1", mensaje: "Desde tiene que ser igual o menor que hasta" },
   ]);
 });
 
 test("un rango de datos 2 al revés es un error", () => {
-  expect(filtrar.validar({ ...CAJA_NUEVA, datos2Desde: 100, datos2Hasta: 50 })).toEqual([
-    { clave: "datos2Hasta", mensaje: "Tiene que ser igual o mayor que Datos 2 desde" },
+  const parametros = { ...CAJA_NUEVA, datos2: { desde: 100, hasta: 50 } };
+
+  expect(erroresDeConfiguracion(filtrar, parametros)).toEqual([
+    { clave: "datos2", mensaje: "Desde tiene que ser igual o menor que hasta" },
   ]);
 });
 
 test("un rango de un solo valor está bien", () => {
-  expect(filtrar.validar({ ...CAJA_NUEVA, datos2Desde: 64, datos2Hasta: 64 })).toEqual([]);
+  const parametros = { ...CAJA_NUEVA, datos2: { desde: 64, hasta: 64 } };
+
+  expect(erroresDeConfiguracion(filtrar, parametros)).toEqual([]);
 });

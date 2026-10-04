@@ -1,6 +1,8 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
+import { Trash2 } from "lucide";
 
+import "@/componentes/boton-de-accion";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado } from "@/estado/estado";
 import { compartidos } from "@/estilos/compartidos";
@@ -36,16 +38,24 @@ export class PanelDeConfiguracion extends LitElement {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 10px;
       }
 
       h3 {
         margin: 0;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--borde-suave);
+        font-size: inherit;
+        font-weight: 600;
       }
 
       .vacia {
         margin: 0;
-        opacity: 0.7;
+        color: var(--letra-secundaria);
+      }
+
+      boton-de-accion {
+        align-self: flex-start;
       }
 
       .parametro {
@@ -98,9 +108,9 @@ export class PanelDeConfiguracion extends LitElement {
               `,
             )}
         ${tipo
-          ? html`<button type="button" @click=${() => this.pedirEliminar(nodo.id)}>
+          ? html`<boton-de-accion .icono=${Trash2} @click=${() => this.pedirEliminar(nodo.id)}>
               Eliminar caja
-            </button>`
+            </boton-de-accion>`
           : null}
       </aside>
     `;

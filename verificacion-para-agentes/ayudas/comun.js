@@ -12,7 +12,11 @@ const todos = (selector, raiz = document) => {
   return encontrados;
 };
 const uno = (selector) => todos(selector)[0];
-const boton = (texto) => todos("button").find((b) => b.textContent.trim() === texto);
+// Un <boton-de-accion> tiene el texto afuera de su <button>: se devuelve ese
+// <button>, que es el que tiene `disabled` y recibe el clic.
+const boton = (texto) =>
+  todos("button").find((b) => b.textContent.trim() === texto) ??
+  todos("boton-de-accion").find((b) => b.textContent.trim() === texto)?.shadowRoot.querySelector("button");
 const visible = (el) => !!el && el.getClientRects().length > 0;
 
 /** Espera a que todos los componentes terminen de dibujarse. */

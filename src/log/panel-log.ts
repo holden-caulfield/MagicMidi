@@ -4,6 +4,7 @@ import { guard } from "lit/directives/guard.js";
 import { repeat } from "lit/directives/repeat.js";
 import { Ban, CornerDownRight, Equal, type IconNode, Trash2, TriangleAlert } from "lucide";
 
+import "@/componentes/boton-de-accion";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { compartidos } from "@/estilos/compartidos";
 import { partesDeLaDescripcion } from "@/midi/describir";
@@ -95,8 +96,7 @@ export class PanelLog extends LitElement {
         flex: 1;
         min-height: 0;
         overflow: auto;
-        font-family: "SF Mono", "Fira Code", Consolas, monospace;
-        font-size: 0.85em;
+        font-family: var(--letra-monoespaciada);
         background-color: var(--fondo-hundido);
       }
 
@@ -115,23 +115,13 @@ export class PanelLog extends LitElement {
       }
 
       .fila-encabezados > span {
-        font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-        font-size: 0.95em;
+        font-family: var(--letra-interfaz);
+        font-size: 11px;
       }
 
       .fila-encabezados .limpiar {
         grid-column: -2;
         justify-self: end;
-      }
-
-      .limpiar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.2em;
-        border: none;
-        background-color: transparent;
-        color: inherit;
       }
 
       .grupo-mensaje {
@@ -151,7 +141,7 @@ export class PanelLog extends LitElement {
         grid-template-columns: var(--columnas);
         column-gap: 1ch;
         align-items: center;
-        padding: 0.3rem 0.75rem;
+        padding: 3px 10px;
       }
 
       .descripcion-entera {
@@ -231,15 +221,12 @@ export class PanelLog extends LitElement {
           <span>Hora</span>
           <span>Bytes</span>
           <span class="descripcion-entera">Descripción</span>
-          <button
-            type="button"
+          <boton-de-accion
             class="limpiar"
-            aria-label="Limpiar"
-            title="Limpiar"
+            etiqueta="Limpiar"
+            .icono=${Trash2}
             @click=${limpiarLog}
-          >
-            ${dibujarIcono(Trash2, 14)}
-          </button>
+          ></boton-de-accion>
         </div>
         ${repeat(
           entradasDelLog(),

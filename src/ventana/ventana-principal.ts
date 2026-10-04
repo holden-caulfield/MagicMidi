@@ -20,13 +20,13 @@ const PANELES: Panel[] = [
     icono: Plug,
     contenido: () => html`<panel-conexion></panel-conexion>`,
   },
-  { id: "log", titulo: "Log", icono: List, contenido: () => html`<panel-log></panel-log>` },
   {
     id: "workflow",
     titulo: "Workflow",
     icono: Workflow,
     contenido: () => html`<panel-workflow></panel-workflow>`,
   },
+  { id: "log", titulo: "Log", icono: List, contenido: () => html`<panel-log></panel-log>` },
 ];
 
 @customElement("ventana-principal")
@@ -59,7 +59,7 @@ export class VentanaPrincipal extends LitElement {
         overflow: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 12px;
       }
     `,
   ];

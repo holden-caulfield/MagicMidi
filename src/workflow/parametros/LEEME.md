@@ -13,9 +13,10 @@ los que hay no expresan bien. Si alcanza con uno de los que hay, usá ese: ver
 [cómo se declaran los parámetros](../nodos/LEEME.md#qué-va-en-el-archivo).
 
 Crear un tipo de parámetro es un paso más que crear un tipo de nodo: además de
-la lógica, hay que escribir el control que se ve en el panel. Pero lo común
-(la etiqueta, los estilos, guardar el valor en la caja) ya está resuelto, y
-tu archivo solo dice qué control dibujar y qué valores acepta.
+la lógica, hay que elegir el control que se ve en el panel. Pero los controles
+ya están hechos (son los *campos* de `src/componentes/`, con su etiqueta, su
+error y sus estilos), y guardar el valor en la caja también está resuelto: tu
+archivo solo dice qué campo dibujar y qué valores acepta.
 
 ## Los que hay
 
@@ -30,6 +31,11 @@ tu archivo solo dice qué control dibujar y qué valores acepta.
   escribiendo en un campo; las elegidas quedan debajo, cada una con un botón
   para quitarla. Sirve para listas largas (en Filtrar, los tipos de mensaje),
   y puede declarar un `textoDeAyuda` para cuando no hay ninguna elegida.
+- `rango`: dos extremos enteros, "desde" y "hasta", entre un `minimo` y un
+  `maximo`, con una barra de dos perillas y un campo a cada lado. Con
+  `invertible: true`, "desde" puede quedar mayor que "hasta" (en Mapear, para
+  dar vuelta un sentido); si no, las perillas se frenan al tocarse (en
+  Filtrar). El valor es `{ desde, hasta }`.
 
 En `opciones` y `autocompletar` el valor es una lista con los valores
 elegidos, en el orden de las opciones, y no elegir ninguna también vale.
@@ -90,29 +96,33 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
   sí/no no la necesita, porque no hay forma de marcarla mal.
 - **El control**: una clase que extiende `CampoDeParametro`, con el nombre de
   su etiqueta HTML en `@customElement("parametro-…")`. Lo único que escribe es
-  `control()`, que devuelve el control que se ve en el panel:
-  - el control lleva `id="control"`, así la etiqueta queda enlazada a él (al
-    hacer clic en la etiqueta, el foco va al control);
+  `render()`, que dibuja uno de los campos de `src/componentes/` (importado
+  arriba, como `import "@/componentes/campo-numero";`):
+  - `campo-numero` (un número escrito), `campo-interruptor` (una casilla),
+    `campo-lista` (un desplegable), `campo-opciones` (píldoras),
+    `campo-autocompletar` (buscar y elegir varias) o `campo-rango` (dos
+    perillas). Cada uno recibe `etiqueta`, `.valor` y `.error`, más lo
+    propio (por ejemplo, `.opciones`);
   - `this.valor` es el valor que tiene la caja, y `this.parametro`, la
     declaración;
-  - cuando la persona usuaria cambia el valor, llamá a
-    `this.avisarCambio(valorNuevo)`. Si lo que escribió no sirve, llamá a
-    `this.requestUpdate()` en su lugar: eso vuelve a dibujar el control con el
-    valor que la caja conserva;
-  - el valor se muestra envuelto en `live(…)`, para que vuelva a aparecer
-    aunque la persona haya escrito otra cosa en el control. Si se muestra
-    distinto de como se guarda, armá el texto con una función aparte (como
-    `mostrar` en el ejemplo de abajo), que también se puede probar;
-  - si el control va antes de la etiqueta y en la misma línea, como una
-    casilla, poné `protected enLinea = true;` (ver `interruptor.ts`);
-  - si el control son varios controles, cada uno con su texto (como las
-    píldoras de `opciones.ts`), poné `protected esGrupo = true;` y ponele
-    `id="control"` al elemento que los agrupa: la etiqueta pasa a nombrar al
-    grupo, que es lo que anuncia un lector de pantalla al entrar en él, porque
-    una etiqueta común solo puede apuntar a un control;
-  - si el valor es una lista, avisá siempre una lista nueva, nunca la misma
-    modificada: la caja se da cuenta de que algo cambió porque el valor es
-    otro.
+  - el campo avisa con el evento `cambio` cuando la persona cambia algo, y
+    `evento.detail` trae lo nuevo. Si sirve para guardarlo, llamá a
+    `this.avisarCambio(valorNuevo)`. Si no (lo que se escribió no se puede
+    interpretar), no llames a nada: el campo vuelve solo a mostrar el valor
+    que la caja conserva;
+  - si el valor se muestra distinto de como se guarda, armá el texto con una
+    función aparte (como `mostrar` en el ejemplo de abajo), que también se
+    puede probar;
+  - no hace falta escribir estilos, ni ocuparse de la etiqueta o de cómo se
+    ve el error: eso es del campo. Así un mismo control se ve igual en todos
+    lados;
+  - si el valor es una lista o un objeto, avisá siempre uno nuevo, nunca el
+    mismo modificado: la caja se da cuenta de que algo cambió porque el valor
+    es otro.
+
+  Si ninguno de los campos sirve para tu tipo, hace falta uno nuevo en
+  `src/componentes/`: es un paso más grande, y conviene mirar primero cómo
+  están hechos los que hay.
 - **La entrada para el catálogo** (el `export default`), con dos funciones:
   - **`error(parametro, valor)`**: si un valor le sirve a este parámetro.
     Devuelve `null` si le sirve, o el texto que se muestra debajo del campo si
@@ -131,8 +141,7 @@ Son dos cosas distintas, y cada una tiene su lugar:
 
 - **Lo que no se puede interpretar** (un "2.5" en un entero, o el campo vacío)
   no es un valor que se pueda guardar: `interpretar` devuelve `null`, el
-  control llama a `this.requestUpdate()` y la caja conserva el valor que
-  tenía.
+  control no avisa nada y la caja conserva el valor que tenía.
 - **Lo que se interpreta pero no sirve** (un 200 en un entero de 0 a 127) sí
   se guarda: el control llama a `this.avisarCambio(…)` igual, y `error` dice
   qué está mal. Así la persona ve el problema debajo del campo, y una regla
@@ -140,13 +149,13 @@ Son dos cosas distintas, y cada una tiene su lugar:
   [`validar`](../nodos/LEEME.md#reglas-entre-parámetros-validar)) puede
   marcar una combinación aunque cada valor, solo, esté bien.
 
-El texto del error lo dibuja `CampoDeParametro` debajo del control, y además
-le pone al elemento con `id="control"` los atributos que usan los lectores de
-pantalla para anunciarlo. Por eso es importante que tu control lleve ese `id`.
+El texto del error lo dibuja el campo debajo del control, con los atributos
+que usan los lectores de pantalla para anunciarlo: alcanza con pasarle
+`.error=${this.error}`.
 
-No hace falta ocuparse de la etiqueta, de los estilos del campo, ni de
-guardar el valor en la caja: de eso se encargan `CampoDeParametro` y el panel
-de configuración.
+No hace falta ocuparse de la etiqueta, de los estilos, ni de guardar el valor
+en la caja: de eso se encargan el campo, `CampoDeParametro` y el panel de
+configuración.
 
 ## Ejemplo completo: real
 
@@ -161,14 +170,14 @@ Dos detalles importantes:
   punto, y JavaScript solo entiende el punto. Por eso `interpretar` acepta las
   dos cosas, y cambia la coma por un punto antes de convertir el texto con
   `Number(…)`.
-- El control muestra el valor con coma (`mostrar`), así que después de
+- El campo muestra el valor con coma (`mostrar`), así que después de
   escribir "2.5" se ve "2,5": es el mismo número.
 
 ```ts
 import { html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { live } from "lit/directives/live.js";
 
+import "@/componentes/campo-numero";
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
 export interface ParametroReal extends ParametroBase<number> {
@@ -194,23 +203,21 @@ export function mostrar(numero: number): string {
 
 @customElement("parametro-real")
 export class CampoReal extends CampoDeParametro<ParametroReal, number> {
-  protected control() {
+  render() {
     return html`
-      <input
-        id="control"
-        type="text"
-        inputmode="decimal"
-        .value=${live(mostrar(this.valor))}
-        @change=${(evento: Event) => {
-          const numero = interpretar((evento.target as HTMLInputElement).value);
-          if (numero === null) {
-            // Redibujar vuelve a mostrar el valor que la caja conserva.
-            this.requestUpdate();
-          } else {
+      <campo-numero
+        decimales
+        etiqueta=${this.parametro.etiqueta}
+        .valor=${mostrar(this.valor)}
+        .error=${this.error}
+        @cambio=${(evento: CustomEvent<string>) => {
+          const numero = interpretar(evento.detail);
+          // Si no es un número, el campo vuelve solo al valor que tenía.
+          if (numero !== null) {
             this.avisarCambio(numero);
           }
         }}
-      />
+      ></campo-numero>
     `;
   }
 }
@@ -223,10 +230,9 @@ export default {
 };
 ```
 
-El control es un campo de texto, no uno numérico: un campo numérico decide por
-su cuenta qué separador acepta según el idioma del sistema, y así no se podría
-aceptar los dos. `inputmode="decimal"` hace que, en una pantalla táctil,
-aparezca el teclado de números.
+`decimales` hace que, en una pantalla táctil, aparezca el teclado de números
+con separador. `campo-numero` avisa el texto tal como se escribió, sin
+interpretarlo: así cada tipo decide qué acepta, como acá la coma y el punto.
 
 Y su test, en `real.test.ts`. Además de los casos normales, prueba las dos
 formas de separar los decimales y lo que no es un número.

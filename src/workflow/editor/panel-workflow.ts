@@ -15,21 +15,21 @@ export class PanelWorkflow extends LitElement {
       min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      padding: 0.75rem;
+      gap: 6px;
+      padding: 8px;
     }
 
     .ayuda {
       margin: 0;
-      font-size: 0.85em;
-      opacity: 0.75;
+      font-size: 11px;
+      color: var(--letra-secundaria);
     }
 
     .area {
       flex: 1;
       min-height: 0;
       display: flex;
-      gap: 0.75rem;
+      gap: 10px;
     }
   `;
 

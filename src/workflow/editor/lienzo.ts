@@ -26,9 +26,11 @@ import { estilosDelGlobo } from "./globo";
 /** Con este formato la barra de herramientas pone, al arrastrar, el tipo de la caja. */
 export const FORMATO_ARRASTRE = "application/x-tipo-de-nodo";
 
-const LADO_CAJA = 72;
-const LADO_ICONO = 36;
-const SEPARACION_INICIAL = 180;
+const LADO_CAJA = 48;
+const LADO_ICONO = 24;
+const SEPARACION_INICIAL = 150;
+/** El área que se agarra para conectar; el cuadrado que se ve es más chico. */
+const LADO_CONECTOR = 16;
 
 class Caja extends ClassicPreset.Node {
   conErrores = false;
@@ -85,12 +87,16 @@ export class CajaDelFlujo extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid rgba(127, 127, 127, 0.5);
-        border-radius: 10px;
-        background-color: #ffffff;
-        color: #0f0f0f;
+        border: 1.5px solid var(--borde-caja);
+        border-radius: 4px;
+        background-color: var(--fondo-caja);
+        color: var(--letra-caja);
         cursor: grab;
         user-select: none;
+      }
+
+      .caja > svg {
+        stroke-width: 1.75;
       }
 
       .caja-inicio {
@@ -103,31 +109,50 @@ export class CajaDelFlujo extends LitElement {
         background-color: var(--fondo-fin);
       }
 
+      /* Un anillo plano por fuera, sin desenfoque: el borde sigue diciendo la
+         etapa, y el ámbar no se confunde con el naranja de una caja de fin. La
+         primera sombra, del color del lienzo, lo separa del borde. */
       .seleccionada {
-        border-color: var(--acento);
-        box-shadow: 0 0 0 3px rgba(57, 108, 216, 0.3);
+        box-shadow:
+          0 0 0 2px var(--fondo-lienzo),
+          0 0 0 4px var(--ambar);
       }
 
-      /* Por fuera del borde, que ya dice la etapa y la selección: así el error
-         no tapa ninguna de las dos. */
+      /* Por fuera del anillo de selección: así el error no tapa ni la etapa
+         ni la selección. */
       .con-errores {
-        outline: 2px solid var(--letra-error);
-        outline-offset: 4px;
+        outline: 1.5px solid var(--letra-error);
+        outline-offset: 6px;
       }
 
       /* Rete ubica las conexiones sumando offsetLeft/offsetTop, sin tener en
          cuenta transform: por eso los conectores se ubican con top y left. */
       .conector {
         position: absolute;
-        top: calc(50% - 18px);
+        top: calc(50% - ${LADO_CONECTOR / 2}px);
+        width: ${LADO_CONECTOR}px;
+        height: ${LADO_CONECTOR}px;
       }
 
       .conector-entrada {
-        left: -18px;
+        left: -${LADO_CONECTOR / 2}px;
       }
 
       .conector-salida {
-        right: -18px;
+        right: -${LADO_CONECTOR / 2}px;
+      }
+
+      /* Lo dibuja Rete dentro del conector, con la plantilla de
+         customize.socket. */
+      .punto {
+        display: block;
+        width: 10px;
+        height: 10px;
+        margin: 3px;
+        border: 1.5px solid var(--fondo-lienzo);
+        border-radius: 1px;
+        background-color: var(--ambar);
+        cursor: crosshair;
       }
 
       .caja:hover .globo {
@@ -158,6 +183,38 @@ export class CajaDelFlujo extends LitElement {
         ${caja.outputs.salida ? conector("output", "salida", caja.outputs.salida.socket) : null}
       </div>
     `;
+  }
+}
+
+/**
+ * Una conexión del lienzo. Rete calcula el camino (el atributo `d` de un
+ * `<path>`) y lo vuelve a asignar cada vez que se mueve una caja.
+ */
+@customElement("cable-del-flujo")
+export class CableDelFlujo extends LitElement {
+  // Rete dibuja cada conexión en un SVG enorme, que no tiene que tapar los
+  // clics del lienzo: solo el trazo los recibe.
+  static styles = css`
+    svg {
+      overflow: visible !important;
+      position: absolute;
+      pointer-events: none;
+      width: 9999px;
+      height: 9999px;
+    }
+
+    path {
+      fill: none;
+      stroke: var(--ambar);
+      stroke-width: 2px;
+      pointer-events: auto;
+    }
+  `;
+
+  @property({ attribute: false }) camino = "";
+
+  render() {
+    return html`<svg><path d=${this.camino}></path></svg>`;
   }
 }
 
@@ -219,8 +276,9 @@ export class LienzoWorkflow extends LitElement {
       position: relative;
       overflow: hidden;
       contain: strict;
-      border-radius: 8px;
-      background-color: var(--fondo-hundido);
+      border: 1px solid var(--borde-suave);
+      border-radius: 2px;
+      background-color: var(--fondo-lienzo);
       background-image: radial-gradient(rgba(127, 127, 127, 0.35) 1px, transparent 1px);
       background-size: 20px 20px;
     }
@@ -342,7 +400,7 @@ export class LienzoWorkflow extends LitElement {
   private centroVisible() {
     const { x, y, k } = this.area.area.transform;
     const { width, height } = this.contenedor.getBoundingClientRect();
-    const corrimiento = (this.cajasAgregadasConClic++ % 5) * 48;
+    const corrimiento = (this.cajasAgregadasConClic++ % 5) * (LADO_CAJA + 16);
     return {
       x: (width / 2 - x) / k - LADO_CAJA / 2 + corrimiento,
       y: (height / 2 - y) / k - LADO_CAJA / 2 + corrimiento,
@@ -362,6 +420,8 @@ export class LienzoWorkflow extends LitElement {
         customize: {
           node: (contexto) => ({ emit }) =>
             html`<caja-del-flujo .data=${contexto.payload} .emit=${emit}></caja-del-flujo>`,
+          socket: () => () => html`<span class="punto"></span>`,
+          connection: () => ({ path }) => html`<cable-del-flujo .camino=${path}></cable-del-flujo>`,
         },
       }),
     );

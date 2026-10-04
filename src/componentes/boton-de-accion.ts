@@ -1,0 +1,91 @@
+import { css, html, LitElement, nothing } from "lit";
+import { customElement, property } from "lit/decorators.js";
+import { ifDefined } from "lit/directives/if-defined.js";
+import type { IconNode } from "lucide";
+
+import { dibujarIcono } from "@/workflow/iconos";
+import { compartidos } from "@/estilos/compartidos";
+import { estilosDeControl } from "./estilos";
+
+/**
+ * Un botón de texto, con un ícono opcional. El texto va como contenido; si el
+ * botón tiene solo ícono, `etiqueta` es su nombre accesible. Se escucha con
+ * `click`, como un botón nativo.
+ */
+@customElement("boton-de-accion")
+export class BotonDeAccion extends LitElement {
+  static styles = [
+    compartidos,
+    estilosDeControl,
+    css`
+      :host {
+        display: inline-flex;
+      }
+
+      button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 8px;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      button.solo-icono {
+        width: 20px;
+        padding: 0;
+      }
+
+      button.activo,
+      button.activo:hover:not(:disabled) {
+        background-color: var(--ambar);
+        color: var(--letra-sobre-ambar);
+      }
+
+      /* Más claro y no gris: sobre el gris de siempre, la letra oscura de lo
+         encendido no se leería en modo oscuro. */
+      button.activo:hover:not(:disabled) {
+        background-color: var(--ambar-claro);
+      }
+    `,
+  ];
+
+  @property({ attribute: false }) icono?: IconNode;
+  /** El nombre accesible cuando el botón tiene solo ícono. */
+  @property() etiqueta?: string;
+  @property({ type: Boolean }) activo = false;
+  @property({ type: Boolean }) deshabilitado = false;
+
+  constructor() {
+    super();
+    // El clic sobre el texto llega al host aunque el botón esté deshabilitado:
+    // se corta antes de que lo vea quien escucha afuera.
+    this.addEventListener(
+      "click",
+      (evento) => {
+        if (this.deshabilitado) {
+          evento.stopImmediatePropagation();
+        }
+      },
+      { capture: true },
+    );
+  }
+
+  render() {
+    const soloIcono = this.etiqueta !== undefined;
+    return html`
+      <button
+        type="button"
+        class="control ${soloIcono ? "solo-icono" : ""} ${this.activo ? "activo" : ""}"
+        ?disabled=${this.deshabilitado}
+        aria-label=${ifDefined(this.etiqueta)}
+        title=${ifDefined(this.etiqueta)}
+      >
+        ${this.icono ? dibujarIcono(this.icono, 13) : nothing}
+        <slot></slot>
+      </button>
+    `;
+  }
+}
