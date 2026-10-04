@@ -25,7 +25,11 @@ const describir = (el) => {
     props.map((p) => c.getPropertyValue(p)).join("|")
   );
 };
-const valores = () => todos("input, select").map((el) => (el.type === "checkbox" ? el.checked : el.value));
+// Las listas son botones con role="combobox": su valor es el texto que muestran.
+const valores = () =>
+  todos("input, select, button[role=combobox]").map((el) =>
+    el.type === "checkbox" ? el.checked : el.localName === "button" ? el.textContent.trim() : el.value,
+  );
 
 const est = await modulo("/src/estado/estado.ts");
 est.actualizar({
@@ -40,10 +44,8 @@ est.actualizar({
         parametros: {
           tipos: ["nota-on", "nota-off"],
           canales: [1, 10],
-          datos1Desde: 60,
-          datos1Hasta: 72,
-          datos2Desde: 0,
-          datos2Hasta: 127,
+          datos1: { desde: 60, hasta: 72 },
+          datos2: { desde: 0, hasta: 127 },
         },
       },
     ],
@@ -66,6 +68,10 @@ for (const tab of todos("[role=tab]")) {
   await espera(800);
   salida[tab.textContent.trim()] = hojas().map(describir);
 }
+// Las cajas se seleccionan con el tab Workflow a la vista, que ya no es el
+// último de la barra.
+todos("[role=tab]").find((tab) => tab.textContent.trim() === "Workflow").click();
+await espera(800);
 for (const id of ["d", "f", "trigger"]) {
   est.actualizar({ nodoSeleccionado: id });
   await espera(400);

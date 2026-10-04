@@ -28,10 +28,8 @@ function subirNota(id: string, cuanto: number): Flujo["nodos"][number] {
 const FILTRAR_NUEVO = {
   tipos: [],
   canales: [],
-  datos1Desde: 0,
-  datos1Hasta: 127,
-  datos2Desde: 0,
-  datos2Hasta: 127,
+  datos1: { desde: 0, hasta: 127 },
+  datos2: { desde: 0, hasta: 127 },
 };
 
 function soloTipos(...tipos: TipoDeMensaje[]) {
@@ -547,7 +545,7 @@ test("una caja mal configurada a la que no llega el mensaje no afecta", () => {
         {
           id: "mapear",
           tipo: "mapear",
-          parametros: { byte: 2, entradaDesde: 64, entradaHasta: 64, salidaDesde: 0, salidaHasta: 127 },
+          parametros: { byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
@@ -592,7 +590,7 @@ test("comprimir la velocidad solo en las notas no convierte un Nota Off en Nota 
         {
           id: "mapear",
           tipo: "mapear",
-          parametros: { byte: 2, entradaDesde: 0, entradaHasta: 127, salidaDesde: 40, salidaHasta: 110 },
+          parametros: { byte: 2, entrada: { desde: 0, hasta: 127 }, salida: { desde: 40, hasta: 110 } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
@@ -696,7 +694,7 @@ test("una fila de botones elige programas", () => {
         {
           id: "apretados",
           tipo: "filtrar",
-          parametros: { ...soloTipos("cambio-de-control"), datos2Desde: 64 },
+          parametros: { ...soloTipos("cambio-de-control"), datos2: { desde: 64, hasta: 127 } },
         },
         { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-programa" } },
         { id: "emitir", tipo: "emitir", parametros: {} },
@@ -720,7 +718,7 @@ test("un pedal arranca el secuenciador", () => {
         {
           id: "apretado",
           tipo: "filtrar",
-          parametros: { ...soloTipos("cambio-de-control"), datos2Desde: 64 },
+          parametros: { ...soloTipos("cambio-de-control"), datos2: { desde: 64, hasta: 127 } },
         },
         { id: "convertir", tipo: "convertir", parametros: { destino: "inicio" } },
         { id: "emitir", tipo: "emitir", parametros: {} },

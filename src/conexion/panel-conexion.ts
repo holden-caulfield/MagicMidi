@@ -1,11 +1,17 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
+import { Plug, RefreshCw, Unplug } from "lucide";
 
+import "@/componentes/boton-de-accion";
+import "@/componentes/campo-lista";
 import { ControladorDeEstado } from "@/estado/controlador";
-import { actualizar, estado } from "@/estado/estado";
+import { actualizar, estado, type Puerto } from "@/estado/estado";
 import { compartidos } from "@/estilos/compartidos";
-import { actualizarListaDePuertos, conectar, desconectar } from "./conexion";
-import "./selector-de-puerto";
+import { actualizarListaDePuertos, conectar, conNombresAMostrar, desconectar } from "./conexion";
+
+function opcionesDePuerto(puertos: Puerto[]) {
+  return conNombresAMostrar(puertos).map((puerto) => ({ valor: puerto.id, texto: puerto.nombre }));
+}
 
 @customElement("panel-conexion")
 export class PanelConexion extends LitElement {
@@ -14,7 +20,7 @@ export class PanelConexion extends LitElement {
     css`
       :host {
         display: block;
-        padding: 0.75rem;
+        padding: 12px;
       }
 
       /* Los selectores no ganan nada con más ancho: conservan el que tenían
@@ -25,27 +31,39 @@ export class PanelConexion extends LitElement {
         margin-inline: auto;
         display: flex;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 10px;
         align-items: end;
       }
 
       .subtitulo {
         flex-basis: 100%;
         margin: 0;
-        opacity: 0.75;
+        color: var(--letra-secundaria);
       }
 
+      campo-lista {
+        flex: 1 1 220px;
+      }
+
+      /* Siempre en su propia línea, debajo de los selectores, y los tres del
+         ancho del más ancho. */
       .fila-botones {
+        flex-basis: 100%;
         display: flex;
-        gap: 0.6rem;
-        flex-wrap: wrap;
+      }
+
+      .botones {
+        display: inline-grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 1px;
       }
 
       .mensaje {
         flex-basis: 100%;
         margin: 0;
         font-weight: 600;
-        color: #b3261e;
+        color: var(--letra-error);
       }
 
       .mensaje:empty {
@@ -67,31 +85,47 @@ export class PanelConexion extends LitElement {
           aplicación.
         </p>
 
-        <selector-de-puerto
+        <campo-lista
           etiqueta="Puerto de entrada"
-          .puertos=${estado.puertosEntrada}
-          elegido=${estado.puertoEntradaElegido}
+          textoSinOpciones="No hay puertos disponibles"
+          textoSinElegir="Elegí un puerto"
+          .opciones=${opcionesDePuerto(estado.puertosEntrada)}
+          .valor=${estado.puertoEntradaElegido}
           ?deshabilitado=${estado.conectado}
           @cambio=${(evento: CustomEvent<string>) =>
             actualizar({ puertoEntradaElegido: evento.detail })}
-        ></selector-de-puerto>
-        <selector-de-puerto
+        ></campo-lista>
+        <campo-lista
           etiqueta="Puerto de salida"
-          .puertos=${estado.puertosSalida}
-          elegido=${estado.puertoSalidaElegido}
+          textoSinOpciones="No hay puertos disponibles"
+          textoSinElegir="Elegí un puerto"
+          .opciones=${opcionesDePuerto(estado.puertosSalida)}
+          .valor=${estado.puertoSalidaElegido}
           ?deshabilitado=${estado.conectado}
           @cambio=${(evento: CustomEvent<string>) =>
             actualizar({ puertoSalidaElegido: evento.detail })}
-        ></selector-de-puerto>
+        ></campo-lista>
 
         <div class="fila-botones">
-          <button type="button" ?disabled=${estado.conectado} @click=${actualizarListaDePuertos}>
-            Actualizar puertos
-          </button>
-          <button type="button" ?disabled=${estado.conectado} @click=${conectar}>Conectar</button>
-          <button type="button" ?disabled=${!estado.conectado} @click=${desconectar}>
-            Desconectar
-          </button>
+          <div class="botones">
+            <boton-de-accion
+              .icono=${RefreshCw}
+              ?deshabilitado=${estado.conectado}
+              @click=${actualizarListaDePuertos}
+            >
+              Actualizar puertos
+            </boton-de-accion>
+            <boton-de-accion .icono=${Plug} ?deshabilitado=${estado.conectado} @click=${conectar}>
+              Conectar
+            </boton-de-accion>
+            <boton-de-accion
+              .icono=${Unplug}
+              ?deshabilitado=${!estado.conectado}
+              @click=${desconectar}
+            >
+              Desconectar
+            </boton-de-accion>
+          </div>
         </div>
 
         <p class="mensaje">${estado.mensajeConexion}</p>

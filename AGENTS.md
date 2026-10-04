@@ -75,8 +75,9 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   estándar es agregar `accessor` a cada propiedad y sacar las dos opciones.
 - **Organización del código**: por área. Cada carpeta de primer nivel de
   `src/` es un módulo: `ventana/`, `conexion/`, `log/` y `workflow/` (con la
-  vista del editor en `workflow/editor/`), más `estado/`, `estilos/` y
-  `midi/`. Cada componente es un archivo con el nombre de su etiqueta
+  vista del editor en `workflow/editor/`), más `estado/`, `estilos/`, `midi/`
+  y `componentes/` (los controles que comparten todos, ver "Estilos y Shadow
+  DOM"). Cada componente es un archivo con el nombre de su etiqueta
   (`panel-conexion.ts` define `<panel-conexion>`) que exporta una sola clase;
   las etiquetas van en castellano y sin prefijo, y a una palabra suelta se le
   agrega contexto (`ventana-principal`, no `ventana`). La lógica que no dibuja
@@ -96,7 +97,8 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   esperar `elemento.updateComplete` para mirarlo.
 - **Componentes**: los de área (`panel-conexion`, `panel-workflow`,
   `panel-de-configuracion`…) leen el store y llaman a las acciones. Los hoja
-  (`selector-de-puerto`, los `parametro-…`) reciben lo que necesitan por
+  (los `campo-…` y `boton-de-accion` de `componentes/`, los `parametro-…`)
+  reciben lo que necesitan por
   propiedades y avisan con `CustomEvent` de nombre en castellano (`cambio`,
   `agregar-caja`), sin conocer el store; un evento que tiene que cruzar una
   raíz lleva `bubbles: true, composed: true`. Una plantilla sin estado,
@@ -108,11 +110,32 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   `static styles`. Lo único global es `estilos/global.css`: las variables (que
   sí atraviesan el Shadow DOM), la letra que heredan todos y el `body`. Los
   colores que cambian en modo oscuro son variables ahí, así los componentes no
-  repiten el `@media`. Lo que comparten los controles (botones, listas, campos,
-  foco, `box-sizing` y `[hidden]`) está en `estilos/compartidos.ts`, y cada
-  componente que los dibuja lo suma: `static styles = [compartidos, css`…`]`.
-  El CSS de afuera no entra: un componente que no suma `compartidos`, o que no
-  declara `box-sizing: border-box`, se ve distinto sin dar ningún error. Los
+  repiten el `@media`. El único color de acento es el ámbar (`--ambar`): lo
+  encendido, el foco, la selección, los cables y los conectores. Las cajas del lienzo y los controles de la barra que las agregan
+  tienen colores fijos, claros en los dos modos. `estilos/compartidos.ts`
+  tiene solo `box-sizing` y `[hidden]`, y cada componente lo suma:
+  `static styles = [compartidos, css`…`]`. El CSS de afuera no entra: un
+  componente que no lo suma se ve distinto sin dar ningún error.
+- **Controles**: ningún componente estiliza un `<button>`, `<select>` o
+  `<input>` por su cuenta. Los controles son componentes de
+  `src/componentes/`: `boton-de-accion` y los campos (`campo-lista`,
+  `campo-numero`, `campo-interruptor`, `campo-opciones`,
+  `campo-autocompletar`, `campo-rango`), así un mismo control se ve igual en
+  cualquier panel. Cada campo dibuja en su propia raíz la etiqueta, el
+  control y el error (la base es `Campo`, en `componentes/campo.ts`), porque
+  `<label for>` y `aria-describedby` no cruzan de un shadow root a otro; avisa
+  con `cambio` y no guarda el valor: lo recibe de vuelta. `campo-numero`
+  avisa el texto tal como se escribió (interpretarlo es de quien lo usa) y se
+  vuelve a dibujar solo, así un valor rechazado desaparece sin que nadie le
+  pase uno nuevo. La apariencia común está en `componentes/estilos.ts`, sobre
+  la clase `.control`: los estilos propios de un componente que la pisan
+  (alto, padding) necesitan un selector más específico, como `button.control`,
+  o pierden sin dar ningún error. `campo-lista` no usa `<select>`: la lista
+  del sistema no se puede estilizar en WebKit, así que es un botón con
+  `role="combobox"` y una lista propia, como el autocompletar (patrón de la
+  APG, con `aria-activedescendant`). WebKit no enfoca un botón al hacerle
+  clic: un control que depende del foco (para cerrarse al salir, o para el
+  teclado) lo enfoca a mano. Los
   custom elements son `display: inline`, así que todo componente que participa
   del layout declara su `display` en `:host` (y, si crece,
   `flex: 1; min-height: 0`). Lo que se enlaza por `id` (`aria-controls`,
@@ -209,8 +232,13 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   - `editor/lienzo.ts` es el **único** módulo que importa Rete. Ni los tipos de
     nodo, ni el ejecutor, ni el panel de configuración dependen de la librería
     del lienzo, y así tiene que seguir: cambiar de librería es reescribir ese
-    archivo y nada más. Define `<lienzo-workflow>` y `<caja-del-flujo>` (la
-    caja conoce el protocolo de Rete, por eso va en el mismo archivo). El
+    archivo y nada más. Define `<lienzo-workflow>`, `<caja-del-flujo>` y
+    `<cable-del-flujo>` (la caja y el cable conocen el protocolo de Rete, por
+    eso van en el mismo archivo). Los conectores y los cables se dibujan con
+    `customize.socket` y `customize.connection` del preset clásico: el
+    conector se dibuja dentro de la caja (y toma sus estilos), pero el cable
+    va dentro de un componente de Rete con su propio shadow root, por eso es
+    un componente nuestro con sus estilos. El
     lienzo se monta la primera vez que tiene tamaño (con un `ResizeObserver`),
     porque Rete mide las cajas en pantalla y dentro de un panel oculto todo
     mide cero. La barra de herramientas y el panel de configuración piden
@@ -223,27 +251,28 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   - Cada tipo de parámetro (lo que se configura en una caja) es un archivo en
     `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
     `Parametro` y la lista `TIPOS_DE_PARAMETRO`, que el chequeo de tipos
-    mantiene de acuerdo. Cada uno define su control sobre `CampoDeParametro`
-    (que pone la etiqueta, el error debajo del control con `aria-invalid` y
-    `aria-describedby` sobre `#control`, y los estilos de campo) y, en
-    `error`, el texto si un valor no le sirve. El
+    mantiene de acuerdo. Cada uno extiende `CampoDeParametro` (que tiene el
+    parámetro, el valor, el error y `avisarCambio`) y dibuja el `campo-…` de
+    `src/componentes/` que le corresponde, sin estilos propios; en `error`
+    devuelve el texto si un valor no le sirve. El
     panel de configuración no nombra ningún tipo. La guía está en
     `parametros/LEEME.md`, para alguien con nociones básicas de programación.
-    Para elegir de una lista hay tres: `lista` (una, con `<select>`),
+    Para elegir de una lista hay tres: `lista` (una, con un desplegable),
     `opciones` (varias, como píldoras, para pocas y cortas) y `autocompletar`
     (varias, buscándolas, para listas largas). Son tipos distintos y no uno
-    con modos, porque un tipo es su control; tampoco comparten código. Un
+    con modos, porque un tipo es su control; tampoco comparten código. Para
+    dos extremos está `rango` (valor `{ desde, hasta }`, con `invertible`),
+    que se dibuja como una barra de dos perillas. Un
     valor que es una lista se avisa siempre como una lista nueva, en el orden
     de las opciones. Un control de varias partes pone `esGrupo = true`: la
     etiqueta nombra al grupo (`role="group"` + `aria-labelledby`), porque un
     `<label for>` apunta a un solo control.
-  - Lo que flota sobre los parámetros siguientes (la lista del
-    autocompletar) va con `position: absolute` y un `z-index` en el `:host`
-    del control: los parámetros son hermanos en la raíz del panel, y sin eso
-    los de después se dibujan encima. `compartidos` estiliza todo `label`
-    dentro de `.campo` (y todo `button`): un control que dibuja sus propios
-    `label` o botones necesita selectores más específicos
-    (`.pildoras .pildora`) para que no se los pise.
+  - Lo que flota sobre los parámetros siguientes (la lista del autocompletar
+    y la de `campo-lista`) va con `position: absolute` y un `z-index` en el
+    `:host` del control: los parámetros son hermanos en la raíz del panel, y
+    sin eso los de después se dibujan encima. `campo-lista` lo sube solo
+    mientras está abierta (`:host([abierta])`), para quedar encima también de
+    otro campo que flota.
   - Cada caja del lienzo es un componente Lit (`<caja-del-flujo>`): Rete le
     asigna `data` y `emit` al volver a dibujarla, y la selección se marca con
     la propiedad `selected` del nodo más `area.update`. Rete ubica las

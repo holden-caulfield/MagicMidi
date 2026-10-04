@@ -1,8 +1,7 @@
 import { html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { ifDefined } from "lit/directives/if-defined.js";
-import { live } from "lit/directives/live.js";
 
+import "@/componentes/campo-numero";
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
 export interface ParametroEntero extends ParametroBase<number> {
@@ -39,26 +38,22 @@ export function error(parametro: ParametroEntero, valor: number): string | null 
 
 @customElement("parametro-entero")
 export class CampoEntero extends CampoDeParametro<ParametroEntero, number> {
-  protected control() {
+  render() {
     return html`
-      <input
-        id="control"
-        type="number"
-        step="1"
-        min=${ifDefined(this.parametro.minimo)}
-        max=${ifDefined(this.parametro.maximo)}
-        .value=${live(String(this.valor))}
-        @change=${(evento: Event) => {
-          const numero = interpretar((evento.target as HTMLInputElement).value);
-          if (numero === null) {
-            // Redibujar vuelve a mostrar el valor que la caja conserva.
-            this.requestUpdate();
-          } else {
-            // Fuera de rango también se guarda: el error lo muestra el panel.
+      <campo-numero
+        etiqueta=${this.parametro.etiqueta}
+        .valor=${String(this.valor)}
+        .error=${this.error}
+        @cambio=${(evento: CustomEvent<string>) => {
+          const numero = interpretar(evento.detail);
+          // Lo que no es un entero no cambia la caja: el campo vuelve solo al
+          // valor que tenía. Fuera de rango sí se guarda, y el panel muestra
+          // el error.
+          if (numero !== null) {
             this.avisarCambio(numero);
           }
         }}
-      />
+      ></campo-numero>
     `;
   }
 }

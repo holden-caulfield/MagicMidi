@@ -100,10 +100,10 @@ export const estilosDeLaBarraDeEstado = css`
   .barra-de-estado {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    height: 1.5rem;
-    padding: 0 0.75rem;
-    font-size: 0.8em;
+    gap: 6px;
+    height: 20px;
+    padding: 0 10px;
+    font-size: 11px;
     line-height: 1;
     border-top: 1px solid var(--borde-suave);
     color: var(--letra-secundaria);
@@ -170,7 +170,7 @@ export function barraDeEstado() {
   const { icono, texto, contenido } = contenidoDeLaBarra(estadoDeLaBarra);
   return html`
     <footer class="barra-de-estado ${estadoDeLaBarra}" role="status" title=${texto}>
-      ${dibujarIcono(icono, 14)}
+      ${dibujarIcono(icono, 13)}
       <span class="texto-de-estado">${contenido}</span>
     </footer>
   `;

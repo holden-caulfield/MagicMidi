@@ -23,7 +23,7 @@ const recorrer = (nodo) => { for (const el of nodo.children) { if (el.matches('b
 tabs[0].click(); await dibujado();
 recorrer(raiz);
 r.ordenConexion = enfocables;
-r.tabsAlPrincipio = enfocables.slice(0, 3).join() === 'tab-conexion,tab-log,tab-workflow';
+r.tabsAlPrincipio = enfocables.slice(0, 3).join() === 'tab-conexion,tab-workflow,tab-log';
 // Hosts de componentes dentro de secciones ocultas: ninguno tiene `hidden` propio que su display anule
 r.hostsVisiblesEnSeccionesOcultas = [...raiz.querySelectorAll('[role=tabpanel][hidden] > *')].filter(visible).map((e) => e.localName);
 return r;

@@ -1,7 +1,8 @@
 import { Filter } from "lucide";
 
+import type { Rango } from "@/componentes/campo-rango";
 import { NOMBRES_DE_TIPO, TIPOS_ELEGIBLES } from "@/midi/mensaje";
-import type { ErrorDeConfiguracion, TipoDeNodo } from "../tipos";
+import type { TipoDeNodo } from "../tipos";
 
 /**
  * Si el byte está entre `desde` y `hasta`, los dos incluidos. De 0 a 127 es el
@@ -39,27 +40,34 @@ export default {
         texto: String(indice + 1),
       })),
     },
-    // Los rangos van de 0 a 127, como un byte de datos.
-    { clave: "datos1Desde", etiqueta: "Datos 1 desde", tipo: "entero", inicial: 0, minimo: 0, maximo: 127 },
-    { clave: "datos1Hasta", etiqueta: "Datos 1 hasta", tipo: "entero", inicial: 127, minimo: 0, maximo: 127 },
-    { clave: "datos2Desde", etiqueta: "Datos 2 desde", tipo: "entero", inicial: 0, minimo: 0, maximo: 127 },
-    { clave: "datos2Hasta", etiqueta: "Datos 2 hasta", tipo: "entero", inicial: 127, minimo: 0, maximo: 127 },
+    // Los rangos van de 0 a 127, como un byte de datos, y no se pueden
+    // invertir: "desde" mayor que "hasta" no dejaría pasar nada.
+    {
+      clave: "datos1",
+      etiqueta: "Datos 1",
+      tipo: "rango",
+      inicial: { desde: 0, hasta: 127 },
+      minimo: 0,
+      maximo: 127,
+      invertible: false,
+    },
+    {
+      clave: "datos2",
+      etiqueta: "Datos 2",
+      tipo: "rango",
+      inicial: { desde: 0, hasta: 127 },
+      minimo: 0,
+      maximo: 127,
+      invertible: false,
+    },
   ],
-  validar(parametros) {
-    const errores: ErrorDeConfiguracion[] = [];
-    if (Number(parametros.datos1Desde) > Number(parametros.datos1Hasta)) {
-      errores.push({ clave: "datos1Hasta", mensaje: "Tiene que ser igual o mayor que Datos 1 desde" });
-    }
-    if (Number(parametros.datos2Desde) > Number(parametros.datos2Hasta)) {
-      errores.push({ clave: "datos2Hasta", mensaje: "Tiene que ser igual o mayor que Datos 2 desde" });
-    }
-    return errores;
-  },
   procesar(mensaje, parametros) {
-    // Los dos primeros parámetros son listas: hay que decírselo a TypeScript,
-    // como `Number(…)` le dice que un entero es un número.
+    // Hay que decirle a TypeScript qué es cada parámetro: dos listas y dos
+    // rangos.
     const tipos = parametros.tipos as string[];
     const canales = parametros.canales as number[];
+    const datos1 = parametros.datos1 as Rango;
+    const datos2 = parametros.datos2 as Rango;
 
     // Un mensaje de un tipo que no se puede elegir (por ejemplo, desconocido)
     // no pasa si hay tipos elegidos.
@@ -71,10 +79,10 @@ export default {
       return;
     }
     const bytes = mensaje.bytes;
-    if (!dentroDelRango(bytes[1], Number(parametros.datos1Desde), Number(parametros.datos1Hasta))) {
+    if (!dentroDelRango(bytes[1], datos1.desde, datos1.hasta)) {
       return;
     }
-    if (!dentroDelRango(bytes[2], Number(parametros.datos2Desde), Number(parametros.datos2Hasta))) {
+    if (!dentroDelRango(bytes[2], datos2.desde, datos2.hasta)) {
       return;
     }
     return mensaje;

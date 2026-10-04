@@ -5,6 +5,7 @@ import entero, { type ParametroEntero } from "./entero";
 import lista, { type ParametroLista } from "./lista";
 import opciones, { type ParametroDeOpciones } from "./opciones";
 import interruptor, { type ParametroInterruptor } from "./interruptor";
+import rango, { type ParametroRango } from "./rango";
 
 // Para sumar un tipo de parámetro: importarlo arriba, agregar su declaración a
 // esta unión y su entrada a la lista de abajo. Si falta alguna de las dos, el
@@ -18,7 +19,8 @@ export type Parametro =
   | ParametroDeOpciones<number>
   | ParametroDeOpciones<string>
   | ParametroAutocompletar<number>
-  | ParametroAutocompletar<string>;
+  | ParametroAutocompletar<string>
+  | ParametroRango;
 
 export type ValorDeParametro = Parametro["inicial"];
 
@@ -38,6 +40,7 @@ const TIPOS_DE_PARAMETRO = {
   lista,
   opciones,
   autocompletar,
+  rango,
 } satisfies { [T in Parametro["tipo"]]: TipoDeParametro<Extract<Parametro, { tipo: T }>> };
 
 // TypeScript no sabe que la entrada que se busca con `parametro.tipo` es la de

@@ -8,17 +8,17 @@ import { css } from "lit";
 export const estilosDelGlobo = css`
   .globo {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 5px);
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
-    padding: 0.15rem 0.5rem;
-    border-radius: 6px;
-    background-color: #0f0f0f;
-    color: #ffffff;
-    font-size: 0.8rem;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background-color: var(--fondo-globo);
+    color: var(--letra-globo);
+    font-size: 11px;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 16px;
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;

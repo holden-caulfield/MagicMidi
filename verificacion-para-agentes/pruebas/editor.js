@@ -13,7 +13,7 @@ const div = (id) => caja(id).shadowRoot.querySelector('.caja');
 const conector = (id, lado) => caja(id).shadowRoot.querySelector(`.conector-${lado}`);
 const conexiones = () => m.estado.flujo.conexiones.map((c) => `${c.desde}->${c.hacia}`).sort();
 const ids = () => m.estado.flujo.nodos.map((n) => n.id);
-r.montaje = { cajas: todos('caja-del-flujo').length, conexionDibujada: todos('rete-connection', l.shadowRoot).some((c) => todos('path', c.shadowRoot ?? c).some((p) => p.getAttribute('d'))) };
+r.montaje = { cajas: todos('caja-del-flujo').length, conexionDibujada: todos('cable-del-flujo', l.shadowRoot).some((c) => todos('path', c.shadowRoot ?? c).some((p) => p.getAttribute('d'))) };
 r.colores = { trigger: div('trigger').className, emitir: div('emitir-inicial').className };
 // Agregar con clic en la barra
 const barra = uno('barra-de-herramientas').shadowRoot;
@@ -50,6 +50,6 @@ puntero('pointerdown', l.shadowRoot.querySelector('.lienzo'), { x: rect.right - 
 r.fondo = { seleccionado: m.estado.nodoSeleccionado, clase: div(filtrar).className };
 // Seleccionar desplazar y borrarlo desde el panel: se van sus conexiones
 await arrastrar(caja(desplazar), centro(caja(desplazar)), centro(caja(desplazar)));
-todos('button').find((b) => b.textContent.trim() === 'Eliminar caja').click(); await espera(400); await dibujado();
+boton('Eliminar caja').click(); await espera(400); await dibujado();
 r.borrar = { ids: ids().length, sigue: ids().includes(desplazar), conexiones: conexiones(), cajas: todos('caja-del-flujo').length, panel: uno('panel-de-configuracion').shadowRoot.textContent.trim() };
 return r;

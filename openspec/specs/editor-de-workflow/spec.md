@@ -21,9 +21,12 @@ teclado a un control de la barra. El nombre SHALL seguir siendo el nombre
 accesible de cada control de la barra y estar disponible para lectores de
 pantalla en las cajas del lienzo.
 
-Las cajas del lienzo SHALL ser cuadradas, más altas que los controles de la
-barra y con un ícono más grande que el de la barra. Los controles de la barra
-SHALL mantener la altura que tenían cuando mostraban el nombre.
+Las cajas del lienzo SHALL ser cuadradas, de 48 px de lado (con el lienzo sin
+zoom), con borde fino y esquinas apenas redondeadas, y con un ícono más grande
+que el de la barra. Los controles de la barra SHALL ser cuadrados, más chicos
+que las cajas del lienzo, con el mismo borde fino que ellas, y SHALL seguir la
+escala compacta del resto de la interfaz (ver la spec
+`estilo-de-la-interfaz`).
 
 #### Scenario: Partes del tab
 
@@ -51,9 +54,9 @@ SHALL mantener la altura que tenían cuando mostraban el nombre.
 
 #### Scenario: Cajas cuadradas en el lienzo
 
-- **WHEN** hay una caja en el lienzo
-- **THEN** es igual de ancha que de alta, y más grande que el control de su
-  tipo en la barra
+- **WHEN** hay una caja en el lienzo, sin zoom
+- **THEN** mide 48 px de ancho y 48 px de alto, y es más grande que el
+  control de su tipo en la barra
 
 #### Scenario: El panel sigue nombrando la caja
 
@@ -302,14 +305,18 @@ en el flujo:
 - **inicio**: el trigger, con fondo verde claro y borde verde;
 - **fin**: toda caja cuyo tipo no tiene salida, con fondo naranja claro y borde
   naranja;
-- **intermedia**: el resto, con el fondo y el borde neutros de siempre.
+- **intermedia**: el resto, con fondo blanco y borde gris.
+
+Los tres colores SHALL ser los mismos en el modo claro y en el oscuro: las
+cajas son claras en los dos, y el ícono, oscuro.
 
 La etapa SHALL deducirse de los conectores de la caja, sin que el tipo de nodo
-declare un color. Los controles de la barra SHALL usar el mismo color que
-tendrá la caja en el lienzo. Ninguno de los dos colores SHALL confundirse con
-el que señala la caja seleccionada: una caja de inicio o de fin seleccionada
-SHALL conservar su fondo y verse seleccionada igual que las demás. Los colores
-SHALL mantener legible el ícono en el modo claro y en el oscuro.
+declare un color. Los controles de la barra SHALL usar el mismo fondo y borde
+que tendrá la caja en el lienzo, también en los dos modos. La caja
+seleccionada SHALL marcarse con un anillo ámbar plano por fuera de su borde,
+sin cambiar su fondo ni su borde, así una caja de inicio o de fin seleccionada
+sigue mostrando su etapa y se ve seleccionada igual que las demás. El anillo
+no SHALL confundirse con el naranja de las cajas de fin.
 
 #### Scenario: Lienzo inicial con colores
 
@@ -320,18 +327,26 @@ SHALL mantener legible el ícono en el modo claro y en el oscuro.
 #### Scenario: Caja intermedia
 
 - **WHEN** la persona usuaria agrega una caja "Desplazar"
-- **THEN** se ve con el fondo neutro, distinta del trigger y del Emitir
+- **THEN** se ve con fondo blanco, distinta del trigger y del Emitir
+
+#### Scenario: Cajas claras en modo oscuro
+
+- **GIVEN** la aplicación en modo oscuro
+- **WHEN** la persona usuaria mira el lienzo y la barra de herramientas
+- **THEN** la caja y el control "Desplazar" se ven blancos, y la caja y el
+  control "Emitir", naranja claro, con el ícono oscuro
 
 #### Scenario: La barra anticipa el color
 
 - **WHEN** la persona usuaria mira la barra de herramientas
-- **THEN** el control "Emitir" se ve naranja y el control "Desplazar" neutro
+- **THEN** el control "Emitir" se ve naranja y el control "Desplazar" blanco,
+  con el mismo borde fino
 
 #### Scenario: Seleccionar una caja de color
 
 - **WHEN** la persona usuaria selecciona la caja "Emitir"
-- **THEN** la caja sigue naranja y además se ve seleccionada, con la misma
-  señal que cualquier otra caja seleccionada
+- **THEN** la caja sigue con su fondo y su borde naranja, y además tiene
+  alrededor el anillo ámbar, el mismo que cualquier otra caja seleccionada
 
 ### Requirement: El lienzo ocupa el espacio disponible
 
@@ -401,7 +416,8 @@ dos parámetros puede dejar de cumplirse al cambiar cualquiera de los dos).
 Una caja con al menos un error de configuración SHALL verse en el lienzo con un
 borde rojo, el mismo rojo que marca un error en el log, legible en el modo
 claro y en el oscuro. El rojo no SHALL confundirse con el naranja de las cajas
-de fin, y una caja con error seleccionada SHALL seguir viéndose seleccionada.
+de fin, y una caja con error seleccionada SHALL seguir viéndose seleccionada:
+el borde rojo y el anillo de selección no se tapan entre sí.
 La caja SHALL dejar de verse en rojo apenas se corrigen todos sus errores.
 
 #### Scenario: Error debajo del campo
@@ -422,12 +438,32 @@ La caja SHALL dejar de verse en rojo apenas se corrigen todos sus errores.
 
 - **GIVEN** una caja "Mapear" con entrada de 64 a 64
 - **WHEN** la persona usuaria la selecciona y después selecciona otra caja
-- **THEN** mientras está seleccionada se ve seleccionada y con borde rojo, y
-  al seleccionar otra sigue con borde rojo
+- **THEN** mientras está seleccionada se ve con el anillo de selección y con
+  borde rojo, y al seleccionar otra sigue con borde rojo
 
 #### Scenario: Corregir todos los errores
 
-- **GIVEN** una caja "Mapear" con entrada de 64 a 64, y salida hasta 200
-- **WHEN** la persona usuaria cambia la entrada hasta a 127
-- **THEN** sigue con borde rojo y con el error en "Salida hasta"; al cambiar
-  "Salida hasta" a 127, el borde rojo desaparece
+- **GIVEN** una caja "Mapear" con entrada de 64 a 64, y salida de 0 a 200
+- **WHEN** la persona usuaria cambia el "hasta" de la entrada a 127
+- **THEN** sigue con borde rojo y con el error en "Salida"; al cambiar el
+  "hasta" de la salida a 127, el borde rojo desaparece
+
+### Requirement: Conexiones y conectores en el color de acento
+
+Los conectores de las cajas SHALL verse como cuadrados chicos de color ámbar,
+y las conexiones entre cajas, como líneas finas del mismo ámbar, en el modo
+claro y en el oscuro. Un conector SHALL seguir siendo fácil de agarrar con el
+puntero para empezar una conexión.
+
+#### Scenario: Conexión inicial
+
+- **WHEN** se abre la aplicación y se activa el tab "Workflow"
+- **THEN** la conexión entre el trigger y el "Emitir" se ve como una línea
+  fina ámbar, y los conectores de los dos extremos, como cuadrados ámbar
+
+#### Scenario: Conectar sigue funcionando
+
+- **GIVEN** una caja "Desplazar" sin conexiones
+- **WHEN** la persona usuaria arrastra desde la salida del trigger hasta el
+  conector de entrada de la caja
+- **THEN** queda una conexión ámbar entre las dos

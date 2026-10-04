@@ -1,7 +1,7 @@
 import { html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { live } from "lit/directives/live.js";
 
+import "@/componentes/campo-lista";
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
 type Valor = number | string | boolean;
@@ -14,20 +14,15 @@ export interface ParametroLista<T extends Valor> extends ParametroBase<T> {
 
 @customElement("parametro-lista")
 export class CampoLista extends CampoDeParametro<ParametroLista<Valor>, Valor> {
-  protected control() {
+  render() {
     return html`
-      <select
-        id="control"
-        @change=${(evento: Event) => {
-          const indice = (evento.target as HTMLSelectElement).selectedIndex;
-          this.avisarCambio(this.parametro.opciones[indice].valor);
-        }}
-      >
-        ${this.parametro.opciones.map(
-          (opcion) =>
-            html`<option .selected=${live(opcion.valor === this.valor)}>${opcion.texto}</option>`,
-        )}
-      </select>
+      <campo-lista
+        etiqueta=${this.parametro.etiqueta}
+        .opciones=${this.parametro.opciones}
+        .valor=${this.valor}
+        .error=${this.error}
+        @cambio=${(evento: CustomEvent<Valor>) => this.avisarCambio(evento.detail)}
+      ></campo-lista>
     `;
   }
 }

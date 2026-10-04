@@ -20,24 +20,40 @@ export class BarraDeHerramientas extends LitElement {
 
       .barra {
         display: flex;
-        gap: 0.5rem;
+        gap: 4px;
         flex-wrap: wrap;
       }
 
+      /* Cada control anticipa la caja que agrega: su fondo, su borde y su
+         ícono oscuro, en los dos modos. */
       button {
         position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        aspect-ratio: 1;
-        /* Los 2px de más compensan que el ícono es más bajo que la línea de
-           texto que llevaba antes, para que el botón conserve su altura. */
-        padding: calc(0.6em + 2px);
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        margin: 0;
+        padding: 0;
+        border: 1px solid var(--borde-caja);
+        border-radius: 2px;
+        background-color: var(--fondo-caja);
+        color: var(--letra-caja);
+        cursor: pointer;
+        outline: none;
       }
 
       .caja-fin {
-        border-color: var(--borde-boton-fin);
-        background-color: var(--fondo-boton-fin);
+        border-color: var(--borde-fin);
+        background-color: var(--fondo-fin);
+      }
+
+      button:hover {
+        border-color: var(--ambar);
+      }
+
+      button:focus-visible {
+        outline: 1.5px solid var(--ambar);
+        outline-offset: 1px;
       }
 
       button:hover .globo,
@@ -62,7 +78,7 @@ export class BarraDeHerramientas extends LitElement {
               @dragstart=${(evento: DragEvent) => evento.dataTransfer?.setData(FORMATO_ARRASTRE, id)}
               @click=${() => this.pedirCaja(id)}
             >
-              ${dibujarIcono(tipo.icono)}
+              ${dibujarIcono(tipo.icono, 15)}
               <span class="globo" aria-hidden="true">${tipo.nombre}</span>
             </button>
           `;

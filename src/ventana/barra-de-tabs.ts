@@ -27,7 +27,7 @@ export function barraDeTabs(paneles: Panel[], activo: string) {
               aria-selected=${panel.id === activo}
               @click=${() => actualizar({ panelActivo: panel.id })}
             >
-              ${dibujarIcono(panel.icono, 14)} ${panel.titulo}
+              ${dibujarIcono(panel.icono, 13)} ${panel.titulo}
             </button>
           `,
         )}
@@ -41,7 +41,7 @@ export const estilosDeLaBarraDeTabs = css`
   .barra-tabs {
     display: flex;
     justify-content: center;
-    padding: 0.35rem 1rem;
+    padding: 4px 10px;
     /* El borde de arriba la separa de la barra de título de la ventana, que
        en macOS tiene el mismo color. */
     border-top: 1px solid var(--borde-suave);
@@ -49,39 +49,45 @@ export const estilosDeLaBarraDeTabs = css`
     background-color: var(--fondo-hundido);
   }
 
-  /* Un selector segmentado: los tabs comparten un mismo borde, como en la
-     barra de herramientas de una ventana de macOS. */
+  /* Una tira de tabs pegados, separados por una línea fina. El activo toma el
+     fondo de la ventana, como si fuera parte del panel que muestra. */
   .selector {
     display: flex;
     border: 1px solid var(--borde-suave);
-    border-radius: 6px;
-    overflow: hidden;
   }
 
   .selector button {
     display: flex;
     align-items: center;
-    gap: 0.35em;
+    gap: 5px;
+    margin: 0;
+    padding: 1px 12px;
     border: none;
     border-radius: 0;
     background-color: transparent;
-    padding: 0.2rem 0.85rem;
-    font-size: 0.8rem;
-    line-height: 1.25rem;
+    color: var(--letra-secundaria);
+    font: inherit;
     font-weight: 500;
-    opacity: 0.65;
+    cursor: pointer;
+    outline: none;
   }
 
   .selector button + button {
     border-left: 1px solid var(--borde-suave);
   }
 
+  .selector button:hover {
+    color: inherit;
+  }
+
   .selector button[aria-selected="true"] {
-    background-color: var(--fondo-tab-activo);
-    opacity: 1;
+    background-color: var(--fondo-ventana);
+    color: inherit;
   }
 
   .selector button:focus-visible {
-    opacity: 1;
+    color: inherit;
+    outline: 1.5px solid var(--ambar);
+    outline-offset: -1.5px;
   }
 `;

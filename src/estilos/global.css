@@ -1,12 +1,16 @@
 /* Lo único que no vive en un componente: las variables (que sí atraviesan el
    Shadow DOM) y la letra que heredan todos. */
 :root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
+  --letra-interfaz: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  --letra-monoespaciada: "SF Mono", "Fira Code", Consolas, monospace;
+
+  font-family: var(--letra-interfaz);
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 400;
 
-  color: #0f0f0f;
+  color: #1c1c1b;
   background-color: var(--fondo-ventana);
 
   font-synthesis: none;
@@ -16,25 +20,36 @@
   -webkit-text-size-adjust: 100%;
 
   --fondo-ventana: #f6f6f6;
-  --letra-secundaria: #5f5e5a;
+  --fondo-lienzo: #ececeb;
+  --letra-secundaria: #6a6964;
 
-  --acento: #396cd8;
   --borde-suave: rgba(127, 127, 127, 0.35);
-  --fondo-control: #ffffff;
-  --letra-control: inherit;
-  --fondo-control-activo: #ffffff;
   --fondo-hundido: rgba(0, 0, 0, 0.04);
 
+  /* Los controles se distinguen del panel por el relleno, sin borde. */
+  --fondo-control: #e2e2e0;
+  --fondo-control-hover: #d6d6d3;
+  --letra-control: #1c1c1b;
+
+  /* El único acento: lo encendido, el foco, la selección y los cables. */
+  --ambar: #f2a634;
+  --ambar-claro: #f6bb5f;
+  --letra-sobre-ambar: #1c1c1b;
+  /* La letra de un botón mientras se aprieta, sobre el ámbar. */
+  --letra-apretado: #5f5a52;
+
+  /* Las cajas del lienzo, y los controles de la barra que las agregan, son
+     claras en los dos modos. */
+  --fondo-caja: #ffffff;
+  --borde-caja: #9c9b96;
+  --letra-caja: #1c1c1b;
   --fondo-inicio: #dcf5e4;
   --borde-inicio: #2e9d5a;
   --fondo-fin: #fde6d6;
   --borde-fin: #dd6b20;
-  /* Las cajas del lienzo son claras en los dos modos; los botones de la barra
-     de herramientas, no. */
-  --fondo-boton-inicio: var(--fondo-inicio);
-  --borde-boton-inicio: var(--borde-inicio);
-  --fondo-boton-fin: var(--fondo-fin);
-  --borde-boton-fin: var(--borde-fin);
+
+  --fondo-globo: #1c1c1b;
+  --letra-globo: #ffffff;
 
   --letra-salida: #3c3489;
   --fondo-salida: #eeedfe;
@@ -44,8 +59,6 @@
   --letra-error: #a32d2d;
   --fondo-error: #fcebeb;
 
-  --fondo-tab-activo: rgba(127, 127, 127, 0.2);
-
   --letra-estado-conectado: #1b6b34;
   --fondo-estado-conectado: #dcf5e4;
   --letra-estado-error: #a32d2d;
@@ -54,20 +67,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    color: #f6f6f6;
+    color: #ececec;
 
     --fondo-ventana: #2f2f2f;
-    --letra-secundaria: #b4b2a9;
+    --fondo-lienzo: #373737;
+    --letra-secundaria: #a8a8a3;
 
-    --fondo-control: #0f0f0f98;
-    --letra-control: #ffffff;
-    --fondo-control-activo: #0f0f0f69;
     --fondo-hundido: rgba(255, 255, 255, 0.04);
 
-    --fondo-boton-inicio: #173f27;
-    --borde-boton-inicio: #4cc27c;
-    --fondo-boton-fin: #5a2e12;
-    --borde-boton-fin: #f08a3c;
+    --fondo-control: #3d3d3d;
+    --fondo-control-hover: #4a4a4a;
+    --letra-control: #ececec;
+
+    --ambar: #ffb547;
+    --ambar-claro: #ffc876;
+
+    --fondo-globo: #ececec;
+    --letra-globo: #1c1c1b;
 
     --letra-salida: #cecbf6;
     --fondo-salida: #26215c;
@@ -75,8 +91,6 @@
     --letra-descartado: #8f8f8f;
     --letra-error: #f7c1c1;
     --fondo-error: #501313;
-
-    --fondo-tab-activo: rgba(255, 255, 255, 0.14);
 
     --letra-estado-conectado: #a6e3b8;
     --fondo-estado-conectado: #173f27;
