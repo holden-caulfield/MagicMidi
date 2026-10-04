@@ -26,6 +26,14 @@ herramientas del workflow o en el panel de configuración de una caja.
 - **THEN** los dos tienen el mismo alto, la misma letra, las mismas esquinas,
   el mismo fondo y la misma flecha
 
+#### Scenario: La lista desplegada es de la aplicación
+
+- **WHEN** la persona usuaria abre el selector "Puerto de entrada" o el
+  campo "Byte" de una caja
+- **THEN** la lista que se despliega tiene el mismo ancho que el control y
+  se ve igual que la del campo de los tipos de mensaje, en lugar de la lista
+  del sistema
+
 #### Scenario: Botones de distintos paneles
 
 - **WHEN** la persona usuaria compara el botón "Conectar" del tab "Conexión"

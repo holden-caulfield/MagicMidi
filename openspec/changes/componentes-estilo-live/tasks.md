@@ -145,6 +145,20 @@ final.
       `campo-lista` frente a `.control`; verificar midiendo en WebKit el
       alto y el padding
 
+## 9. Lista propia en lugar del `<select>`
+
+- [x] 9.1 Reescribir `campo-lista` con un botón `role="combobox"` y la lista
+      flotante del autocompletar, según design.md ("La lista es propia, no un
+      `<select>`"), con la búsqueda por letra como función pura y su test;
+      verificar con `npm test` y en WebKit que la lista ocupa el ancho del
+      control, en claro y oscuro
+- [x] 9.2 Actualizar las pruebas de `verificacion-para-agentes/` que usan
+      `select` (`conexion.js`, `configuracion.js`) y correrlas; verificar que
+      dan lo mismo que antes
+- [x] 9.3 Probar con el teclado en el navegador (abrir, recorrer, elegir,
+      Escape, letra) y que la lista abierta quede encima del campo que
+      sigue; verificar con una prueba en WebKit
+
 ## 7. Verificación final
 
 - [x] 7.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`; verificar
@@ -159,7 +173,7 @@ final.
       `estilo-de-la-interfaz`
 - [ ] 7.4 Probar en la ventana real (`npm run tauri dev`): activación con
       Enter y barra espaciadora de botones, píldoras, interruptor y perillas,
-      arrastre del rango, el `<select>` en WebKit, y el flujo MIDI con dos
+      arrastre del rango, la lista propia con el teclado, y el flujo MIDI con dos
       buses del IAC Driver usando un Filtrar y un Mapear con rangos
 - [ ] 7.5 Al archivar, proponer a la persona usuaria el diff de AGENTS.md
       (componentes en `src/componentes/`, `compartidos` solo para

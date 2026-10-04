@@ -23,11 +23,12 @@ d.value = '2.5'; d.dispatchEvent(new Event('change', { bubbles: true })); await 
 r.decimal = { valor: nodo('d1').parametros.desplazamiento, campo: campo('Desplazamiento').value };
 campo('Desplazamiento').value = ''; campo('Desplazamiento').dispatchEvent(new Event('change', { bubbles: true })); await dibujado();
 r.vacio = { valor: nodo('d1').parametros.desplazamiento, campo: campo('Desplazamiento').value };
-const byte = campo('Byte'); byte.selectedIndex = 2; byte.dispatchEvent(new Event('change', { bubbles: true }));
+const opcionesDe = (control) => [...control.getRootNode().querySelectorAll('[role=option]')];
+opcionesDe(campo('Byte'))[2].click();
 const ov = campo('Overflow'); ov.checked = true; ov.dispatchEvent(new Event('change', { bubbles: true })); await dibujado();
 r.otros = { byte: nodo('d1').parametros.byte, overflow: nodo('d1').parametros.overflow };
 m.actualizar({ nodoSeleccionado: 'd2' }); await dibujado();
-r.d2 = { desplazamiento: campo('Desplazamiento').value, byte: campo('Byte').selectedIndex, overflow: campo('Overflow').checked };
+r.d2 = { desplazamiento: campo('Desplazamiento').value, byte: opcionesDe(campo('Byte')).findIndex((o) => o.getAttribute('aria-selected') === 'true'), overflow: campo('Overflow').checked };
 // la etiqueta lleva al control
 const etiquetaDe = (t) => campoDe(t).shadowRoot.querySelector('.etiqueta');
 etiquetaDe('Desplazamiento').click(); await espera(50);

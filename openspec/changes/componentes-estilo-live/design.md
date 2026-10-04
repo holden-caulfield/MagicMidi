@@ -44,9 +44,6 @@ mockups aprobados (propuesta "A · Live", rango "barra con chevrones", ícono
 
 **Non-Goals:**
 
-- Reemplazar los desplegables nativos por listas propias: el `<select>` se
-  estiliza (sin `appearance`, con la flecha de Lucide), pero la lista que se
-  abre sigue siendo la del sistema.
 - Un tema configurable o un modo de alto contraste: se definen los colores
   de claro y oscuro, como hoy.
 - Cambiar el log más allá de su botón y su escala de letra: las columnas en
@@ -84,6 +81,35 @@ Alternativas descartadas:
   `compartidos.ts`, y es justamente lo que se desarmó: cada lugar lo pisa.
   Además el rango, las píldoras y el autocompletar tienen comportamiento, no
   solo estilos.
+
+### La lista es propia, no un `<select>`
+
+En la primera revisión, la lista que abre el `<select>` de WebKit no ocupaba
+el ancho del control y no seguía la estética del resto, mientras que la del
+autocompletar sí. Por eso `campo-lista` dibuja su propio desplegable, con la
+misma lista flotante del autocompletar, siguiendo el patrón "select-only
+combobox" de la guía de ARIA (APG):
+
+- el control es un `<button id="control" role="combobox">` con
+  `aria-haspopup="listbox"`, `aria-expanded` y `aria-controls`. Es un
+  `button` porque es un elemento que se puede etiquetar: el `<label for>`
+  sigue dándole nombre, y hacer clic en la etiqueta abre la lista;
+- el foco nunca sale del botón: la opción activa se marca con
+  `aria-activedescendant`, como en el autocompletar;
+- con el teclado, Enter, barra espaciadora o las flechas abren la lista; las
+  flechas, Inicio y Fin recorren; Enter o barra espaciadora eligen; Escape
+  cierra sin elegir; escribir una letra va a la próxima opción que empieza
+  con ella (la búsqueda es una función pura, con su test). Salir del control
+  cierra la lista;
+- mientras está abierta, el componente sube su `z-index` (refleja el
+  atributo `abierta`), así queda encima de un campo hermano que también
+  flota;
+- sin opciones, el botón muestra el texto para ese caso y la lista lo
+  repite; con `textoSinElegir`, el botón lo muestra en gris mientras ninguna
+  opción tiene el valor actual.
+
+Alternativa descartada: estilizar más el `<select>`. La lista que abre es del
+sistema y no se puede estilizar en WebKit.
 
 Los botones van como `boton-de-accion`: un componente con un `<button>`
 nativo adentro, el texto por slot (el nombre accesible se calcula con el
@@ -204,9 +230,9 @@ los PNG, `.icns` e `.ico` con `npx tauri icon src-tauri/icons/icono.svg`
 - [Con 48px, los conectores y el globo quedan más cerca de la caja vecina]
   → La separación inicial entre cajas (`SEPARACION_INICIAL`) se ajusta a la
   caja nueva, y se revisa que el globo siga quedando encima.
-- [WebKit y Chromium dibujan distinto un `<select>` sin `appearance`] → Se
-  revisa en el WebKit del sistema con las herramientas de verificación, y en
-  la ventana real antes de terminar.
+- [Una lista propia tiene que reproducir lo que el `<select>` daba gratis:
+  teclado, lector de pantalla, cerrarse al salir] → Sigue el patrón de la
+  APG, como el autocompletar, y se prueba con el teclado en la ventana real.
 
 ## Migration Plan
 

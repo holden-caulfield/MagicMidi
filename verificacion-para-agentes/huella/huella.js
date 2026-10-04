@@ -25,7 +25,11 @@ const describir = (el) => {
     props.map((p) => c.getPropertyValue(p)).join("|")
   );
 };
-const valores = () => todos("input, select").map((el) => (el.type === "checkbox" ? el.checked : el.value));
+// Las listas son botones con role="combobox": su valor es el texto que muestran.
+const valores = () =>
+  todos("input, select, button[role=combobox]").map((el) =>
+    el.type === "checkbox" ? el.checked : el.localName === "button" ? el.textContent.trim() : el.value,
+  );
 
 const est = await modulo("/src/estado/estado.ts");
 est.actualizar({

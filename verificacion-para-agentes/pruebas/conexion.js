@@ -4,24 +4,30 @@
 // simuladas reemplazando el puente de IPC.
 const m = await modulo('/src/estado/estado.ts');
 const r = {};
+// Las listas son propias (<campo-lista>): el control es un botón, y las
+// opciones, los <li> de su lista.
+const listas = () => todos('campo-lista').map((c) => c.shadowRoot.querySelector('#control'));
+const textoDe = (control) => control.textContent.trim();
+const opcionesDe = (control) => [...control.getRootNode().querySelectorAll('[role=option]')];
+const elegir = (control, texto) => opcionesDe(control).find((o) => o.textContent.trim() === texto).click();
 m.actualizar({ puertosEntrada: [], puertosSalida: [] }); await dibujado();
-r.sinPuertos = todos('select').map((s) => s.options[0]?.textContent.trim());
+r.sinPuertos = listas().map(textoDe);
 m.actualizar({ puertosEntrada: [{ id: 'a', nombre: 'IAC' }, { id: 'b', nombre: 'IAC' }], puertosSalida: [{ id: 'c', nombre: 'Salida' }] }); await dibujado();
-r.opciones = [...todos('select')[0].options].map((o) => o.textContent.trim());
-const [entrada, salida] = todos('select');
-const elegir = (s, texto) => { s.selectedIndex = [...s.options].findIndex((o) => o.textContent.trim() === texto); s.dispatchEvent(new Event('change')); };
+r.opciones = opcionesDe(listas()[0]).map((o) => o.textContent.trim());
+r.sinElegir = listas().map(textoDe);
+const [entrada, salida] = listas();
 elegir(entrada, 'IAC (2)'); elegir(salida, 'Salida'); await dibujado();
 r.elegidos = [m.estado.puertoEntradaElegido, m.estado.puertoSalidaElegido];
 m.actualizar({ conectado: true }); await dibujado();
-r.conectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: todos('select').map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, actualizar: boton('Actualizar puertos').disabled };
+r.conectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: listas().map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, actualizar: boton('Actualizar puertos').disabled };
 m.actualizar({ panelActivo: 'log' }); await dibujado(); m.actualizar({ panelActivo: 'conexion', mensajeConexion: 'algo' }); await dibujado();
-r.trasRedibujar = { entrada: todos('select')[0].selectedOptions[0]?.textContent.trim(), mensaje: todos('p').find((p) => p.className === 'mensaje')?.textContent.trim(), visible: visible(todos('p').find((p) => p.className === 'mensaje')) };
+r.trasRedibujar = { entrada: textoDe(listas()[0]), mensaje: todos('p').find((p) => p.className === 'mensaje')?.textContent.trim(), visible: visible(todos('p').find((p) => p.className === 'mensaje')) };
 m.actualizar({ conectado: false, mensajeConexion: '' }); await dibujado();
-r.desconectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: todos('select').map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, mensajeVisible: visible(todos('p').find((p) => p.className === 'mensaje')) };
+r.desconectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: listas().map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, mensajeVisible: visible(todos('p').find((p) => p.className === 'mensaje')) };
 // 3.2: backend que falla
 window.__TAURI_INTERNALS__ = { transformCallback: () => 1, invoke: async (comando) => { if (comando.startsWith('plugin:event|')) return 1; throw 'fallo simulado'; } };
 boton('Actualizar puertos').click(); await espera(100); await dibujado();
-r.fallaPuertos = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), entradaSigue: todos('select')[0].selectedOptions[0]?.textContent.trim() };
+r.fallaPuertos = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), entradaSigue: textoDe(listas()[0]) };
 boton('Conectar').click(); await espera(100); await dibujado();
-r.fallaConectar = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), conectarHabilitado: !boton('Conectar').disabled, selectsHabilitados: todos('select').map((s) => !s.disabled) };
+r.fallaConectar = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), conectarHabilitado: !boton('Conectar').disabled, selectsHabilitados: listas().map((s) => !s.disabled) };
 return r;
