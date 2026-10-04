@@ -171,11 +171,11 @@ final.
       y recorrer los tres tabs en claro y oscuro con foco de teclado y una
       caja seleccionada; verificar el escenario "Sin azul" de
       `estilo-de-la-interfaz`
-- [ ] 7.4 Probar en la ventana real (`npm run tauri dev`): activación con
+- [x] 7.4 Probar en la ventana real (`npm run tauri dev`): activación con
       Enter y barra espaciadora de botones, píldoras, interruptor y perillas,
       arrastre del rango, la lista propia con el teclado, y el flujo MIDI con dos
       buses del IAC Driver usando un Filtrar y un Mapear con rangos
-- [ ] 7.5 Al archivar, proponer a la persona usuaria el diff de AGENTS.md
+- [x] 7.5 Al archivar, proponer a la persona usuaria el diff de AGENTS.md
       (componentes en `src/componentes/`, `compartidos` solo para
       `box-sizing` y `[hidden]`, ámbar como único acento, el tipo rango) y
       esperar su aprobación antes de aplicarlo

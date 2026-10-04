@@ -9,20 +9,21 @@ expresión, comprimir la velocidad o limitar el recorrido de un controlador.
 
 ### Requirement: Parámetros del nodo Mapear
 
-Una caja **Mapear** SHALL tener entrada y salida, y cinco parámetros:
+Una caja **Mapear** SHALL tener entrada y salida, y tres parámetros:
 
 - **Byte**: qué byte de datos mapea. Las opciones son "2.º (datos 1)" y "3.º
   (datos 2)". El status no se ofrece.
-- **Entrada desde** y **Entrada hasta**, los extremos del rango de entrada, y
-  **Salida desde** y **Salida hasta**, los del rango de salida: cuatro números
-  enteros, cada uno de 0 a 127.
+- **Entrada**: el rango de entrada, de 0 a 127, que se puede invertir.
+- **Salida**: el rango de salida, de 0 a 127, que se puede invertir.
 
 Un extremo fuera de 0 a 127 SHALL ser un error de configuración de la caja,
-asociado a ese extremo. "Entrada desde" igual a "Entrada hasta" SHALL ser un
-error de configuración asociado a "Entrada hasta": con un solo valor de
-entrada no hay forma de repartir los valores (ver la spec
-`editor-de-workflow`, "Los errores de configuración se ven en el panel y en el
-lienzo").
+asociado al rango de ese extremo (el error del tipo de parámetro rango, ver la
+spec `tipos-de-parametro`). Una entrada con "desde" igual a "hasta" SHALL ser
+un error de configuración asociado a "Entrada", con el texto "Desde tiene que
+ser distinto de hasta": con un solo valor de entrada no hay forma de repartir
+los valores (ver la spec `editor-de-workflow`, "Los errores de configuración
+se ven en el panel y en el lienzo"). En la salida, un solo valor sí sirve:
+lleva todo a ese valor.
 
 Una caja nueva SHALL arrancar con byte "3.º (datos 2)", entrada de 0 a 127 y
 salida de 0 a 127, sin errores. Con esos valores deja pasar los mensajes sin
@@ -31,31 +32,42 @@ cambios.
 #### Scenario: Configuración inicial
 
 - **WHEN** la persona usuaria agrega una caja "Mapear" y la selecciona
-- **THEN** el panel muestra byte "3.º (datos 2)", entrada de 0 a 127 y salida
-  de 0 a 127, sin errores
+- **THEN** el panel muestra byte "3.º (datos 2)", y los rangos "Entrada" y
+  "Salida", los dos de 0 a 127, sin errores
 
 #### Scenario: Rango de entrada de un solo valor
 
 - **GIVEN** una caja "Mapear" con entrada de 0 a 127
-- **WHEN** la persona usuaria escribe 0 en "Entrada hasta" y sale del campo
-- **THEN** el panel muestra debajo de "Entrada hasta" que tiene que ser
-  distinto de "Entrada desde", y la caja se ve con borde rojo
+- **WHEN** la persona usuaria escribe 0 en el campo de la derecha de
+  "Entrada" y sale del campo
+- **THEN** el panel muestra debajo de "Entrada" que desde tiene que ser
+  distinto de hasta, y la caja se ve con borde rojo
 
 #### Scenario: Extremo fuera de rango
 
-- **WHEN** la persona usuaria escribe 200 en "Salida hasta" y sale del campo
-- **THEN** el panel muestra debajo de "Salida hasta" que tiene que ir de 0 a
-  127, y la caja se ve con borde rojo
+- **WHEN** la persona usuaria escribe 200 en el campo de la derecha de
+  "Salida" y sale del campo
+- **THEN** el panel muestra debajo de "Salida" que tiene que ir de 0 a 127, y
+  la caja se ve con borde rojo
+
+#### Scenario: Invertir con las perillas
+
+- **GIVEN** una caja "Mapear" con salida de 0 a 127
+- **WHEN** la persona usuaria cruza las perillas de "Salida" hasta dejarla de
+  127 a 0
+- **THEN** la caja no tiene errores y las marcas del tramo de "Salida" apuntan
+  hacia la izquierda
 
 ### Requirement: Mapea linealmente el byte elegido
 
 La caja SHALL producir un mensaje igual al recibido, salvo por el byte elegido,
 que pasa a valer el punto del rango de salida que corresponde, en la misma
-proporción, al valor original dentro del rango de entrada: "Entrada desde" va a
-"Salida desde", "Entrada hasta" a "Salida hasta", y los valores intermedios se
-reparten parejo entre los dos, redondeados al entero más cercano. Los demás
-bytes, y la cantidad de bytes, SHALL quedar igual. Como los extremos de salida
-van de 0 a 127, el leading bit del byte de datos SHALL seguir en 0.
+proporción, al valor original dentro del rango de entrada: el "desde" de la
+entrada va al "desde" de la salida, el "hasta" de la entrada al "hasta" de la
+salida, y los valores intermedios se reparten parejo entre los dos,
+redondeados al entero más cercano. Los demás bytes, y la cantidad de bytes,
+SHALL quedar igual. Como los extremos de salida van de 0 a 127, el leading bit
+del byte de datos SHALL seguir en 0.
 
 El "desde" de un rango SHALL poder ser mayor que su "hasta": un rango de salida
 de 127 a 0 invierte el sentido.
