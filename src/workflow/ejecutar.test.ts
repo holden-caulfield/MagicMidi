@@ -506,6 +506,31 @@ test("Fijar con el canal fuera de rango hace que no salga nada", () => {
   });
 });
 
+test("el error de Fijar en el log dice los números como los muestra el panel", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        {
+          id: "fijar",
+          tipo: "fijar",
+          parametros: { byte: 0, valor: 100 },
+          presentaciones: { valor: { modo: "hexadecimal" } },
+        },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [],
+    error: 'La caja "Fijar" está mal configurada: Valor: Con Canal, tiene que ir de 01 a 10',
+  });
+});
+
 test("al corregir la caja, el mensaje siguiente sale bien", () => {
   actualizar({
     flujo: flujo(

@@ -3,6 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 
 import "./campo-numero";
 import { Campo } from "./campo";
+import type { Paso } from "./campo-numero";
 
 export interface Rango {
   desde: number;
@@ -61,7 +62,24 @@ export function extremoMasCercano(rango: Rango, valor: number): Extremo {
   return rango.desde <= rango.hasta === derecha ? "hasta" : "desde";
 }
 
-/** El número escrito en uno de los campos, o `null` si no es un entero. */
+/**
+ * El rango después de un paso de las flechas en el campo de un extremo: el
+ * número leído más el paso, movido como con la perilla (frenado o cruzado).
+ */
+export function pasarExtremo(
+  rango: Rango,
+  extremo: Extremo,
+  leido: number,
+  cantidad: number,
+  limites: Limites,
+): Rango {
+  return moverExtremo(rango, extremo, leido + cantidad, limites);
+}
+
+/**
+ * El número escrito en uno de los campos, o `null` si no es un entero. Es lo
+ * que usa el control si no recibe otra forma de leer.
+ */
 export function interpretarExtremo(texto: string): number | null {
   const numero = Number(texto);
   return texto.trim() !== "" && Number.isInteger(numero) ? numero : null;
@@ -153,6 +171,10 @@ export class CampoRango extends Campo<Rango> {
   @property({ type: Number }) minimo = 0;
   @property({ type: Number }) maximo = 127;
   @property({ type: Boolean }) invertible = false;
+  /** Cómo se escribe cada extremo en su campo y se anuncia en su perilla. */
+  @property({ attribute: false }) formatear: (numero: number) => string = String;
+  /** Cómo se lee lo escrito en un campo: el número, o `null` si no se puede. */
+  @property({ attribute: false }) leer: (texto: string) => number | null = interpretarExtremo;
 
   protected esGrupo = true;
 
@@ -193,12 +215,20 @@ export class CampoRango extends Campo<Rango> {
         compacto
         etiquetaOculta
         etiqueta=${extremo}
-        .valor=${String(this.valor[extremo])}
+        .valor=${this.formatear(this.valor[extremo])}
         @cambio=${(evento: CustomEvent<string>) => {
-          const numero = interpretarExtremo(evento.detail);
+          const numero = this.leer(evento.detail);
           // Lo escrito se guarda aunque no sirva: el error lo muestra el panel.
           if (numero !== null) {
             this.avisar({ ...this.valor, [extremo]: numero });
+          }
+        }}
+        @paso=${(evento: CustomEvent<Paso>) => {
+          const numero = this.leer(evento.detail.texto);
+          if (numero !== null) {
+            this.avisar(
+              pasarExtremo(this.valor, extremo, numero, evento.detail.cantidad, this.limites),
+            );
           }
         }}
       ></campo-numero>
@@ -215,6 +245,7 @@ export class CampoRango extends Campo<Rango> {
         aria-valuemin=${this.minimo}
         aria-valuemax=${this.maximo}
         aria-valuenow=${this.valor[extremo]}
+        aria-valuetext=${this.formatear(this.valor[extremo])}
         style="left: ${posicion}%"
         @keydown=${(evento: KeyboardEvent) => this.teclaEnPerilla(evento, extremo)}
       ></button>

@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { MensajeMidi } from "@/midi/mensaje";
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import { erroresDeConfiguracion } from "../validacion";
+import { modosDe } from "../parametros/modos";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
@@ -22,6 +23,28 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => 
       tipo.parametros.map((parametro) => [parametro.clave, parametro.inicial]),
     );
     expect(erroresDeConfiguracion(tipo, iniciales)).toEqual([]);
+  });
+
+  // Una nota va de 0 a 127, y el hexadecimal no tiene negativos: un parámetro
+  // numérico solo puede ofrecer esos modos si sus límites entran ahí.
+  test("sus parámetros numéricos ofrecen solo modos que les entran", () => {
+    for (const parametro of tipo.parametros) {
+      if (parametro.tipo !== "entero" && parametro.tipo !== "rango") continue;
+      const modos = modosDe(parametro);
+      const { minimo, maximo } = parametro;
+      if (modos.includes("nota")) {
+        expect(
+          minimo !== undefined && maximo !== undefined && minimo >= 0 && maximo <= 127,
+          `"${parametro.clave}" ofrece nota sin ir de 0 a 127`,
+        ).toBe(true);
+      }
+      if (modos.includes("hexadecimal")) {
+        expect(
+          minimo !== undefined && minimo >= 0,
+          `"${parametro.clave}" ofrece hexadecimal con negativos`,
+        ).toBe(true);
+      }
+    }
   });
 
   test("no repite claves de parámetro", () => {

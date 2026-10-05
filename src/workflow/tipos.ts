@@ -23,9 +23,14 @@ export interface TipoDeNodo {
   /**
    * Reglas que miran varios parámetros juntos. Es opcional, y se llama solo si
    * cada parámetro, por separado, ya tiene un valor que le sirve. Devuelve los
-   * errores que encontró, o una lista vacía.
+   * errores que encontró, o una lista vacía. Para nombrar un número en un
+   * error, `formatear(clave, numero)` lo escribe como lo muestra el parámetro
+   * de esa clave.
    */
-  validar?(parametros: Record<string, ValorDeParametro>): ErrorDeConfiguracion[];
+  validar?(
+    parametros: Record<string, ValorDeParametro>,
+    formatear: (clave: string, numero: number) => string,
+  ): ErrorDeConfiguracion[];
   /**
    * Recibe una copia del mensaje (se puede modificar sin afectar a otras
    * ramas) y devuelve el mensaje que pasa a las cajas siguientes, o nada para

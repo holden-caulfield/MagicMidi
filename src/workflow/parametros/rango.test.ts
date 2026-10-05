@@ -55,3 +55,8 @@ test("marca algo que no es un rango", () => {
     "Tiene que ser un número entero",
   );
 });
+
+test("el extremo fuera de rango se dice en el modo del parámetro", () => {
+  expect(error(fijo, { desde: 0, hasta: 200 }, { modo: "nota" })).toBe("Tiene que ir de C-1 a G9");
+  expect(error(fijo, { desde: 0, hasta: 200 }, { modo: "hexadecimal" })).toBe("Tiene que ir de 00 a 7F");
+});

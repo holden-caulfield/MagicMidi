@@ -28,10 +28,13 @@ export default {
     // De 0 a 127: un byte de datos con el leading bit en 0.
     { clave: "valor", etiqueta: "Valor", tipo: "entero", inicial: 100, minimo: 0, maximo: 127 },
   ],
-  validar(parametros) {
+  validar(parametros, formatear) {
     const valor = Number(parametros.valor);
     if (Number(parametros.byte) === BYTE_CANAL && (valor < 1 || valor > 16)) {
-      return [{ clave: "valor", mensaje: "Con Canal, tiene que ir de 1 a 16" }];
+      // `formatear` escribe el 1 y el 16 como se muestra el valor en el panel.
+      const desde = formatear("valor", 1);
+      const hasta = formatear("valor", 16);
+      return [{ clave: "valor", mensaje: `Con Canal, tiene que ir de ${desde} a ${hasta}` }];
     }
     return [];
   },

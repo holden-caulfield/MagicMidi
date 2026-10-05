@@ -72,7 +72,15 @@ Un tipo de nodo es un objeto con estos campos:
   - `"entero"`: un número entero (acepta negativos). Si solo sirven algunos,
     declarale `minimo`, `maximo` o los dos: por ejemplo, `minimo: 0, maximo:
     127` para un byte de datos. Un número fuera de ese rango se guarda igual,
-    y el panel muestra el error debajo del campo.
+    y el panel muestra el error debajo del campo. El número se puede mostrar
+    y escribir en decimal ("60"), como nota ("C4") o en hexadecimal ("3C"):
+    son los *modos*, y la persona los cambia con un botón al lado de la
+    etiqueta. Si solo algunos tienen sentido, declarale `modos` con esos, en
+    orden; el primero es el de una caja nueva. Por ejemplo, el desplazamiento
+    de Desplazar es un intervalo que puede ser negativo, y declara
+    `modos: ["decimal"]`. La nota solo se puede ofrecer si el parámetro va de
+    0 a 127, y el hexadecimal, si no tiene negativos. Para `procesar`, el
+    valor es siempre un número, en cualquier modo.
   - `"interruptor"`: una casilla para prender o apagar algo.
   - `"lista"`: una opción de una lista cerrada. Cada opción tiene un `valor` y
     un `texto`.
@@ -86,13 +94,13 @@ Un tipo de nodo es un objeto con estos campos:
     `{ desde, hasta }`: en `procesar` se lee como
     `const datos1 = parametros.datos1 as Rango;` (el tipo `Rango` se importa
     de `@/componentes/campo-rango`), y después `datos1.desde` y
-    `datos1.hasta`.
+    `datos1.hasta`. Tiene los mismos modos que el entero.
 
   Los que hay están en `parametros/catalogo.ts`. Si ninguno te sirve, se puede
   crear uno nuevo: la guía está en
   [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
   poné `parametros: []`.
-- **`validar(parametros)`**: opcional. Solo hace falta si algún valor depende
+- **`validar(parametros, formatear)`**: opcional. Solo hace falta si algún valor depende
   de otro, o si dentro de un parámetro hay una regla que el tipo no conoce:
   por ejemplo, en Mapear, los dos extremos del rango de entrada no pueden ser
   iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
@@ -313,13 +321,33 @@ validar(parametros) {
   muestra, y el `mensaje`. Si está todo bien, devuelve una lista vacía.
 - Se llama **solo si cada parámetro ya está bien por separado**: no hace falta
   revisar que un número esté en su rango, eso ya lo hizo el parámetro.
+- Si el mensaje nombra un número de un parámetro, escribilo con
+  `formatear(clave, numero)`, el segundo argumento: lo escribe como lo
+  muestra ese parámetro, en el modo que eligió la persona. Fijar, por ejemplo,
+  dice "Con Canal, tiene que ir de 1 a 16", y con el valor en hexadecimal,
+  "de 01 a 10":
+
+  ```ts
+  validar(parametros, formatear) {
+    const valor = Number(parametros.valor);
+    if (Number(parametros.byte) === BYTE_CANAL && (valor < 1 || valor > 16)) {
+      const desde = formatear("valor", 1);
+      const hasta = formatear("valor", 16);
+      return [{ clave: "valor", mensaje: `Con Canal, tiene que ir de ${desde} a ${hasta}` }];
+    }
+    return [];
+  },
+  ```
+
+  Si no nombra números, como en Mapear, no hace falta declararlo.
 - La aplicación guarda igual el valor con error, lo muestra debajo del campo y
   marca la caja con un borde rojo. Si llega un mensaje a una caja así, la caja
   falla (como si `procesar` tirara un error) y nunca se llama a `procesar`: por
   eso `procesar` puede suponer que la configuración está bien.
 
 `validar` se prueba en el mismo `.test.ts` que `procesar`, llamándolo con
-valores:
+valores (y, si usa `formatear`, con uno que escribe en decimal, como
+`(_clave, numero) => String(numero)`):
 
 ```ts
 test("una entrada de un solo valor es un error", () => {

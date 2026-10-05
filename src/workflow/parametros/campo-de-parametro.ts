@@ -26,8 +26,20 @@ export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends Li
   @property({ attribute: false }) valor!: V;
   /** El texto del error de configuración de este parámetro, o `null`. */
   @property({ attribute: false }) error: string | null = null;
+  /**
+   * Cómo se muestra el valor, tal como lo guardó este tipo en la caja, o
+   * `undefined`. Solo lo usan los tipos que lo necesitan, como el entero.
+   */
+  @property({ attribute: false }) presentacion: unknown = undefined;
 
   protected avisarCambio(valor: V) {
     this.dispatchEvent(new CustomEvent("cambio", { detail: valor, bubbles: true }));
+  }
+
+  /** Avisa con `cambio-de-presentacion` cómo pasa a mostrarse el valor. */
+  protected avisarCambioDePresentacion(presentacion: unknown) {
+    this.dispatchEvent(
+      new CustomEvent("cambio-de-presentacion", { detail: presentacion, bubbles: true }),
+    );
   }
 }
