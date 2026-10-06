@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { css, html } from "lit";
 import { CircleCheck, TriangleAlert, Unplug } from "lucide";
 
@@ -176,10 +175,7 @@ export function barraDeEstado() {
   `;
 }
 
-export async function inicializarConexion() {
-  await listen<string>("conexion-perdida", (evento) => {
-    actualizar({ conectado: false, mensajeConexion: evento.payload });
-  });
-
-  await actualizarListaDePuertos();
+/** El backend cerró la conexión por su cuenta: `mensaje` dice por qué. */
+export function perderConexion(mensaje: string) {
+  actualizar({ conectado: false, mensajeConexion: mensaje });
 }

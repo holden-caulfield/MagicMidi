@@ -90,11 +90,8 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   (`panel-conexion.ts` define `<panel-conexion>`) que exporta una sola clase;
   las etiquetas van en castellano y sin prefijo, y a una palabra suelta se le
   agrega contexto (`ventana-principal`, no `ventana`). La lógica que no dibuja
-  (las acciones que llaman al backend, los `inicializar<X>()` con sus
-  `listen`, el ejecutor, los tipos de nodo) queda en módulos sin componentes.
-  Los `inicializar<X>()` los llama `main.ts` al arrancar, no el ciclo de vida
-  de un componente: el flujo tiene que procesar mensajes aunque no haya una
-  vista montada.
+  (las acciones que llaman al backend o responden a sus eventos, el
+  ejecutor, los tipos de nodo) queda en módulos sin componentes.
 - **Estado de la interfaz**: en dos niveles. Lo que necesita más de un
   componente, o la lógica, vive en `src/estado/estado.ts` y se modifica solo
   con `actualizar()`; los componentes se enganchan con `ControladorDeEstado`
@@ -157,10 +154,13 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   que el tree-shaking deje solo los usados. Se dibujan con `dibujarIcono`
   (`componentes/icono.ts`), que es una función y no un componente: el
   `<svg>` queda en la raíz de quien lo dibuja, que lo estiliza directamente.
-- **`<ventana-principal>` es la raíz** (`src/ventana/`): `index.html` contiene
-  solo esa etiqueta, y `main.ts` solo la registra y llama a los
-  `inicializar<X>()`. Ningún módulo llama a `render` ni a
-  `document.querySelector`.
+- **`main.ts` es el arranque**: monta `<ventana-principal>`, la raíz
+  (`src/ventana/`), y engancha los eventos del backend, así ese archivo
+  muestra todo lo que arranca y todo lo que entra del backend. Es el único
+  que llama a `render` (una vez) y a `listen`: cada evento llama a una acción
+  de su módulo, y ningún componente escucha al backend, porque el flujo tiene
+  que procesar mensajes aunque no haya una vista montada. Ningún módulo llama
+  a `document.querySelector`.
 - **Paneles y tabs**: la lista `PANELES` de `ventana-principal.ts` es la única
   fuente; de ahí salen la barra, las `<section>` de los paneles y los
   atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
@@ -205,7 +205,7 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   espera al próximo cuadro para dibujar (redefine `scheduleUpdate`), así una
   ráfaga se dibuja una sola vez. Con la ventana minimizada no se dibuja: los
   mensajes se acumulan en el registro y se dibujan al volver. El log no
-  escucha `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa
+  recibe `mensaje-midi`: lo recibe `recibirMensaje` (`ejecutar.ts`), que pasa
   el mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la
   entrada, lo que se emitió y el texto del error, si una caja falló.
 
@@ -220,8 +220,8 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   declara nada para esto: lo decide el recorrido.
 - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
   Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
-  puro y devuelve `{ salidas, error }`; el listener de `mensaje-midi` envía
-  las salidas con `enviarMensaje` y le pasa todo al log. Ningún tipo de
+  puro y devuelve `{ salidas, error }`; `recibirMensaje` envía las salidas
+  con `enviarMensaje` y le pasa todo al log. Ningún tipo de
   nodo importa `salida.ts`.
 - Un error en una caja se lanza como `Error` (con el nombre de la caja y
   `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
@@ -375,13 +375,13 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   a un redibujado y que las filas del log no se pierdan. Lo que sigue
   necesitando la ventana real es la activación con teclado y el flujo MIDI
   completo.
-- En el navegador, el arranque se corta en el primer `listen` (el de
-  `inicializarWorkflow`), así que los `inicializar<X>()` que vienen después nunca
-  corren. Para probar uno, o para simular respuestas del backend (por ejemplo
-  un comando que falla, un caso que en la aplicación real no se puede
-  provocar), se reemplaza el puente desde la consola y se llama a la función
-  a mano:
-  `window.__TAURI_INTERNALS__ = { transformCallback: () => 1, invoke: async (comando) => { if (comando.startsWith('plugin:event|')) return 1; throw 'fallo simulado'; } }`.
+- En el navegador, el arranque monta la ventana y se corta en el primer
+  `listen`. Para probar un evento del backend se llama a su acción desde la
+  consola, importando el módulo como el estado (por ejemplo,
+  `recibirMensaje` de `ejecutar.ts`, con lo mismo que manda el backend). Para
+  simular un comando que falla, un caso que en la aplicación real no se
+  puede provocar, se reemplaza el puente desde la consola:
+  `window.__TAURI_INTERNALS__ = { invoke: async () => { throw 'fallo simulado'; } }`.
   Los botones que llaman a `invoke` usan ese reemplazo desde el siguiente
   clic.
 - Para probar el flujo de MIDI sin hardware físico, en macOS se puede
