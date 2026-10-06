@@ -72,7 +72,7 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
 ### Frontend
 
 - **TypeScript, Vite y [Lit](https://lit.dev)**: la interfaz son
-  componentes `LitElement` con Shadow DOM. Se comunica con el backend mediante
+  componentes de Lit con Shadow DOM. Se comunica con el backend mediante
   comandos (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar otro
   framework de componentes (React, Vue, Svelte, etc.) sin que la persona
   usuaria lo pida explícitamente. Todo se importa de `lit` (`lit/decorators.js`,
@@ -107,10 +107,12 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   reciben lo que necesitan por
   propiedades y avisan con `CustomEvent` de nombre en castellano (`cambio`,
   `agregar-caja`), sin conocer el store; un evento que tiene que cruzar una
-  raíz lleva `bubbles: true, composed: true`. Una plantilla sin estado,
-  estilos ni ciclo de vida propios sigue siendo una función: por ejemplo, la
-  barra de estado de `conexion/conexion.ts`, que exporta también sus estilos
-  para el componente que la dibuja. Un módulo es dueño de un
+  raíz lleva `bubbles: true, composed: true`. Toda pieza de interfaz que se
+  dibuja desde otro archivo es un componente, con sus estilos y, si lee el
+  store, su propio `ControladorDeEstado`: así quien la dibuja no tiene que
+  sumar sus estilos ni estar suscripto por ella. Una función que devuelve una
+  plantilla es una ayuda interna de su archivo y no se exporta, salvo
+  `dibujarIcono` (ver "Íconos"). Un módulo es dueño de un
   comportamiento, no de una región de la pantalla.
 - **Estilos y Shadow DOM**: cada componente encapsula sus estilos en
   `static styles`. Lo único global es `estilos/global.css`: las variables (que
@@ -118,10 +120,11 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   colores que cambian en modo oscuro son variables ahí, así los componentes no
   repiten el `@media`. El único color de acento es el ámbar (`--ambar`): lo
   encendido, el foco, la selección, los cables y los conectores. Las cajas del lienzo y los controles de la barra que las agregan
-  tienen colores fijos, claros en los dos modos. `estilos/compartidos.ts`
-  tiene solo `box-sizing` y `[hidden]`, y cada componente lo suma:
-  `static styles = [compartidos, css`…`]`. El CSS de afuera no entra: un
-  componente que no lo suma se ve distinto sin dar ningún error.
+  tienen colores fijos, claros en los dos modos. Todos los componentes usan
+  Shadow DOM y extienden `Componente` (`componentes/componente.ts`), nunca
+  `LitElement`: es la que suma `compartidos` (`box-sizing` y `[hidden]`),
+  porque el CSS de afuera no entra y un componente sin él se ve distinto sin
+  dar ningún error.
 - **Controles**: ningún componente estiliza un `<button>`, `<select>` o
   `<input>` por su cuenta. Los controles son componentes de
   `src/componentes/`: `boton-de-accion` y los campos (`campo-lista`,
@@ -149,7 +152,8 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   custom elements son `display: inline`, así que todo componente que participa
   del layout declara su `display` en `:host` (y, si crece,
   `flex: 1; min-height: 0`). Lo que se enlaza por `id` (`aria-controls`,
-  `aria-labelledby`, `<label for>`) tiene que quedar dentro de una misma raíz.
+  `aria-labelledby`, `<label for>`) lo dibuja un mismo componente, porque el
+  enlace no cruza de una raíz a otra.
 - **Íconos**: son de [Lucide](https://lucide.dev), importados por nombre para
   que el tree-shaking deje solo los usados. Se dibujan con `dibujarIcono`
   (`componentes/icono.ts`), que es una función y no un componente: el
@@ -164,9 +168,9 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
 - **Paneles y tabs**: la lista `PANELES` de `ventana-principal.ts` es la única
   fuente; de ahí salen la barra, las `<section>` de los paneles y los
   atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
-  `aria-selected`). La barra de tabs es una función (`ventana/barra-de-tabs.ts`)
-  y no un componente, para que quede en la misma raíz que los paneles a los
-  que apunta. Agregar un panel es agregar una entrada a esa lista (con su nombre y su
+  `aria-selected`). La barra de tabs y las secciones de los paneles las
+  dibuja `ventana-principal`, y no componentes aparte, porque se enlazan por
+  `id`. Agregar un panel es agregar una entrada a esa lista (con su nombre y su
   ícono) y el módulo con su componente. La barra de tabs va arriba y primera
   en la raíz, antes de los paneles, para que el recorrido por teclado siga el
   orden visual. No hay encabezado: el nombre de la aplicación lo muestra el
