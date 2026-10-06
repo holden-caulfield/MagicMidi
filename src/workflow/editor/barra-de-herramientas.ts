@@ -1,17 +1,16 @@
-import { css, html, LitElement } from "lit";
+import { css, html } from "lit";
 import { customElement } from "lit/decorators.js";
 
+import { Componente } from "@/componentes/componente";
 import { dibujarIcono } from "@/componentes/icono";
-import { compartidos } from "@/estilos/compartidos";
 import { etapaDelTipo, TIPOS_DE_NODO, type IdDeTipo } from "../nodos/catalogo";
 import { estilosDelGlobo } from "./globo";
 import { FORMATO_ARRASTRE } from "./lienzo";
 
 /** Pide una caja nueva con el evento `agregar-caja`, con el tipo elegido. */
 @customElement("barra-de-herramientas")
-export class BarraDeHerramientas extends LitElement {
+export class BarraDeHerramientas extends Componente {
   static styles = [
-    compartidos,
     estilosDelGlobo,
     css`
       :host {

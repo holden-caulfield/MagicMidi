@@ -1,8 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { css, html } from "lit";
-import { CircleCheck, TriangleAlert, Unplug } from "lucide";
 
-import { dibujarIcono } from "@/componentes/icono";
 import { actualizar, type Estado, estado, type Puerto } from "@/estado/estado";
 
 function puertoVigente(elegido: string, puertos: Puerto[]): string {
@@ -25,7 +22,7 @@ export function conNombresAMostrar(puertos: Puerto[]): Puerto[] {
   });
 }
 
-function puertoElegido(elegido: string, puertos: Puerto[]): Puerto | undefined {
+export function puertoElegido(elegido: string, puertos: Puerto[]): Puerto | undefined {
   return conNombresAMostrar(puertos).find((puerto) => puerto.id === elegido);
 }
 
@@ -92,87 +89,6 @@ export function estadoDeLaConexion({
     return "conectado";
   }
   return mensajeConexion === "" ? "desconectado" : "error";
-}
-
-/** Los estilos de `barraDeEstado`, para el componente que la dibuja. */
-export const estilosDeLaBarraDeEstado = css`
-  .barra-de-estado {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 20px;
-    padding: 0 10px;
-    font-size: 11px;
-    line-height: 1;
-    border-top: 1px solid var(--borde-suave);
-    color: var(--letra-secundaria);
-  }
-
-  .barra-de-estado svg {
-    flex-shrink: 0;
-  }
-
-  .barra-de-estado.conectado {
-    color: var(--letra-estado-conectado);
-    background-color: var(--fondo-estado-conectado);
-  }
-
-  .barra-de-estado.error {
-    color: var(--letra-estado-error);
-    background-color: var(--fondo-estado-error);
-  }
-
-  .texto-de-estado {
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .texto-oculto {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-`;
-
-function contenidoDeLaBarra(estadoDeLaBarra: EstadoDeLaConexion) {
-  switch (estadoDeLaBarra) {
-    case "desconectado":
-      return { icono: Unplug, texto: "Desconectado", contenido: html`Desconectado` };
-    case "error":
-      return {
-        icono: TriangleAlert,
-        texto: `Desconectado · ${estado.mensajeConexion}`,
-        contenido: html`Desconectado · ${estado.mensajeConexion}`,
-      };
-    case "conectado": {
-      const entrada = puertoElegido(estado.puertoEntradaElegido, estado.puertosEntrada)?.nombre;
-      const salida = puertoElegido(estado.puertoSalidaElegido, estado.puertosSalida)?.nombre;
-      return {
-        icono: CircleCheck,
-        texto: `Conectado · entrada ${entrada}, salida ${salida}`,
-        contenido: html`Conectado ·
-          <span class="texto-oculto">entrada</span>${entrada}
-          <span aria-hidden="true">→</span>
-          <span class="texto-oculto">salida</span>${salida}`,
-      };
-    }
-  }
-}
-
-export function barraDeEstado() {
-  const estadoDeLaBarra = estadoDeLaConexion(estado);
-  const { icono, texto, contenido } = contenidoDeLaBarra(estadoDeLaBarra);
-  return html`
-    <footer class="barra-de-estado ${estadoDeLaBarra}" role="status" title=${texto}>
-      ${dibujarIcono(icono, 13)}
-      <span class="texto-de-estado">${contenido}</span>
-    </footer>
-  `;
 }
 
 /** El backend cerró la conexión por su cuenta: `mensaje` dice por qué. */
