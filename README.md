@@ -11,24 +11,9 @@ protocolo MIDI.
 - Permite elegir un puerto MIDI de **entrada** y uno de **salida** entre los
   disponibles en el sistema.
 - Pasa cada mensaje que llega por la entrada por un **flujo** que se arma
-  en el tab Workflow, conectando cajas en un editor visual: **Filtrar**
-  (deja seguir solo lo que cumple todos sus criterios: los tipos de mensaje
-  elegidos, incluido cada mensaje de sistema por separado, los canales
-  elegidos, y un rango para cada byte de datos, por ejemplo una zona del
-  teclado o una capa de velocidad; lo que no se configura no restringe),
-  **Convertir** (cambia el tipo de mensaje, por ejemplo el aftertouch a un
-  CC, un CC a Pitch Bend o una nota a un Cambio de Programa; cada dato va al
-  lugar que significa lo mismo en el tipo nuevo, como el número de la nota al
-  número de programa, y lo que falta se rellena; para convertir solo algunos
-  mensajes, se pone antes un Filtrar),
-  **Fijar** (pone siempre el mismo canal o el mismo valor en un byte de datos,
-  por ejemplo una velocidad pareja), **Desplazar** (suma o
-  resta un valor al canal o a un byte de datos, por ejemplo para transponer),
-  **Mapear** (lleva un rango de valores de
-  un byte de datos a otro, por ejemplo para invertir un pedal o comprimir la
-  velocidad), **Emitir** (manda el mensaje a la salida) y **Descartar** (hace
-  que no salga). Una caja mal configurada (por ejemplo, un canal que no va de
-  1 a 16) muestra el error en el panel y se marca en rojo en el lienzo.
+  en el tab Workflow, conectando cajas en un editor visual. Cada caja realiza
+  algún tipo de transformación en los mensajes (ver "Cajas disponibles en esta
+  version").
 - Si un mensaje no llega a ninguna caja de fin (Emitir o Descartar), sale tal
   cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
   caja falla, no sale nada de ese mensaje.
@@ -38,25 +23,45 @@ protocolo MIDI.
 - Muestra en pantalla un log en tiempo real de los mensajes que entran y lo
   que el flujo hizo con cada uno (si salió igual, transformado, descartado o
   con error), con una descripción legible (Nota On/Off, Control Change, Pitch
-  Bend, etc.) pensada para gente que recién se acerca al protocolo. Las notas
-  se nombran con letra y octava además del número, como "C4 (60)": se usa la
-  notación científica, en la que el Do central (nota 60) es C4. Algunos
-  programas, como Ableton Live o los equipos Yamaha, llaman C3 a esa misma
-  nota.
+  Bend, etc.) pensada para gente que recién se acerca al protocolo.
+- Las notas se nombran con letra y octava además del número, como "C4 (60)":
+  se usa la notación científica, en la que el Do central (nota 60) es C4.
+  Algunos programas, como Ableton Live o los equipos Yamaha, llaman C3 a
+  esa misma nota.
 - Los mensajes de reloj MIDI (*Timing Clock*, `0xF8`) y de Sensor Activo
   (*Active Sensing*, `0xFE`) no pasan por el flujo ni aparecen en el log: se
   reenvían directo a la salida, para no sumarles demora ni saturar la
   pantalla.
 
+## Cajas disponibles en esta version
+
+- **Filtrar**: deja seguir solo lo que cumple todos sus criterios: los tipos de
+  mensaje elegidos, incluido cada mensaje de sistema por separado, los canales
+  elegidos, y un rango para cada byte de datos, por ejemplo una zona del
+  teclado o una capa de velocidad. Lo que no se configura no restringe.
+- **Convertir**: cambia el tipo de mensaje, por ejemplo el aftertouch a un
+  CC, un CC a Pitch Bend o una nota a un Cambio de Programa; cada dato va al
+  lugar que significa lo mismo en el tipo nuevo, como el número de la nota al
+  número de programa, y lo que falta se rellena. Para convertir solo algunos
+  mensajes, se pone antes un Filtrar.
+- **Fijar**: pone siempre el mismo canal o el mismo valor en un byte de datos,
+  por ejemplo una velocidad pareja.
+- **Desplazar**: suma o resta un valor al canal o a un byte de datos, por ejemplo
+  para transponer.
+- **Mapear**: lleva un rango de valores de un byte de datos a otro, por ejemplo para
+  invertir un pedal o comprimir la velocidad.
+- **Emitir**: manda el mensaje a la salida.
+- **Descartar**: hace que no salga. 
+
 ## Hacia dónde va
 
-A futuro se van a agregar componentes visuales que permitan a usuarios
-semi-técnicos armar sus propios flujos de trabajo manipulando mensajes MIDI
-(por ejemplo: filtrar, transformar o remapear mensajes mediante un editor
-visual de nodos). La idea no es evitarles la programación, sino darles una
-puerta de entrada visual para que además vayan aprendiendo conceptos básicos
-de programación en el proceso. El editor de flujos ya existe, y los tipos de
-caja se van sumando de a uno.
+A futuro se van a seguir agregando componentes visuales que permitan más posibilidades
+a usuarios semi-técnicos armar sus propios flujos de trabajo manipulando mensajes MIDI. 
+La idea no es necesariamente evitarles la programación, sino darles una puerta de entrada 
+visual para que además vayan aprendiendo conceptos básicos de programación en el proceso.
+Es por ello que un objetivo del proyecto es que modificar el código para agregar un tipo
+de nodo (i.e. una caja) nueva sea relativamente sencillo sin necesidad de comprender la
+arquitectura completa de la aplicación.
 
 ## Arquitectura
 
@@ -83,14 +88,12 @@ sistema operativo, y un frontend web embebido que corre en un WebView nativo.
   guarda en `tauri::State` (protegido con `Mutex`/`Arc` porque el callback
   de MIDI corre en su propio hilo). Expone:
   - Comandos (`invoke` desde el frontend): `listar_puertos_entrada`,
-    `listar_puertos_salida`, `conectar`, `desconectar`.
+    `listar_puertos_salida`, `conectar`, `desconectar`, `enviar_mensaje`.
   - Un evento (`listen` desde el frontend): `mensaje-midi`, emitido por
-    cada mensaje MIDI recibido que no sea de reloj.
+    cada mensaje MIDI recibido que no sea de reloj o sensor activo.
 - **Frontend** ([src/main.ts](src/main.ts), [index.html](index.html)):
-  vanilla TypeScript + Vite, sin frameworks. Popula los selects de puertos,
-  dispara los comandos de conectar/desconectar y renderiza el log a medida
-  que llegan eventos.
-
+  vanilla TypeScript + Vite, con Lit como librería de componentes.
+  
 ## Cómo correr el proyecto
 
 Requisitos: [Node.js](https://nodejs.org) y [Rust](https://rustup.rs)
