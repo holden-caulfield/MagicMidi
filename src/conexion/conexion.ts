@@ -3,8 +3,8 @@ import { listen } from "@tauri-apps/api/event";
 import { css, html } from "lit";
 import { CircleCheck, TriangleAlert, Unplug } from "lucide";
 
+import { dibujarIcono } from "@/componentes/icono";
 import { actualizar, type Estado, estado, type Puerto } from "@/estado/estado";
-import { dibujarIcono } from "@/workflow/iconos";
 
 function puertoVigente(elegido: string, puertos: Puerto[]): string {
   return puertos.some((puerto) => puerto.id === elegido) ? elegido : "";

@@ -160,3 +160,13 @@ por terminada una tarea").
       `describir.test.ts` que el log sigue con sostenidos, y en el navegador
       escribiendo "Db4"
 
+## 8. Revisión del PR
+
+- [x] 8.1 `campo-numero` deja `flechas` y `etiquetaOculta`: las dos salen de
+      `compacto` (sin etiqueta visible ni flechas propias). El ejemplo de
+      `parametros/LEEME.md` atiende `paso`. Verificar con `npx tsc --noEmit`
+      sobre el ejemplo copiado y con la huella igual a la del commit anterior
+- [x] 8.2 `dibujarIcono` pasa de `workflow/iconos.ts` a `componentes/icono.ts`,
+      como función (las raíces que lo dibujan estilizan su `<svg>`). Verificar
+      con `npx tsc --noEmit`, `npm test` y la huella igual
+

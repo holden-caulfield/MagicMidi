@@ -83,7 +83,6 @@ export class CampoEntero extends CampoDeParametro<ParametroEntero, number> {
         .valor=${formatear(this.parametro, this.valor, presentacion)}
         .error=${this.error}
         .modo=${textoDelModo(this.parametro, presentacion.modo)}
-        flechas
         .puedeSubir=${maximo === undefined || this.valor < maximo}
         .puedeBajar=${minimo === undefined || this.valor > minimo}
         @siguiente-modo=${() =>

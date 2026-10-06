@@ -3,8 +3,8 @@ import { customElement, property } from "lit/decorators.js";
 import { live } from "lit/directives/live.js";
 import { Check } from "lucide";
 
-import { dibujarIcono } from "@/workflow/iconos";
 import { Campo } from "./campo";
+import { dibujarIcono } from "./icono";
 
 /** Sí o no, con una casilla antes de la etiqueta. */
 @customElement("campo-interruptor")

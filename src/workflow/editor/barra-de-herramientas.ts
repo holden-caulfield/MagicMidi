@@ -1,9 +1,9 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 
+import { dibujarIcono } from "@/componentes/icono";
 import { compartidos } from "@/estilos/compartidos";
 import { etapaDelTipo, TIPOS_DE_NODO, type IdDeTipo } from "../nodos/catalogo";
-import { dibujarIcono } from "../iconos";
 import { estilosDelGlobo } from "./globo";
 import { FORMATO_ARRASTRE } from "./lienzo";
 

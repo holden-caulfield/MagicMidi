@@ -213,7 +213,6 @@ export class CampoRango extends Campo<Rango> {
     return html`
       <campo-numero
         compacto
-        etiquetaOculta
         etiqueta=${extremo}
         .valor=${this.formatear(this.valor[extremo])}
         @cambio=${(evento: CustomEvent<string>) => {

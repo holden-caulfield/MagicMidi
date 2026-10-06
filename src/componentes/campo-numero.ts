@@ -3,8 +3,8 @@ import { customElement, property } from "lit/decorators.js";
 import { live } from "lit/directives/live.js";
 import { ChevronDown, ChevronUp } from "lucide";
 
-import { dibujarIcono } from "@/workflow/iconos";
 import { Campo } from "./campo";
+import { dibujarIcono } from "./icono";
 
 /**
  * Un paso de las flechas: lo que hay escrito en el campo en ese momento (aunque
@@ -18,7 +18,7 @@ export interface Paso {
 /**
  * Un número escrito. Avisa el texto tal como se escribió, al salir del campo:
  * interpretarlo le toca a quien lo usa, que devuelve el valor que corresponde.
- * Con las flechas del teclado (y las propias, si tiene `flechas`) avisa un
+ * Con las flechas del teclado (y las propias, si no es `compacto`) avisa un
  * `paso`, con el texto y cuánto sumarle.
  *
  * Es un campo de texto y no uno numérico: uno numérico decide por su cuenta
@@ -93,12 +93,12 @@ export class CampoNumero extends Campo<string> {
   @property() valor = "";
   /** Si acepta decimales: en una pantalla táctil, cambia el teclado que aparece. */
   @property({ type: Boolean }) decimales = false;
-  /** Más chico, para ir dentro de otro control (como el rango). */
+  /**
+   * Más chico, para ir dentro de otro control (como el rango): la etiqueta
+   * queda solo para los lectores de pantalla y no hay flechas propias, aunque
+   * las del teclado siguen funcionando.
+   */
   @property({ type: Boolean, reflect: true }) compacto = false;
-  /** La etiqueta queda solo para los lectores de pantalla. */
-  @property({ type: Boolean }) etiquetaOculta = false;
-  /** Dibuja las flechas de subir y bajar al lado del campo (no en el compacto). */
-  @property({ type: Boolean }) flechas = false;
   @property({ type: Boolean }) puedeSubir = true;
   @property({ type: Boolean }) puedeBajar = true;
 
@@ -120,7 +120,7 @@ export class CampoNumero extends Campo<string> {
         @keydown=${this.tecla}
       />
     `;
-    if (!this.flechas || this.compacto) {
+    if (this.compacto) {
       return input;
     }
     // Las flechas no se recorren con Tab: con el teclado se usa el campo.
@@ -168,7 +168,7 @@ export class CampoNumero extends Campo<string> {
   }
 
   render() {
-    if (!this.etiquetaOculta) {
+    if (!this.compacto) {
       return super.render();
     }
     return html`

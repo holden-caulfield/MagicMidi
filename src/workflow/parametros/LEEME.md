@@ -233,6 +233,7 @@ import { html } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import "@/componentes/campo-numero";
+import type { Paso } from "@/componentes/campo-numero";
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
 export interface ParametroReal extends ParametroBase<number> {
@@ -272,6 +273,13 @@ export class CampoReal extends CampoDeParametro<ParametroReal, number> {
             this.avisarCambio(numero);
           }
         }}
+        @paso=${(evento: CustomEvent<Paso>) => {
+          // Las flechas: lo escrito (aunque no se haya confirmado) más el paso.
+          const numero = interpretar(evento.detail.texto);
+          if (numero !== null) {
+            this.avisarCambio(numero + evento.detail.cantidad);
+          }
+        }}
       ></campo-numero>
     `;
   }
@@ -287,8 +295,12 @@ export default {
 
 Este tipo no usa presentación, así que `error` y `dibujar` no la declaran: el
 catálogo se la pasa igual, y simplemente no la leen. `decimales` hace que, en
-una pantalla táctil, aparezca el teclado de números con separador. `campo-numero` avisa el texto tal como se escribió, sin
-interpretarlo: así cada tipo decide qué acepta, como acá la coma y el punto.
+una pantalla táctil, aparezca el teclado de números con separador.
+`campo-numero` avisa el texto tal como se escribió, sin interpretarlo: así
+cada tipo decide qué acepta, como acá la coma y el punto. Lo mismo con sus
+flechas para subir y bajar (y las del teclado): avisan `paso`, con lo escrito
+y cuánto sumarle (1, o 10 con Mayúsculas, con signo), y el tipo decide qué
+valor resulta.
 
 Y su test, en `real.test.ts`. Además de los casos normales, prueba las dos
 formas de separar los decimales y lo que no es un número.
