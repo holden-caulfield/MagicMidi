@@ -28,42 +28,50 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
 
 ## Arquitectura y convenciones técnicas
 
-- **Backend**: Rust, en `src-tauri/`. La lógica de MIDI usa la librería
-  [`midir`](https://docs.rs/midir). Las conexiones activas (entrada/salida)
-  viven en `tauri::State`, protegidas con `Mutex` (la conexión de salida
-  además está detrás de un `Arc` porque el callback de la conexión de
-  entrada —que corre en su propio hilo— también necesita escribir en ella
-  para reenviar el reloj MIDI y el Sensor Activo). El backend no procesa
-  mensajes: manda cada uno al frontend (evento `mensaje-midi`, solo con los
-  bytes y la marca temporal) y envía a la salida lo que el frontend le pida
-  con el comando `enviar_mensaje`. La descripción legible de un mensaje la
-  arma el frontend (`src/midi/describir.ts`), porque también describe lo que
-  sale del flujo, que nunca vuelve del backend. El tipo, el canal y la nota de un
-  mensaje no se calculan ahí: los lee `MensajeMidi` (`src/midi/mensaje.ts`), y
-  cualquier otro módulo que los necesite usa esa misma lectura. Lo que es solo
-  presentación, como el nombre de la nota ("C4", con el Do central 60 como C4),
-  sí queda en `describir.ts`: `nombreDeNota` (con sostenidos, o con bemoles
-  si se le pide) y su inversa, `numeroDeNota`. El tipo distingue cada mensaje de sistema
-  (`"inicio"`, `"sysex"`, …, y `"sistema-no-definido"`), y no hay un tipo
-  `"sistema"`: un mensaje de sistema es el que no es desconocido y no tiene
-  canal. Los nombres largos del log ("Inicio (Start)") son presentación y
-  siguen en `describir.ts`.
-  `midir` no avisa cuando un puerto desaparece, así que cada conexión
-  exitosa lanza un hilo vigilante que revisa una vez por segundo que sus dos
-  puertos sigan en la lista del sistema. Si falta alguno, cierra todo y
-  emite `conexion-perdida` con el mensaje a mostrar. Para que un vigilante
-  viejo no cierre una conexión nueva, `EstadoMidi` lleva un
+### Backend
+
+- **Rust y `midir`**: el backend está en `src-tauri/`, y la lógica de MIDI
+  usa la librería [`midir`](https://docs.rs/midir). Las conexiones activas
+  (entrada/salida) viven en `tauri::State`, protegidas con `Mutex` (la
+  conexión de salida además está detrás de un `Arc` porque el callback de la
+  conexión de entrada —que corre en su propio hilo— también necesita
+  escribir en ella para reenviar el reloj MIDI y el Sensor Activo).
+- **Límite con el frontend**: el backend no procesa ni describe mensajes.
+  Manda cada uno al frontend (evento `mensaje-midi`, solo con los bytes y la
+  marca temporal) y envía a la salida lo que el frontend le pida con el
+  comando `enviar_mensaje`.
+- **Conexión perdida**: `midir` no avisa cuando un puerto desaparece, así
+  que cada conexión exitosa lanza un hilo vigilante que revisa una vez por
+  segundo que sus dos puertos sigan en la lista del sistema. Si falta alguno,
+  cierra todo y emite `conexion-perdida` con el mensaje a mostrar. Para que
+  un vigilante viejo no cierre una conexión nueva, `EstadoMidi` lleva un
   `numero_de_conexion` que `cerrar_conexiones` incrementa. Su lock se toma
   durante todo el cierre y la apertura (en `conectar`, `desconectar` y el
   vigilante), y por eso `cerrar_conexiones` lo recibe ya tomado: cualquier
   camino nuevo que cierre o abra conexiones tiene que tomarlo igual.
-  Los puertos se identifican siempre por el `id` que da el sistema
+- **Puertos**: se identifican siempre por el `id` que da el sistema
   (`Puerto { id, nombre }`, `find_port_by_id`), nunca por el nombre: dos
   puertos pueden llamarse igual. El nombre es solo para mostrar, y el
   " (2)" de los repetidos lo arma el frontend (`conNombresAMostrar`). En
   macOS el `id` no cambia al desenchufar y volver a enchufar; en Linux
   (ALSA) sí puede cambiar.
-- **Frontend**: TypeScript con Vite y [Lit](https://lit.dev): la interfaz son
+- **Comunicación Rust ↔ JS**: los argumentos de los comandos se escriben en
+  `snake_case` del lado de Rust; Tauri los mapea automáticamente a
+  `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en
+  ambos lados en vez de forzar un nombre igual en los dos.
+- **Reloj MIDI y Sensor Activo**: por diseño, los mensajes de *Timing Clock*
+  (`0xF8`) y *Active Sensing* (`0xFE`) no pasan por el workflow: el backend
+  los reenvía directo a la salida y no los manda al frontend, así que
+  tampoco aparecen en el log (ver `se_reenvia_directo` en
+  `src-tauri/src/lib.rs`). Al reloj, el ida y vuelta al frontend le sumaría
+  jitter. El Sensor Activo tiene que llegar sí o sí: un receptor que deja de
+  recibirlo apaga las notas. Si aparece otro mensaje de alta frecuencia,
+  evaluar si corresponde el mismo tratamiento: no asumirlo, confirmarlo con
+  la persona usuaria.
+
+### Frontend
+
+- **TypeScript, Vite y [Lit](https://lit.dev)**: la interfaz son
   componentes `LitElement` con Shadow DOM. Se comunica con el backend mediante
   comandos (`invoke`) y eventos (`listen`) de la API de Tauri. No agregar otro
   framework de componentes (React, Vue, Svelte, etc.) sin que la persona
@@ -145,6 +153,10 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   del layout declara su `display` en `:host` (y, si crece,
   `flex: 1; min-height: 0`). Lo que se enlaza por `id` (`aria-controls`,
   `aria-labelledby`, `<label for>`) tiene que quedar dentro de una misma raíz.
+- **Íconos**: son de [Lucide](https://lucide.dev), importados por nombre para
+  que el tree-shaking deje solo los usados. Se dibujan con `dibujarIcono`
+  (`componentes/icono.ts`), que es una función y no un componente: el
+  `<svg>` queda en la raíz de quien lo dibuja, que lo estiliza directamente.
 - **`<ventana-principal>` es la raíz** (`src/ventana/`): `index.html` contiene
   solo esa etiqueta, y `main.ts` solo la registra y llama a los
   `inicializar<X>()`. Ningún módulo llama a `render` ni a
@@ -175,6 +187,16 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   que dibuja adentro, y eso se confina al lugar que tiene: lo que crece va con
   `flex: 1; min-height: 0` y desplaza su propio contenido, en vez de agrandar
   el panel. No usar alturas fijas ni mínimas para que algo "entre".
+- **Mensajes MIDI** (`src/midi/`): `MensajeMidi` guarda solo los bytes; el
+  tipo, el canal y la nota son getters que se calculan en cada lectura, así no
+  quedan viejos si una caja cambia los bytes. Cualquier módulo que los
+  necesite usa esos getters en vez de calcularlos por su cuenta, y no se le
+  agregan campos derivados que haya que mantener sincronizados. Un mensaje de
+  sistema es el que no es desconocido y no tiene canal: no hay un tipo
+  `"sistema"`. La presentación (la descripción legible y el nombre de las
+  notas, con el Do central 60 como C4) vive en `describir.ts`, en el
+  frontend, porque también describe lo que sale del flujo, que nunca vuelve
+  del backend.
 - **Log**: tiene su propio registro (`log/log.ts`: las últimas 500 entradas,
   la más nueva primero, cada una con un `id` y sin cambios después de
   creada), separado del store: si estuviera ahí, cada mensaje MIDI haría
@@ -182,153 +204,113 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   `repeat` por `id` y `guard`, así un mensaje nuevo crea solo su fila, y
   espera al próximo cuadro para dibujar (redefine `scheduleUpdate`), así una
   ráfaga se dibuja una sola vez. Con la ventana minimizada no se dibuja: los
-  mensajes se acumulan en el registro y se dibujan al volver. Cada fila parte
-  la descripción en sub-columnas de ancho fijo (`partesDeLaDescripcion` de
-  `describir.ts`), medidas en `ch` porque la letra es monoespaciada: por eso
-  la fila de encabezados conserva esa letra y cambia la de cada título, ya que
-  los `ch` de la grilla se miden con la letra del contenedor. El log no
+  mensajes se acumulan en el registro y se dibujan al volver. El log no
   escucha `mensaje-midi`: el único listener está en `ejecutar.ts`, que pasa
   el mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la
   entrada, lo que se emitió y el texto del error, si una caja falló.
-- **Workflow**: el editor de flujos y su ejecución viven en `src/workflow/`.
-  - El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
-    el trigger y sale tal cual, salvo que llegue a al menos una caja sin
-    salida (Emitir, Descartar): entonces sale solo lo que devuelvan esas
-    cajas. Si una caja falla, no sale nada de ese mensaje. Ninguna caja
-    declara nada para esto: lo decide el recorrido.
-  - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
-    Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
-    puro y devuelve `{ salidas, error }`; el listener de `mensaje-midi` envía
-    las salidas con `enviarMensaje` y le pasa todo al log. Ningún tipo de
-    nodo importa `salida.ts`.
-  - Un error en una caja se lanza como `Error` (con el nombre de la caja y
-    `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
-    el único que lo atrapa: el recorrido no revisa marcas de error.
-  - Los errores de configuración de una caja salen de un solo lugar,
-    `erroresDeConfiguracion` (`validacion.ts`): primero el `error` de cada
-    parámetro y, solo si ninguno tiene, el `validar` opcional del tipo de
-    nodo, que revisa reglas entre parámetros. Cada error va asociado a la
-    `clave` de un parámetro. Lo usan el panel (el error debajo del campo), el
-    lienzo (borde rojo con `outline`, para no pisar la etapa ni la
-    selección), el ejecutor y `nodos/catalogo.test.ts`. No se guardan en
-    `estado.flujo`: se calculan cada vez, de los parámetros y de sus
-    presentaciones. Para nombrar un número en un error, `validar` recibe
-    `formatear(clave, numero)`, que lo escribe como lo muestra ese parámetro.
-    Un valor que se
-    puede interpretar pero no sirve se guarda igual y se muestra con su
-    error; solo lo que no se puede interpretar (un "2.5" en un entero) se
-    rechaza en el control. Si a una caja con errores le llega un mensaje, el
-    ejecutor la hace fallar sin llamar a `procesar`, así que `procesar`
-    puede suponer que la configuración está bien.
-  - Los nodos que tocan bytes (Desplazar, Fijar, Mapear) ofrecen "Canal" y
-    no el byte de status entero: el status mezcla tipo y canal, y operar
-    sobre él como un número cambia el tipo (`9F` + 1 da `A0`). Tampoco miran
-    el tipo de mensaje: no protegen el Nota On con velocidad 0, que al
-    cambiarle la velocidad se vuelve un Nota On. Eso se resuelve poniendo
-    antes un Filtrar (Nota On), no con casos especiales en cada nodo.
-  - Convertir es el único nodo que mira el tipo y cambia la cantidad de
-    bytes de un mensaje: cada byte de datos tiene un rol (ordinal, cardinal o
-    cardinal-fino, en `FORMAS` de `nodos/convertir.ts`) y pasa al lugar del
-    mismo rol en el tipo elegido; lo que falta se rellena. Tampoco elige a
-    qué mensajes aplicarse: eso sigue siendo trabajo de un Filtrar antes.
-  - `MensajeMidi` guarda solo los bytes; `tipo`, `canal` y `nota` son getters
-    que se calculan en cada lectura, para que no queden viejos si una caja
-    cambia los bytes. No agregar campos derivados que haya que mantener sincronizados.
-  - El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
-    `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
-    Rete, y no pasa por el store.
-  - `editor/lienzo.ts` es el **único** módulo que importa Rete. Ni los tipos de
-    nodo, ni el ejecutor, ni el panel de configuración dependen de la librería
-    del lienzo, y así tiene que seguir: cambiar de librería es reescribir ese
-    archivo y nada más. Define `<lienzo-workflow>`, `<caja-del-flujo>` y
-    `<cable-del-flujo>` (la caja y el cable conocen el protocolo de Rete, por
-    eso van en el mismo archivo). Los conectores y los cables se dibujan con
-    `customize.socket` y `customize.connection` del preset clásico: el
-    conector se dibuja dentro de la caja (y toma sus estilos), pero el cable
-    va dentro de un componente de Rete con su propio shadow root, por eso es
-    un componente nuestro con sus estilos. El
-    lienzo se monta la primera vez que tiene tamaño (con un `ResizeObserver`),
-    porque Rete mide las cajas en pantalla y dentro de un panel oculto todo
-    mide cero. La barra de herramientas y el panel de configuración piden
-    agregar o borrar cajas con eventos, y `<panel-workflow>` llama a los
-    métodos del lienzo.
-  - Cada tipo de nodo es un archivo en `src/workflow/nodos/` que se registra
-    en la lista de `nodos/catalogo.ts` (el orden de la lista es el de la
-    barra). La guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
-    alcanzando para alguien que recién empieza a programar.
-  - Cada tipo de parámetro (lo que se configura en una caja) es un archivo en
-    `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
-    `Parametro` y la lista `TIPOS_DE_PARAMETRO`, que el chequeo de tipos
-    mantiene de acuerdo. Cada uno extiende `CampoDeParametro` (que tiene el
-    parámetro, el valor, el error y `avisarCambio`) y dibuja el `campo-…` de
-    `src/componentes/` que le corresponde, sin estilos propios; en `error`
-    devuelve el texto si un valor no le sirve. El
-    panel de configuración no nombra ningún tipo. La guía está en
-    `parametros/LEEME.md`, para alguien con nociones básicas de programación.
-    Además del valor, un parámetro puede guardar en la caja su
-    **presentación** (`NodoDelFlujo.presentaciones`, que se cambia con
-    `avisarCambioDePresentacion`): cómo se muestra el valor, sin cambiarlo.
-    Solo la lee su tipo. El panel, el lienzo, el ejecutor y los tipos de nodo
-    la pasan sin mirarla. El entero y el rango la usan para sus modos
-    (decimal, nota y hexadecimal, y bemoles o sostenidos), definidos en
-    `parametros/modos.ts`: fuera de esos dos tipos, nadie sabe que existen.
-    Lo escrito se lee probando los modos desde el actual, en el orden en que
-    rotan, y el parámetro pasa al modo en que se leyó.
-    Para elegir de una lista hay tres: `lista` (una, con un desplegable),
-    `opciones` (varias, como píldoras, para pocas y cortas) y `autocompletar`
-    (varias, buscándolas, para listas largas). Son tipos distintos y no uno
-    con variantes, porque un tipo es su control; tampoco comparten código. Para
-    dos extremos está `rango` (valor `{ desde, hasta }`, con `invertible`),
-    que se dibuja como una barra de dos perillas. Un
-    valor que es una lista se avisa siempre como una lista nueva, en el orden
-    de las opciones. Un control de varias partes pone `esGrupo = true`: la
-    etiqueta nombra al grupo (`role="group"` + `aria-labelledby`), porque un
-    `<label for>` apunta a un solo control.
-  - Lo que flota sobre los parámetros siguientes (la lista del autocompletar
-    y la de `campo-lista`) va con `position: absolute` y un `z-index` en el
-    `:host` del control: los parámetros son hermanos en la raíz del panel, y
-    sin eso los de después se dibujan encima. `campo-lista` lo sube solo
-    mientras está abierta (`:host([abierta])`), para quedar encima también de
-    otro campo que flota.
-  - Cada caja del lienzo es un componente Lit (`<caja-del-flujo>`): Rete le
-    asigna `data` y `emit` al volver a dibujarla, y la selección se marca con
-    la propiedad `selected` del nodo más `area.update`. Rete ubica las
-    conexiones sumando `offsetLeft`/`offsetTop`, sin tener en cuenta
-    `transform` de CSS: los conectores no se posicionan con `transform`.
-  - Rete sí le pone `transform` al contenedor de cada caja, y eso encierra
-    todo lo de la caja en su propio contexto de apilamiento: para que algo
-    que sobresale (como el globo con el nombre) quede encima de otra caja,
-    hay que subir el `z-index` de ese contenedor, no el de la caja. Como la
-    caja tiene su propio shadow root, la regla va en el lienzo y apunta al
-    host: `:has(> rete-root > caja-del-flujo:hover)`.
-  - El lienzo lleva `contain: strict`: Rete ubica las cajas con
-    `position: absolute` y dibuja cada conexión en un SVG de 9999 px, y sin
-    la contención eso puede agrandar el panel en WebKit (por ejemplo, con
-    una caja que queda fuera de la vista al achicar la ventana).
-  - El color de una caja sale de su etapa en el flujo (`etapaDelTipo` en
-    `nodos/catalogo.ts`: inicio, intermedia o fin), no de algo que declare el
-    tipo de nodo. Sumar un color por tipo es una decisión a consultar con la
-    persona usuaria, no un campo para agregar al pasar.
-  - La ventana tiene `"dragDropEnabled": false` en `tauri.conf.json`: sin eso,
-    Tauri captura los arrastres y el drag and drop de HTML5 (arrastrar cajas
-    desde la barra) no funciona en la ventana real.
-  - Los íconos son de [Lucide](https://lucide.dev), importados por nombre para
-    que el tree-shaking deje solo los usados. Se dibujan con `dibujarIcono`
-    (`componentes/icono.ts`), que es una función y no un componente: el
-    `<svg>` queda en la raíz de quien lo dibuja, que lo estiliza directamente.
-- **Comunicación Rust ↔ JS**: los argumentos de los comandos se escriben en
-  `snake_case` del lado de Rust; Tauri los mapea automáticamente a
-  `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en
-  ambos lados en vez de forzar un nombre igual en los dos.
-- **Reloj MIDI y Sensor Activo**: por diseño, los mensajes de *Timing Clock*
-  (`0xF8`) y *Active Sensing* (`0xFE`) no pasan por el workflow: el backend
-  los reenvía directo a la salida y no los manda al frontend, así que
-  tampoco aparecen en el log (ver `se_reenvia_directo` en
-  `src-tauri/src/lib.rs`). Al reloj, el ida y vuelta al frontend le sumaría
-  jitter. El Sensor Activo tiene que llegar sí o sí: un receptor que deja de
-  recibirlo apaga las notas. Si aparece otro mensaje de alta frecuencia,
-  evaluar si corresponde el mismo tratamiento: no asumirlo, confirmarlo con
-  la persona usuaria.
+
+### Workflow
+
+El editor de flujos y su ejecución viven en `src/workflow/`.
+
+- El flujo se ejecuta en el frontend (`ejecutar.ts`): cada mensaje entra por
+  el trigger y sale tal cual, salvo que llegue a al menos una caja sin
+  salida (Emitir, Descartar): entonces sale solo lo que devuelvan esas
+  cajas. Si una caja falla, no sale nada de ese mensaje. Ninguna caja
+  declara nada para esto: lo decide el recorrido.
+- Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
+  Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
+  puro y devuelve `{ salidas, error }`; el listener de `mensaje-midi` envía
+  las salidas con `enviarMensaje` y le pasa todo al log. Ningún tipo de
+  nodo importa `salida.ts`.
+- Un error en una caja se lanza como `Error` (con el nombre de la caja y
+  `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
+  el único que lo atrapa: el recorrido no revisa marcas de error.
+- Los errores de configuración de una caja salen de un solo lugar,
+  `erroresDeConfiguracion` (`validacion.ts`): primero el `error` de cada
+  parámetro y, solo si ninguno tiene, el `validar` opcional del tipo de
+  nodo, que revisa reglas entre parámetros. Cada error va asociado a la
+  `clave` de un parámetro. Lo usan el panel (el error debajo del campo), el
+  lienzo (borde rojo con `outline`, para no pisar la etapa ni la
+  selección), el ejecutor y `nodos/catalogo.test.ts`. No se guardan en
+  `estado.flujo`: se calculan cada vez, de los parámetros y de sus
+  presentaciones. Para nombrar un número en un error, `validar` recibe
+  `formatear(clave, numero)`, que lo escribe como lo muestra ese parámetro.
+  Un valor que se
+  puede interpretar pero no sirve se guarda igual y se muestra con su
+  error; solo lo que no se puede interpretar (un "2.5" en un entero) se
+  rechaza en el control. Si a una caja con errores le llega un mensaje, el
+  ejecutor la hace fallar sin llamar a `procesar`, así que `procesar`
+  puede suponer que la configuración está bien.
+- Un nodo que toca bytes ofrece "Canal" y no el byte de status entero: el
+  status mezcla tipo y canal, y operar sobre él como un número cambia el tipo
+  (`9F` + 1 da `A0`). Tampoco mira el tipo de mensaje, ni siquiera para
+  proteger el Nota On con velocidad 0, que al cambiarle la velocidad se
+  vuelve un Nota On: eso se resuelve poniendo antes un Filtrar, no con casos
+  especiales en cada nodo. Convertir es la excepción, porque su trabajo es
+  cambiar el tipo (y es el único que cambia la cantidad de bytes de un
+  mensaje), pero tampoco elige a qué mensajes aplicarse: eso sigue siendo
+  trabajo de un Filtrar.
+- El grafo (qué cajas hay, cómo están configuradas y conectadas) vive en
+  `estado.flujo`. La vista del lienzo (posiciones, zoom, arrastre) es de
+  Rete, y no pasa por el store.
+- `editor/lienzo.ts` es el **único** módulo que importa Rete, y así tiene que
+  seguir: cambiar de librería es reescribir ese archivo y nada más. Define
+  `<lienzo-workflow>`, `<caja-del-flujo>` y `<cable-del-flujo>` (la caja y el
+  cable conocen el protocolo de Rete, por eso van en el mismo archivo). Los
+  conectores y los cables se dibujan con `customize.socket` y
+  `customize.connection` del preset clásico: el conector se dibuja dentro de
+  la caja (y toma sus estilos), pero el cable va dentro de un componente de
+  Rete con su propio shadow root, por eso es un componente nuestro con sus
+  estilos. Las trampas de Rete (cómo mide, ubica y apila las cajas) están
+  comentadas en ese archivo. La barra de herramientas y el panel de
+  configuración piden agregar o borrar cajas con eventos, y
+  `<panel-workflow>` llama a los métodos del lienzo.
+- Cada tipo de nodo es un archivo en `src/workflow/nodos/` que se registra
+  en la lista de `nodos/catalogo.ts` (el orden de la lista es el de la
+  barra). La guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
+  alcanzando para alguien que recién empieza a programar.
+- Cada tipo de parámetro (lo que se configura en una caja) es un archivo en
+  `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
+  `Parametro` y la lista `TIPOS_DE_PARAMETRO`, que el chequeo de tipos
+  mantiene de acuerdo. Cada uno extiende `CampoDeParametro` (que tiene el
+  parámetro, el valor, el error y `avisarCambio`) y dibuja el `campo-…` de
+  `src/componentes/` que le corresponde, sin estilos propios; en `error`
+  devuelve el texto si un valor no le sirve. El
+  panel de configuración no nombra ningún tipo. La guía está en
+  `parametros/LEEME.md`, para alguien con nociones básicas de programación.
+  Además del valor, un parámetro puede guardar en la caja su
+  **presentación** (`NodoDelFlujo.presentaciones`, que se cambia con
+  `avisarCambioDePresentacion`): cómo se muestra el valor, sin cambiarlo.
+  Solo la lee su tipo. El panel, el lienzo, el ejecutor y los tipos de nodo
+  la pasan sin mirarla. El entero y el rango la usan para sus modos
+  (decimal, nota y hexadecimal, y bemoles o sostenidos), definidos en
+  `parametros/modos.ts`: fuera de esos dos tipos, nadie sabe que existen.
+  Lo escrito se lee probando los modos desde el actual, en el orden en que
+  rotan, y el parámetro pasa al modo en que se leyó.
+  Para elegir de una lista hay tres: `lista` (una, con un desplegable),
+  `opciones` (varias, como píldoras, para pocas y cortas) y `autocompletar`
+  (varias, buscándolas, para listas largas). Son tipos distintos y no uno
+  con variantes, porque un tipo es su control; tampoco comparten código. Para
+  dos extremos está `rango` (valor `{ desde, hasta }`, con `invertible`),
+  que se dibuja como una barra de dos perillas. Un
+  valor que es una lista se avisa siempre como una lista nueva, en el orden
+  de las opciones. Un control de varias partes pone `esGrupo = true`: la
+  etiqueta nombra al grupo (`role="group"` + `aria-labelledby`), porque un
+  `<label for>` apunta a un solo control.
+- Lo que flota sobre los parámetros siguientes (la lista del autocompletar
+  y la de `campo-lista`) va con `position: absolute` y un `z-index` en el
+  `:host` del control: los parámetros son hermanos en la raíz del panel, y
+  sin eso los de después se dibujan encima. `campo-lista` lo sube solo
+  mientras está abierta (`:host([abierta])`), para quedar encima también de
+  otro campo que flota.
+- El color de una caja sale de su etapa en el flujo (`etapaDelTipo` en
+  `nodos/catalogo.ts`: inicio, intermedia o fin), no de algo que declare el
+  tipo de nodo. Sumar un color por tipo es una decisión a consultar con la
+  persona usuaria, no un campo para agregar al pasar.
+- La ventana tiene `"dragDropEnabled": false` en `tauri.conf.json`: sin eso,
+  Tauri captura los arrastres y el drag and drop de HTML5 (arrastrar cajas
+  desde la barra) no funciona en la ventana real.
 
 ## Toolchain
 
@@ -515,14 +497,35 @@ fija el idioma de los artefactos generados y agrega guía para el archivado.
 
 Cuando un cambio hecho con OpenSpec implica decisiones de arquitectura,
 convenciones técnicas nuevas, cambios de toolchain o del flujo de verificación,
-ese conocimiento tiene que volver a este archivo antes de archivar el cambio;
-si no, queda enterrado en `openspec/changes/archive/`. La forma es proponerle
-el diff a la persona usuaria y esperar aprobación explícita — nunca editar este
-archivo por iniciativa propia.
+ese conocimiento tiene que volver a este archivo antes de archivar el cambio,
+con el criterio de "Cómo se escribe este archivo"; si no, queda enterrado en
+`openspec/changes/archive/`. La forma es proponerle el diff a la persona
+usuaria y esperar aprobación explícita — nunca editar este archivo por
+iniciativa propia.
 
-`operations.archive.guidance` en `openspec/config.yaml` repite esa regla para
-que aparezca al momento de archivar, pero el CLI la entrega marcada como
-*advisory*: la regla que manda es esta, no la del archivo de configuración.
+`operations.archive.guidance` en `openspec/config.yaml` repite esa regla y ese
+criterio para que aparezcan al momento de archivar, pero el CLI los entrega
+marcados como *advisory*: lo que manda es este archivo, no el de
+configuración.
+
+## Cómo se escribe este archivo
+
+Este archivo junta las reglas que un agente tiene que respetar, no la
+descripción de cómo funciona todo. Para que las reglas no pierdan jerarquía:
+
+- Van reglas e invariantes, cada una con su porqué en una línea. Cómo
+  funciona algo va al JSDoc o a las specs de `openspec/specs/`.
+- Sin enumeraciones exhaustivas (de componentes, tipos, archivos, o de quién
+  usa qué) ni ejemplos muy específicos: un detalle enumerado queda al mismo
+  nivel que una regla de arquitectura y la diluye, y además se desactualiza
+  con cada agregado. Si un ejemplo aclara la regla, alcanza con uno.
+- Cada cosa va en su lugar:
+  - acá, las reglas que cruzan módulos;
+  - en un comentario, la trampa local. Este archivo la repite solo si un
+    agente la pisaría trabajando en otro archivo, como `dragDropEnabled` en
+    `tauri.conf.json`;
+  - en las specs, el comportamiento completo;
+  - en los LEEME, las guías, donde los ejemplos sí son el propósito.
 
 ## Roadmap (contexto, no una tarea pendiente)
 
