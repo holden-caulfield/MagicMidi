@@ -31,7 +31,14 @@ export default {
         { valor: 2, texto: "3.º (datos 2)" },
       ],
     },
-    { clave: "desplazamiento", etiqueta: "Desplazamiento", tipo: "entero", inicial: 0 },
+    // Un intervalo, que puede ser negativo: solo tiene sentido en decimal.
+    {
+      clave: "desplazamiento",
+      etiqueta: "Desplazamiento",
+      tipo: "entero",
+      inicial: 0,
+      modos: ["decimal"],
+    },
     { clave: "overflow", etiqueta: "Overflow", tipo: "interruptor", inicial: false },
   ],
   procesar(mensaje, parametros) {

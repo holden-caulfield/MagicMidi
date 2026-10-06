@@ -66,6 +66,25 @@ export const estilosDeCampo = css`
     gap: 6px;
   }
 
+  .fila-de-etiqueta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  /* El botón de modo es más chico que un control, para no agrandar la fila de
+     la etiqueta. */
+  button.control.modo {
+    height: 14px;
+    min-width: 28px;
+    padding: 0 4px;
+    font-size: 9px;
+    line-height: 14px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+
   .etiqueta {
     font-size: 11px;
     font-weight: 500;

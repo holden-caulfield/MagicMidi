@@ -9,6 +9,7 @@ import { ClassicPreset, NodeEditor, type GetSchemes } from "rete";
 import { AreaPlugin } from "rete-area-plugin";
 import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-plugin";
 
+import { dibujarIcono } from "@/componentes/icono";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado, type Conexion, type NodoDelFlujo } from "@/estado/estado";
 import {
@@ -19,7 +20,6 @@ import {
   type IdDeTipo,
   type Etapa,
 } from "../nodos/catalogo";
-import { dibujarIcono } from "../iconos";
 import { erroresDeConfiguracion } from "../validacion";
 import { estilosDelGlobo } from "./globo";
 
@@ -57,7 +57,7 @@ type Senales = LitArea2D<Esquema>;
 
 function tieneErrores(nodo: NodoDelFlujo): boolean {
   if (nodo.tipo === "trigger") return false;
-  return erroresDeConfiguracion(TIPOS_DE_NODO[nodo.tipo], nodo.parametros).length > 0;
+  return erroresDeConfiguracion(TIPOS_DE_NODO[nodo.tipo], nodo.parametros, nodo.presentaciones).length > 0;
 }
 
 function crearCaja(nodo: NodoDelFlujo): Caja {

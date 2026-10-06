@@ -16,7 +16,9 @@ Una caja **Desplazar** SHALL tener tres parámetros:
   status mezcla el tipo de mensaje con el canal, y desplazarlo como un todo
   puede cambiar el tipo.
 - **Desplazamiento**: un número entero, positivo, negativo o cero, que se le
-  suma a lo elegido.
+  suma a lo elegido. Ofrece solo el modo decimal, así que no tiene botón
+  de modo ni acepta otros formatos: es un intervalo, que puede ser negativo,
+  y no una nota ni un byte.
 - **Overflow**: sí o no. Dice qué pasa cuando el resultado se sale del rango de
   lo elegido.
 
@@ -28,6 +30,14 @@ overflow desactivado. Con esos valores deja pasar los mensajes sin cambios.
 - **WHEN** la persona usuaria agrega una caja "Desplazar" y la selecciona
 - **THEN** el panel muestra byte "2.º (datos 1)", desplazamiento 0 y overflow
   desactivado
+
+#### Scenario: El desplazamiento es solo decimal
+
+- **GIVEN** una caja "Desplazar" con desplazamiento 4
+- **WHEN** la persona usuaria escribe "E4" en el desplazamiento y sale del
+  campo
+- **THEN** la caja sigue con desplazamiento 4, el campo vuelve a mostrar "4",
+  y el campo no tiene botón de modo
 
 ### Requirement: Desplaza solo el byte elegido
 

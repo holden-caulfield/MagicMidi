@@ -5,6 +5,12 @@ export interface NodoDelFlujo {
   id: string;
   tipo: "trigger" | IdDeTipo;
   parametros: Record<string, ValorDeParametro>;
+  /**
+   * Cómo se muestra cada parámetro, por clave. Solo lo lee el tipo de ese
+   * parámetro: el resto lo guarda y lo pasa sin saber qué tiene. Si falta, el
+   * tipo usa la que corresponde por defecto.
+   */
+  presentaciones?: Record<string, unknown>;
 }
 
 export interface Conexion {

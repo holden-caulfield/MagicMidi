@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import { MensajeMidi } from "@/midi/mensaje";
+import { interpretar } from "../parametros/entero";
 import desplazar from "./desplazar";
 
 // Cada `test` prueba una sola cosa: le pasa un mensaje y unos parámetros a
@@ -159,4 +160,13 @@ test("en un byte de datos, nunca se prende el bit alto", () => {
   });
 
   expect(resultado).toEqual(new MensajeMidi([0x90, 0, 100]));
+});
+
+test("el desplazamiento se escribe solo en decimal", () => {
+  const parametro = desplazar.parametros.find(({ clave }) => clave === "desplazamiento")!;
+  if (parametro.tipo !== "entero") throw new Error("el desplazamiento es un entero");
+
+  expect(interpretar("E4", parametro, { modo: "decimal", bemoles: false })).toBeNull();
+  expect(interpretar("0x0C", parametro, { modo: "decimal", bemoles: false })).toBeNull();
+  expect(interpretar("-12", parametro, { modo: "decimal", bemoles: false })).toEqual({ numero: -12, presentacion: { modo: "decimal", bemoles: false } });
 });

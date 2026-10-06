@@ -20,7 +20,9 @@ archivo solo dice qué campo dibujar y qué valores acepta.
 
 ## Los que hay
 
-- `entero`: un número entero, con un rango opcional.
+- `entero`: un número entero, con un rango opcional. Se puede mostrar y
+  escribir en decimal, como nota o en hexadecimal (ver
+  [Los modos de los números](#los-modos-de-los-números)).
 - `interruptor`: una casilla, para prender o apagar algo.
 - `lista`: una sola opción de una lista cerrada, con un desplegable. Sirve
   para pocas opciones (en Mapear, qué byte se mapea).
@@ -35,7 +37,7 @@ archivo solo dice qué campo dibujar y qué valores acepta.
   `maximo`, con una barra de dos perillas y un campo a cada lado. Con
   `invertible: true`, "desde" puede quedar mayor que "hasta" (en Mapear, para
   dar vuelta un sentido); si no, las perillas se frenan al tocarse (en
-  Filtrar). El valor es `{ desde, hasta }`.
+  Filtrar). El valor es `{ desde, hasta }`. Como el entero, tiene modos.
 
 En `opciones` y `autocompletar` el valor es una lista con los valores
 elegidos, en el orden de las opciones, y no elegir ninguna también vale.
@@ -123,17 +125,27 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
   Si ninguno de los campos sirve para tu tipo, hace falta uno nuevo en
   `src/componentes/`: es un paso más grande, y conviene mirar primero cómo
   están hechos los que hay.
-- **La entrada para el catálogo** (el `export default`), con dos funciones:
-  - **`error(parametro, valor)`**: si un valor le sirve a este parámetro.
+- **La entrada para el catálogo** (el `export default`), con dos funciones
+  (y una tercera opcional):
+  - **`error(parametro, valor, presentacion)`**: si un valor le sirve a este
+    parámetro.
     Devuelve `null` si le sirve, o el texto que se muestra debajo del campo si
     no: el entero, por ejemplo, devuelve "Tiene que ir de 0 a 127" para un
     200 cuando el parámetro se declaró con ese rango. El panel lo muestra, el
     lienzo marca la caja en rojo, y el test que revisa todas las cajas
     (`src/workflow/nodos/catalogo.test.ts`) lo usa para comprobar que el valor
-    `inicial` de cada parámetro no tenga errores.
-  - **`dibujar(parametro, valor, error)`**: devuelve tu etiqueta HTML con
-    `.parametro`, `.valor` y `.error`. Es siempre igual: copiala y cambiá el
-    nombre de la etiqueta.
+    `inicial` de cada parámetro no tenga errores. La `presentacion` solo la
+    usan los tipos que la guardan (ver
+    [Cómo se muestra el valor](#cómo-se-muestra-el-valor-la-presentación));
+    si el tuyo no la usa, no la declares.
+  - **`dibujar(parametro, valor, error, presentacion)`**: devuelve tu
+    etiqueta HTML con `.parametro`, `.valor` y `.error` (y `.presentacion`,
+    si la usa). Es siempre igual: copiala y cambiá el nombre de la etiqueta.
+  - **`formatear(parametro, numero, presentacion)`**, opcional: escribe un
+    número como lo muestra el parámetro. Lo usan las reglas de los tipos de
+    nodo para nombrar un número en un error (ver
+    [`validar`](../nodos/LEEME.md#reglas-entre-parámetros-validar)). Sin
+    esto, el número va en decimal.
 
 ### Lo que no se puede interpretar y lo que no sirve
 
@@ -157,6 +169,49 @@ No hace falta ocuparse de la etiqueta, de los estilos, ni de guardar el valor
 en la caja: de eso se encargan el campo, `CampoDeParametro` y el panel de
 configuración.
 
+### Cómo se muestra el valor: la presentación
+
+Algunos tipos dejan elegir cómo se muestra el valor, sin cambiarlo: el entero
+muestra el 60 como "60", "C4" o "3C", según el modo elegido. Eso que se
+eligió es la *presentación* del parámetro, y la caja la guarda al lado del
+valor, para que siga igual al seleccionar otra caja y volver.
+
+Solo tu tipo sabe qué tiene la presentación: el panel, el lienzo, el ejecutor
+y los tipos de nodo la guardan y te la pasan sin mirarla. Por eso llega como
+`unknown`, y tu tipo tiene que revisar que sea algo que entiende (si no, usar
+la de por defecto). En el control:
+
+- `this.presentacion` es la que guardó la caja, o `undefined` si nunca se
+  eligió;
+- para cambiarla, llamá a `this.avisarCambioDePresentacion(nueva)`, como
+  `avisarCambio` con el valor. Si cambian los dos a la vez, avisá primero la
+  presentación.
+
+La mayoría de los tipos no la necesitan, como el del ejemplo de abajo.
+
+### Los modos de los números
+
+El entero y el rango usan la presentación para sus **modos**: decimal ("60"),
+nota ("C4", con el Do central 60 como C4) y hexadecimal ("3C"). Todo lo de
+los modos está en `modos.ts`, y solo lo usan `entero.ts` y `rango.ts`:
+
+- La declaración del parámetro puede decir qué modos ofrece, en orden, con
+  `modos` (por ejemplo, `modos: ["nota", "decimal"]`). Si no lo dice, son
+  decimal, nota y hexadecimal. El primero es el de una caja nueva, y el botón
+  de modo pasa al siguiente en ese orden. Con un solo modo no hay botón.
+- Lo escrito se lee probando los modos en el orden en que rotan, empezando por
+  el actual (`leer`), y el parámetro pasa al modo en que se leyó: escribir "C4"
+  en modo decimal guarda 60 y deja el campo en modo nota.
+- El modo nota pide que el parámetro vaya de 0 a 127, y el hexadecimal, que
+  no tenga negativos: el test de `nodos/catalogo.test.ts` lo revisa.
+- `error` y `formatear` escriben los números en el modo actual ("Tiene que ir
+  de C-1 a G9").
+- En modo nota, las notas negras van con sostenidos ("C#4"), salvo que la
+  última nota escrita haya llevado bemol ("Db4"): entonces van con bemoles,
+  hasta que se escriba una con sostenido. Por eso la presentación del entero
+  y del rango no es solo el modo, sino `{ modo, bemoles }` (`Presentacion`,
+  en `modos.ts`). El log sigue con sostenidos.
+
 ## Ejemplo completo: real
 
 Este tipo es para números con decimales, como un factor por el que multiplicar
@@ -178,6 +233,7 @@ import { html } from "lit";
 import { customElement } from "lit/decorators.js";
 
 import "@/componentes/campo-numero";
+import type { Paso } from "@/componentes/campo-numero";
 import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
 
 export interface ParametroReal extends ParametroBase<number> {
@@ -217,6 +273,13 @@ export class CampoReal extends CampoDeParametro<ParametroReal, number> {
             this.avisarCambio(numero);
           }
         }}
+        @paso=${(evento: CustomEvent<Paso>) => {
+          // Las flechas: lo escrito (aunque no se haya confirmado) más el paso.
+          const numero = interpretar(evento.detail.texto);
+          if (numero !== null) {
+            this.avisarCambio(numero + evento.detail.cantidad);
+          }
+        }}
       ></campo-numero>
     `;
   }
@@ -230,9 +293,14 @@ export default {
 };
 ```
 
-`decimales` hace que, en una pantalla táctil, aparezca el teclado de números
-con separador. `campo-numero` avisa el texto tal como se escribió, sin
-interpretarlo: así cada tipo decide qué acepta, como acá la coma y el punto.
+Este tipo no usa presentación, así que `error` y `dibujar` no la declaran: el
+catálogo se la pasa igual, y simplemente no la leen. `decimales` hace que, en
+una pantalla táctil, aparezca el teclado de números con separador.
+`campo-numero` avisa el texto tal como se escribió, sin interpretarlo: así
+cada tipo decide qué acepta, como acá la coma y el punto. Lo mismo con sus
+flechas para subir y bajar (y las del teclado): avisan `paso`, con lo escrito
+y cuánto sumarle (1, o 10 con Mayúsculas, con signo), y el tipo decide qué
+valor resulta.
 
 Y su test, en `real.test.ts`. Además de los casos normales, prueba las dos
 formas de separar los decimales y lo que no es un número.

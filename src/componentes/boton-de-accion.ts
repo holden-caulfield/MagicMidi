@@ -3,9 +3,9 @@ import { customElement, property } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type { IconNode } from "lucide";
 
-import { dibujarIcono } from "@/workflow/iconos";
 import { compartidos } from "@/estilos/compartidos";
 import { estilosDeControl } from "./estilos";
+import { dibujarIcono } from "./icono";
 
 /**
  * Un botón de texto, con un ícono opcional. El texto va como contenido; si el

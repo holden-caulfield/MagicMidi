@@ -5,11 +5,11 @@ import { repeat } from "lit/directives/repeat.js";
 import { Ban, CornerDownRight, Equal, type IconNode, Trash2, TriangleAlert } from "lucide";
 
 import "@/componentes/boton-de-accion";
+import { dibujarIcono } from "@/componentes/icono";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { compartidos } from "@/estilos/compartidos";
 import { partesDeLaDescripcion } from "@/midi/describir";
 import type { MensajeMidi } from "@/midi/mensaje";
-import { dibujarIcono } from "@/workflow/iconos";
 import {
   entradasDelLog,
   formatearBytes,

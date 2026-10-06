@@ -21,6 +21,19 @@ function cambiarParametro(nodoId: string, clave: string, valor: ValorDeParametro
   });
 }
 
+function cambiarPresentacion(nodoId: string, clave: string, presentacion: unknown) {
+  actualizar({
+    flujo: {
+      ...estado.flujo,
+      nodos: estado.flujo.nodos.map((nodo) =>
+        nodo.id === nodoId
+          ? { ...nodo, presentaciones: { ...nodo.presentaciones, [clave]: presentacion } }
+          : nodo,
+      ),
+    },
+  });
+}
+
 /** Pide borrar la caja con el evento `eliminar-caja`, con su `id`. */
 @customElement("panel-de-configuracion")
 export class PanelDeConfiguracion extends LitElement {
@@ -85,7 +98,7 @@ export class PanelDeConfiguracion extends LitElement {
     const tipo = nodo.tipo === "trigger" ? null : TIPOS_DE_NODO[nodo.tipo];
     const nombre = tipo ? tipo.nombre : TRIGGER.nombre;
     const parametros = tipo ? tipo.parametros : [];
-    const errores = tipo ? erroresDeConfiguracion(tipo, nodo.parametros) : [];
+    const errores = tipo ? erroresDeConfiguracion(tipo, nodo.parametros, nodo.presentaciones) : [];
     // Si un parámetro tiene varios errores, se muestra el primero.
     const errorDe = (clave: string) =>
       errores.find((error) => error.clave === clave)?.mensaje ?? null;
@@ -101,11 +114,14 @@ export class PanelDeConfiguracion extends LitElement {
                   class="parametro"
                   @cambio=${(evento: CustomEvent<ValorDeParametro>) =>
                     cambiarParametro(nodo.id, parametro.clave, evento.detail)}
+                  @cambio-de-presentacion=${(evento: CustomEvent<unknown>) =>
+                    cambiarPresentacion(nodo.id, parametro.clave, evento.detail)}
                 >
                   ${dibujarParametro(
                     parametro,
                     nodo.parametros[parametro.clave],
                     errorDe(parametro.clave),
+                    nodo.presentaciones?.[parametro.clave],
                   )}
                 </div>
               `,

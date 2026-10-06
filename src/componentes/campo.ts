@@ -16,6 +16,12 @@ export abstract class Campo<V> extends LitElement {
   @property() etiqueta = "";
   /** El texto del error, o `null`. */
   @property({ attribute: false }) error: string | null = null;
+  /**
+   * Si no es `null`, junto a la etiqueta va un botón que muestra la
+   * `abreviatura` y se anuncia con el `nombre`. Al activarlo, el campo avisa
+   * `siguiente-modo`: qué cambia lo decide quien lo usa.
+   */
+  @property({ attribute: false }) modo: { abreviatura: string; nombre: string } | null = null;
 
   /** Con `true`, el control va antes de la etiqueta y en la misma línea, como una casilla. */
   protected enLinea = false;
@@ -36,13 +42,29 @@ export abstract class Campo<V> extends LitElement {
   }
 
   render() {
-    const etiqueta = this.esGrupo
+    const texto = this.esGrupo
       ? html`<span id="etiqueta" class="etiqueta">${this.etiqueta}</span>`
       : html`<label for="control" class="etiqueta">${this.etiqueta}</label>`;
+    const etiqueta = this.modo
+      ? html`<div class="fila-de-etiqueta">${texto}${this.botonDeModo(this.modo)}</div>`
+      : texto;
     const error = this.error ? html`<p id="error" class="error">${this.error}</p>` : nothing;
     return this.enLinea
       ? html`<div class="campo en-linea">${this.control()}${etiqueta}</div>${error}`
       : html`<div class="campo">${etiqueta}${this.control()}${error}</div>`;
+  }
+
+  private botonDeModo({ abreviatura, nombre }: { abreviatura: string; nombre: string }) {
+    return html`
+      <button
+        type="button"
+        class="control modo"
+        aria-label="Modo de ${this.etiqueta}: ${nombre}"
+        @click=${() => this.dispatchEvent(new CustomEvent("siguiente-modo"))}
+      >
+        ${abreviatura}
+      </button>
+    `;
   }
 
   // Los atributos van sobre el control que dibuja cada campo, así ninguno

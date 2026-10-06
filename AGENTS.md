@@ -42,7 +42,8 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   mensaje no se calculan ahí: los lee `MensajeMidi` (`src/midi/mensaje.ts`), y
   cualquier otro módulo que los necesite usa esa misma lectura. Lo que es solo
   presentación, como el nombre de la nota ("C4", con el Do central 60 como C4),
-  sí queda en `describir.ts`. El tipo distingue cada mensaje de sistema
+  sí queda en `describir.ts`: `nombreDeNota` (con sostenidos, o con bemoles
+  si se le pide) y su inversa, `numeroDeNota`. El tipo distingue cada mensaje de sistema
   (`"inicio"`, `"sysex"`, …, y `"sistema-no-definido"`), y no hay un tipo
   `"sistema"`: un mensaje de sistema es el que no es desconocido y no tiene
   canal. Los nombres largos del log ("Inicio (Start)") son presentación y
@@ -127,7 +128,11 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   con `cambio` y no guarda el valor: lo recibe de vuelta. `campo-numero`
   avisa el texto tal como se escribió (interpretarlo es de quien lo usa) y se
   vuelve a dibujar solo, así un valor rechazado desaparece sin que nadie le
-  pase uno nuevo. La apariencia común está en `componentes/estilos.ts`, sobre
+  pase uno nuevo. Con sus flechas, propias o del teclado, avisa `paso`, con
+  el texto y la cantidad a sumar. El `compacto` (el del rango) no tiene
+  etiqueta visible ni flechas propias. Un campo que recibe `modo` dibuja un
+  botón junto a la etiqueta que avisa `siguiente-modo`: el campo no sabe qué
+  modos hay. La apariencia común está en `componentes/estilos.ts`, sobre
   la clase `.control`: los estilos propios de un componente que la pisan
   (alto, padding) necesitan un selector más específico, como `button.control`,
   o pierden sin dar ningún error. `campo-lista` no usa `<select>`: la lista
@@ -206,7 +211,10 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     `clave` de un parámetro. Lo usan el panel (el error debajo del campo), el
     lienzo (borde rojo con `outline`, para no pisar la etapa ni la
     selección), el ejecutor y `nodos/catalogo.test.ts`. No se guardan en
-    `estado.flujo`: se calculan de los parámetros cada vez. Un valor que se
+    `estado.flujo`: se calculan cada vez, de los parámetros y de sus
+    presentaciones. Para nombrar un número en un error, `validar` recibe
+    `formatear(clave, numero)`, que lo escribe como lo muestra ese parámetro.
+    Un valor que se
     puede interpretar pero no sirve se guarda igual y se muestra con su
     error; solo lo que no se puede interpretar (un "2.5" en un entero) se
     rechaza en el control. Si a una caja con errores le llega un mensaje, el
@@ -257,10 +265,19 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     devuelve el texto si un valor no le sirve. El
     panel de configuración no nombra ningún tipo. La guía está en
     `parametros/LEEME.md`, para alguien con nociones básicas de programación.
+    Además del valor, un parámetro puede guardar en la caja su
+    **presentación** (`NodoDelFlujo.presentaciones`, que se cambia con
+    `avisarCambioDePresentacion`): cómo se muestra el valor, sin cambiarlo.
+    Solo la lee su tipo. El panel, el lienzo, el ejecutor y los tipos de nodo
+    la pasan sin mirarla. El entero y el rango la usan para sus modos
+    (decimal, nota y hexadecimal, y bemoles o sostenidos), definidos en
+    `parametros/modos.ts`: fuera de esos dos tipos, nadie sabe que existen.
+    Lo escrito se lee probando los modos desde el actual, en el orden en que
+    rotan, y el parámetro pasa al modo en que se leyó.
     Para elegir de una lista hay tres: `lista` (una, con un desplegable),
     `opciones` (varias, como píldoras, para pocas y cortas) y `autocompletar`
     (varias, buscándolas, para listas largas). Son tipos distintos y no uno
-    con modos, porque un tipo es su control; tampoco comparten código. Para
+    con variantes, porque un tipo es su control; tampoco comparten código. Para
     dos extremos está `rango` (valor `{ desde, hasta }`, con `invertible`),
     que se dibuja como una barra de dos perillas. Un
     valor que es una lista se avisa siempre como una lista nueva, en el orden
@@ -296,7 +313,9 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
     Tauri captura los arrastres y el drag and drop de HTML5 (arrastrar cajas
     desde la barra) no funciona en la ventana real.
   - Los íconos son de [Lucide](https://lucide.dev), importados por nombre para
-    que el tree-shaking deje solo los usados.
+    que el tree-shaking deje solo los usados. Se dibujan con `dibujarIcono`
+    (`componentes/icono.ts`), que es una función y no un componente: el
+    `<svg>` queda en la raíz de quien lo dibuja, que lo estiliza directamente.
 - **Comunicación Rust ↔ JS**: los argumentos de los comandos se escriben en
   `snake_case` del lado de Rust; Tauri los mapea automáticamente a
   `camelCase` del lado de JS/TS al invocarlos. Mantené esa convención en

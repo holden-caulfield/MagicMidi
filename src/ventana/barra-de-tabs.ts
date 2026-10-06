@@ -1,8 +1,8 @@
 import { css, html, type TemplateResult } from "lit";
 import type { IconNode } from "lucide";
 
+import { dibujarIcono } from "@/componentes/icono";
 import { actualizar } from "@/estado/estado";
-import { dibujarIcono } from "@/workflow/iconos";
 
 export interface Panel {
   id: string;

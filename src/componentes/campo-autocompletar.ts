@@ -3,8 +3,8 @@ import { customElement, property, state } from "lit/decorators.js";
 import { live } from "lit/directives/live.js";
 import { X } from "lucide";
 
-import { dibujarIcono } from "@/workflow/iconos";
 import { Campo } from "./campo";
+import { dibujarIcono } from "./icono";
 
 type Valor = number | string;
 type Opcion = { valor: Valor; texto: string };
