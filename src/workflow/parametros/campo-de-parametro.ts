@@ -1,5 +1,7 @@
-import { css, LitElement } from "lit";
+import { css } from "lit";
 import { property } from "lit/decorators.js";
+
+import { Componente } from "@/componentes/componente";
 
 /** Lo que declara todo parámetro, sea del tipo que sea. */
 export interface ParametroBase<T> {
@@ -15,7 +17,7 @@ export interface ParametroBase<T> {
  * tipo llama a `avisarCambio` con el valor nuevo. La etiqueta, el error y los
  * estilos los pone el campo.
  */
-export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends LitElement {
+export abstract class CampoDeParametro<P extends ParametroBase<V>, V> extends Componente {
   static styles = css`
     :host {
       display: block;

@@ -2,13 +2,14 @@
 // zoom y el arrastre son de la librería; qué cajas hay y cómo se conectan vive
 // en `estado.flujo`, y este módulo mantiene las dos cosas de acuerdo.
 import { LitPlugin, Presets as PresetsDeDibujo, type LitArea2D } from "@retejs/lit-plugin";
-import { css, html, LitElement } from "lit";
+import { css, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import type { IconNode } from "lucide";
 import { ClassicPreset, NodeEditor, type GetSchemes } from "rete";
 import { AreaPlugin } from "rete-area-plugin";
 import { ConnectionPlugin, Presets as PresetsDeConexion } from "rete-connection-plugin";
 
+import { Componente } from "@/componentes/componente";
 import { dibujarIcono } from "@/componentes/icono";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado, type Conexion, type NodoDelFlujo } from "@/estado/estado";
@@ -75,12 +76,11 @@ function crearCaja(nodo: NodoDelFlujo): Caja {
  * la vuelve a dibujar, por ejemplo al cambiar la selección.
  */
 @customElement("caja-del-flujo")
-export class CajaDelFlujo extends LitElement {
+export class CajaDelFlujo extends Componente {
   static styles = [
     estilosDelGlobo,
     css`
       .caja {
-        box-sizing: border-box;
         position: relative;
         width: ${LADO_CAJA}px;
         height: ${LADO_CAJA}px;
@@ -146,8 +146,8 @@ export class CajaDelFlujo extends LitElement {
          customize.socket. */
       .punto {
         display: block;
-        width: 10px;
-        height: 10px;
+        width: 13px;
+        height: 13px;
         margin: 3px;
         border: 1.5px solid var(--fondo-lienzo);
         border-radius: 1px;
@@ -191,7 +191,7 @@ export class CajaDelFlujo extends LitElement {
  * `<path>`) y lo vuelve a asignar cada vez que se mueve una caja.
  */
 @customElement("cable-del-flujo")
-export class CableDelFlujo extends LitElement {
+export class CableDelFlujo extends Componente {
   // Rete dibuja cada conexión en un SVG enorme, que no tiene que tapar los
   // clics del lienzo: solo el trazo los recibe.
   static styles = css`
@@ -261,7 +261,7 @@ function quitarConexionDelEstado(desde: string, hacia: string) {
 }
 
 @customElement("lienzo-workflow")
-export class LienzoWorkflow extends LitElement {
+export class LienzoWorkflow extends Componente {
   static styles = css`
     :host {
       flex: 1;

@@ -1,6 +1,7 @@
-import { html, LitElement, nothing, type TemplateResult } from "lit";
+import { html, nothing, type TemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 
+import { Componente } from "./componente";
 import { estilosBase } from "./estilos";
 
 /**
@@ -10,7 +11,7 @@ import { estilosBase } from "./estilos";
  * `aria-describedby` no cruzan de un shadow root a otro. Cada campo escribe
  * solo `control()` y avisa el valor nuevo con `avisar`.
  */
-export abstract class Campo<V> extends LitElement {
+export abstract class Campo<V> extends Componente {
   static styles = estilosBase;
 
   @property() etiqueta = "";

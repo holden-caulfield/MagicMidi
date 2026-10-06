@@ -1,9 +1,9 @@
-import { css, html, LitElement, nothing } from "lit";
+import { css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type { IconNode } from "lucide";
 
-import { compartidos } from "@/estilos/compartidos";
+import { Componente } from "./componente";
 import { estilosDeControl } from "./estilos";
 import { dibujarIcono } from "./icono";
 
@@ -13,9 +13,8 @@ import { dibujarIcono } from "./icono";
  * `click`, como un botón nativo.
  */
 @customElement("boton-de-accion")
-export class BotonDeAccion extends LitElement {
+export class BotonDeAccion extends Componente {
   static styles = [
-    compartidos,
     estilosDeControl,
     css`
       :host {

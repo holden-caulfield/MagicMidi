@@ -1,6 +1,7 @@
-import { css, html, LitElement } from "lit";
+import { css, html } from "lit";
 import { customElement, query } from "lit/decorators.js";
 
+import { Componente } from "@/componentes/componente";
 import type { IdDeTipo } from "../nodos/catalogo";
 import "./barra-de-herramientas";
 import type { LienzoWorkflow } from "./lienzo";
@@ -8,7 +9,7 @@ import "./lienzo";
 import "./panel-de-configuracion";
 
 @customElement("panel-workflow")
-export class PanelWorkflow extends LitElement {
+export class PanelWorkflow extends Componente {
   static styles = css`
     :host {
       flex: 1;

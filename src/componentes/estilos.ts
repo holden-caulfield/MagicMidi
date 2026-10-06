@@ -1,7 +1,5 @@
 import { css } from "lit";
 
-import { compartidos } from "@/estilos/compartidos";
-
 /**
  * La apariencia común de los controles: rellenos grises de 20px, sin borde,
  * con esquinas de 2px. Se aplica a todo elemento con la clase `control`.
@@ -103,4 +101,4 @@ export const estilosDeCampo = css`
   }
 `;
 
-export const estilosBase = [compartidos, estilosDeControl, estilosDeCampo];
+export const estilosBase = [estilosDeControl, estilosDeCampo];

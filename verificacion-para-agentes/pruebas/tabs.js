@@ -11,7 +11,7 @@ for (const tab of tabs) {
     visibles: secciones.filter(visible).map((s) => s.id),
     seleccionados: tabs.filter((t) => t.getAttribute('aria-selected') === 'true').map((t) => t.id),
     ocultasConHidden: secciones.filter((s) => !visible(s)).every((s) => s.hidden && getComputedStyle(s).display === 'none'),
-    barraDeEstado: visible(raiz.querySelector('.barra-de-estado')),
+    barraDeEstado: visible(uno('.barra-de-estado')),
     seccion: (() => { const s = secciones.find(visible).getBoundingClientRect(); return `${Math.round(s.width)}x${Math.round(s.height)}`; })(),
   };
 }

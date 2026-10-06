@@ -1,11 +1,11 @@
-import { css, html, LitElement } from "lit";
+import { css, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { Trash2 } from "lucide";
 
 import "@/componentes/boton-de-accion";
+import { Componente } from "@/componentes/componente";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado } from "@/estado/estado";
-import { compartidos } from "@/estilos/compartidos";
 import { TIPOS_DE_NODO, TRIGGER } from "../nodos/catalogo";
 import { dibujarParametro, type ValorDeParametro } from "../parametros/catalogo";
 import { erroresDeConfiguracion } from "../validacion";
@@ -36,49 +36,46 @@ function cambiarPresentacion(nodoId: string, clave: string, presentacion: unknow
 
 /** Pide borrar la caja con el evento `eliminar-caja`, con su `id`. */
 @customElement("panel-de-configuracion")
-export class PanelDeConfiguracion extends LitElement {
-  static styles = [
-    compartidos,
-    css`
-      :host {
-        flex: 0 0 220px;
-        min-height: 0;
-        display: flex;
-      }
+export class PanelDeConfiguracion extends Componente {
+  static styles = css`
+    :host {
+      flex: 0 0 220px;
+      min-height: 0;
+      display: flex;
+    }
 
-      /* El padding deja lugar al contorno de foco de los controles, que el
-         desplazamiento cortaría contra los bordes. */
-      aside {
-        flex: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 0 4px 4px;
-      }
+    /* El padding deja lugar al contorno de foco de los controles, que el
+       desplazamiento cortaría contra los bordes. */
+    aside {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 4px 4px;
+    }
 
-      h3 {
-        margin: 0;
-        padding-bottom: 6px;
-        border-bottom: 1px solid var(--borde-suave);
-        font-size: inherit;
-        font-weight: 600;
-      }
+    h3 {
+      margin: 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--borde-suave);
+      font-size: inherit;
+      font-weight: 600;
+    }
 
-      .vacia {
-        margin: 0;
-        color: var(--letra-secundaria);
-      }
+    .vacia {
+      margin: 0;
+      color: var(--letra-secundaria);
+    }
 
-      boton-de-accion {
-        align-self: flex-start;
-      }
+    boton-de-accion {
+      align-self: flex-start;
+    }
 
-      .parametro {
-        display: contents;
-      }
-    `,
-  ];
+    .parametro {
+      display: contents;
+    }
+  `;
 
   constructor() {
     super();
