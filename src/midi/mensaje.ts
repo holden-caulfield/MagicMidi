@@ -86,6 +86,13 @@ const TIPOS_DE_SISTEMA: Record<number, TipoDeMensaje> = {
   0xff: "reset",
 };
 
+/** Lo que manda el backend con el evento `mensaje-midi` por cada mensaje que entra. */
+export interface EventoMidi {
+  puerto: string;
+  marca_temporal_ms: number;
+  datos: number[];
+}
+
 /**
  * Un mensaje MIDI. Lo único que guarda es la lista de sus bytes, del status en
  * adelante: el tipo y el canal se leen de ahí cada vez, así que siguen siendo

@@ -25,7 +25,7 @@ r.trasRedibujar = { entrada: textoDe(listas()[0]), mensaje: todos('p').find((p) 
 m.actualizar({ conectado: false, mensajeConexion: '' }); await dibujado();
 r.desconectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: listas().map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, mensajeVisible: visible(todos('p').find((p) => p.className === 'mensaje')) };
 // 3.2: backend que falla
-window.__TAURI_INTERNALS__ = { transformCallback: () => 1, invoke: async (comando) => { if (comando.startsWith('plugin:event|')) return 1; throw 'fallo simulado'; } };
+window.__TAURI_INTERNALS__ = { invoke: async () => { throw 'fallo simulado'; } };
 boton('Actualizar puertos').click(); await espera(100); await dibujado();
 r.fallaPuertos = { mensaje: todos('p').find((p) => p.className === 'mensaje').textContent.trim(), entradaSigue: textoDe(listas()[0]) };
 boton('Conectar').click(); await espera(100); await dibujado();

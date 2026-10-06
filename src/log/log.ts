@@ -1,10 +1,4 @@
-import { MensajeMidi } from "@/midi/mensaje";
-
-export interface EventoMidi {
-  puerto: string;
-  marca_temporal_ms: number;
-  datos: number[];
-}
+import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
 
 export type Resultado =
   | { tipo: "error"; texto: string }

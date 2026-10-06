@@ -1,14 +1,7 @@
 import { beforeEach, expect, test } from "vitest";
 
-import { MensajeMidi } from "@/midi/mensaje";
-import {
-  agregarAlLog,
-  clasificarSalidas,
-  entradasDelLog,
-  limpiarLog,
-  suscribirAlLog,
-  type EventoMidi,
-} from "./log";
+import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
+import { agregarAlLog, clasificarSalidas, entradasDelLog, limpiarLog, suscribirAlLog } from "./log";
 
 function m(...bytes: number[]): MensajeMidi {
   return new MensajeMidi(bytes);
