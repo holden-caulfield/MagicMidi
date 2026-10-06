@@ -139,7 +139,7 @@ por terminada una tarea").
 - [x] 6.4 Probar en la ventana real (`npm run tauri dev`) que el botón de modo
       se activa con Enter y con la barra espaciadora, y que una caja Fijar en
       modo nota con valor C4 envía 60 en el byte elegido
-- [ ] 6.5 Al archivar, proponer a la persona usuaria los cambios a AGENTS.md:
+- [x] 6.5 Al archivar, proponer a la persona usuaria los cambios a AGENTS.md:
       la presentación opaca en `NodoDelFlujo` (solo los tipos de parámetro la
       leen), `parametros/modos.ts`, el `formatear` de `validar`, y que
       `campo-rango` recibe cómo formatear y leer

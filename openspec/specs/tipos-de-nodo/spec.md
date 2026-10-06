@@ -79,14 +79,19 @@ El archivo de un tipo de nodo SHALL declarar:
 - **reglas de validación** propias, que miran los valores de varios
   parámetros juntos. Son opcionales: un tipo que no las declara se valida solo
   con lo que revisa cada parámetro. Cada regla que no se cumple SHALL dar un
-  texto de error asociado a uno de los parámetros. Las reglas del tipo SHALL
+  texto de error asociado a uno de los parámetros. Si ese texto nombra
+  un número, la regla SHALL poder pedirle a un parámetro que lo escriba como
+  él lo muestra (ver la spec `tipos-de-parametro`, "Un parámetro puede guardar
+  cómo se muestra"), sin saber cómo lo muestra. Las reglas del tipo SHALL
   revisarse solo cuando cada parámetro, por separado, tiene un valor que le
   sirve, así no tienen que repetir lo que ya revisan los parámetros;
 - una única **función de procesamiento**.
 
 Los errores de configuración de una caja SHALL ser los de sus parámetros más
 los de las reglas de su tipo, y SHALL poder calcularse sin la interfaz, a
-partir del tipo y de los valores de la caja. Los valores iniciales de todo tipo
+partir del tipo, de los valores de la caja y de la presentación que guarda
+cada parámetro, que se pasa sin leerla. El texto de un error SHALL ser el mismo en el panel, en el lienzo y
+en el log. Los valores iniciales de todo tipo
 de nodo SHALL estar libres de errores, y eso SHALL revisarlo un test que
 recorre todos los tipos.
 
@@ -141,6 +146,14 @@ tipo de parámetro.
 - **WHEN** se calculan los errores de configuración de la caja
 - **THEN** el error es el del rango del parámetro, y las reglas del tipo no se
   revisan
+
+#### Scenario: La regla del tipo nombra un número como lo muestra el parámetro
+
+- **GIVEN** un tipo de nodo declara una regla que dice que el parámetro
+  "Hasta" tiene que ser mayor que 64, y le pide a "Hasta" que escriba el 64
+- **WHEN** una caja de ese tipo tiene "Hasta" 10, mostrado en hexadecimal
+- **THEN** el error asociado a "Hasta" nombra el 64 como "40", y el archivo
+  del tipo de nodo no nombra ningún modo
 
 ### Requirement: La función de procesamiento
 

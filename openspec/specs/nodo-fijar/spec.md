@@ -14,7 +14,9 @@ Una caja **Fijar** SHALL tener entrada y salida, y dos parámetros:
 - **Byte**: qué parte del mensaje fija. Las opciones son "Canal", "2.º (datos
   1)" y "3.º (datos 2)".
 - **Valor**: un número entero de 0 a 127, el valor que pasa a tener lo
-  elegido. Con "Canal", SHALL ir de 1 a 16.
+  elegido. Con "Canal", SHALL ir de 1 a 16. Ofrece los tres modos, en el orden por
+  defecto (decimal, nota y hexadecimal), y los dos errores escriben sus
+  números como los muestra el valor.
 
 Un valor fuera de su rango SHALL ser un error de configuración de la caja,
 asociado al parámetro "Valor" (ver la spec `editor-de-workflow`, "Los errores
@@ -48,6 +50,13 @@ errores.
 - **WHEN** la persona usuaria escribe 10 en el valor y sale del campo
 - **THEN** el error desaparece del panel y la caja deja de verse con borde
   rojo
+
+#### Scenario: Canal fuera de rango en hexadecimal
+
+- **GIVEN** una caja "Fijar" con valor 100, en modo hexadecimal
+- **WHEN** la persona usuaria elige el byte "Canal"
+- **THEN** el panel muestra debajo del campo "Valor" que, con Canal, tiene que
+  ir de 01 a 10
 
 ### Requirement: Fija solo el byte de datos elegido
 
