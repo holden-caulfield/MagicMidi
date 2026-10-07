@@ -1,5 +1,6 @@
 import type { TemplateResult } from "lit";
 
+import type { Texto } from "@/formato";
 import autocompletar, { type ParametroAutocompletar } from "./autocompletar";
 import entero, { type ParametroEntero } from "./entero";
 import lista, { type ParametroLista } from "./lista";
@@ -26,27 +27,19 @@ export type ValorDeParametro = Parametro["inicial"];
 
 interface TipoDeParametro<P extends Parametro> {
   /**
-   * El texto del error si el valor no le sirve a este parámetro, o `null` si
-   * le sirve. El chequeo de tipos no alcanza a ver, por ejemplo, que un entero
-   * no tenga decimales o que esté fuera de su rango.
+   * Si el valor le sirve a este parámetro: `null`, o el texto del error. El
+   * chequeo de tipos no alcanza a ver, por ejemplo, que un entero no tenga
+   * decimales o que esté fuera de su rango. Si el texto nombra valores, van
+   * marcados con `formato`: los escribe el campo donde se muestra.
    */
-  error(parametro: P, valor: P["inicial"], presentacion: unknown): string | null;
+  validar(parametro: P, valor: P["inicial"]): Texto | null;
   /**
-   * `presentacion` es lo que el tipo guardó en la caja sobre cómo se muestra
-   * el valor (con `avisarCambioDePresentacion`), o `undefined`. Solo el tipo
-   * sabe qué tiene: un tipo que no la usa la ignora.
+   * El campo que muestra el parámetro, con `error`, lo que devolvió `validar`
+   * (o una regla del tipo de nodo). `estado` es lo que el campo conservó en la
+   * caja, o `undefined`: el tipo se lo pasa al campo sin leerlo, y un tipo cuyo
+   * campo no conserva nada no lo declara.
    */
-  dibujar(
-    parametro: P,
-    valor: P["inicial"],
-    error: string | null,
-    presentacion: unknown,
-  ): TemplateResult;
-  /**
-   * Opcional: escribe un número como lo muestra el parámetro, para que una
-   * regla de un tipo de nodo lo nombre igual. Sin esto, va en decimal.
-   */
-  formatear?(parametro: P, numero: number, presentacion: unknown): string;
+  dibujar(parametro: P, valor: P["inicial"], error: Texto | null, estado: unknown): TemplateResult;
 }
 
 const TIPOS_DE_PARAMETRO = {
@@ -64,30 +57,17 @@ function tipoDe(parametro: Parametro) {
   return TIPOS_DE_PARAMETRO[parametro.tipo] as TipoDeParametro<Parametro>;
 }
 
-export function errorDelParametro(
-  parametro: Parametro,
-  valor: ValorDeParametro,
-  presentacion?: unknown,
-): string | null {
-  return tipoDe(parametro).error(parametro, valor, presentacion);
+/** Si el valor le sirve al parámetro: `null`, o el texto del error. */
+export function validarParametro(parametro: Parametro, valor: ValorDeParametro): Texto | null {
+  return tipoDe(parametro).validar(parametro, valor);
 }
 
-/** Un número escrito como lo muestra el parámetro. */
-export function formatearParametro(
-  parametro: Parametro,
-  numero: number,
-  presentacion?: unknown,
-): string {
-  const { formatear } = tipoDe(parametro);
-  return formatear ? formatear(parametro, numero, presentacion) : String(numero);
-}
-
-/** El control de un parámetro, el que corresponde a su tipo, con su error si tiene. */
+/** El campo de un parámetro, el que dibuja su tipo, con su error si tiene. */
 export function dibujarParametro(
   parametro: Parametro,
   valor: ValorDeParametro,
-  error: string | null,
-  presentacion?: unknown,
+  error: Texto | null,
+  estado: unknown,
 ) {
-  return tipoDe(parametro).dibujar(parametro, valor, error, presentacion);
+  return tipoDe(parametro).dibujar(parametro, valor, error, estado);
 }

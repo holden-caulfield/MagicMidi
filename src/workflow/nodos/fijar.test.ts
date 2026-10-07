@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
+import { formato } from "@/formato";
 import { MensajeMidi } from "@/midi/mensaje";
-import { erroresDeConfiguracion } from "../validacion";
 import fijar from "./fijar";
 
 // Cada `test` prueba una sola cosa: le pasa un mensaje y unos parámetros a
@@ -77,34 +77,25 @@ test("con Canal, un mensaje de sistema pasa sin cambios", () => {
 
 // `validar` revisa lo que depende de más de un parámetro: con Canal, el valor
 // tiene que ser un canal. Devuelve la lista de errores (vacía si está todo bien).
-// El segundo argumento escribe un número como se muestra el parámetro: acá, en
-// decimal.
-
-const enDecimal = (_clave: string, numero: number) => String(numero);
+// El 1 y el 16 del mensaje van marcados con `formato`, porque los escribe el
+// campo del valor, como lo muestra (en hexadecimal, por ejemplo, "01" y "10").
 
 test("con Canal, un valor de 1 a 16 está bien", () => {
-  expect(fijar.validar({ byte: 0, valor: 10 }, enDecimal)).toEqual([]);
+  expect(fijar.validar({ byte: 0, valor: 10 })).toEqual([]);
 });
 
 test("con Canal, el 0 es un error", () => {
-  expect(fijar.validar({ byte: 0, valor: 0 }, enDecimal)).toEqual([
-    { clave: "valor", mensaje: "Con Canal, tiene que ir de 1 a 16" },
+  expect(fijar.validar({ byte: 0, valor: 0 })).toEqual([
+    { clave: "valor", mensaje: formato`Con Canal, tiene que ir de ${1} a ${16}` },
   ]);
 });
 
 test("con Canal, el 17 es un error", () => {
-  expect(fijar.validar({ byte: 0, valor: 17 }, enDecimal)).toEqual([
-    { clave: "valor", mensaje: "Con Canal, tiene que ir de 1 a 16" },
+  expect(fijar.validar({ byte: 0, valor: 17 })).toEqual([
+    { clave: "valor", mensaje: formato`Con Canal, tiene que ir de ${1} a ${16}` },
   ]);
 });
 
 test("en un byte de datos, el 100 está bien", () => {
-  expect(fijar.validar({ byte: 2, valor: 100 }, enDecimal)).toEqual([]);
-});
-
-test("con Canal, el error escribe los números como se muestra el valor", () => {
-  // La caja guarda que el valor se muestra en hexadecimal.
-  expect(erroresDeConfiguracion(fijar, { byte: 0, valor: 100 }, { valor: { modo: "hexadecimal" } })).toEqual(
-    [{ clave: "valor", mensaje: "Con Canal, tiene que ir de 01 a 10" }],
-  );
+  expect(fijar.validar({ byte: 2, valor: 100 })).toEqual([]);
 });

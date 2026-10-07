@@ -1,15 +1,18 @@
-import { nombreDeNota, numeroDeNota } from "@/midi/describir";
+import { nombreDeNota, numeroDeNota } from "@/midi/notas";
 
 /**
- * Cómo se muestra y se escribe un número: "60", "C4" o "3C". Solo cambia la
- * presentación: el valor de la caja es siempre el número. Lo usan los
- * parámetros entero y rango; el resto de la aplicación no sabe que existe.
+ * Cómo se muestra y se escribe un número: "60", "C4" o "3C". Solo cambia cómo
+ * se ve: el valor es siempre el número. Lo usan los campos numéricos; el resto
+ * de la aplicación no sabe que existe.
  */
 export type Modo = "decimal" | "nota" | "hexadecimal";
 
 export const MODOS_POR_DEFECTO: Modo[] = ["decimal", "nota", "hexadecimal"];
 
-/** Lo que declara un parámetro numérico sobre sus modos y sus límites. */
+/**
+ * Los modos y los límites de un número: los que declara un parámetro numérico
+ * y los que recibe su campo.
+ */
 export interface DeclaracionNumerica {
   /**
    * Los modos que ofrece, en el orden en que rotan. El primero es el de una
@@ -33,24 +36,24 @@ export function modosDe(declaracion: DeclaracionNumerica): Modo[] {
 }
 
 /**
- * Cómo se muestra un parámetro numérico: su modo y, en modo nota, si las
- * notas negras van con bemoles ("Db4") en vez de sostenidos ("C#4"). Es lo
- * que la caja guarda como presentación del parámetro.
+ * Cómo se muestra un número: su modo y, en modo nota, si las notas negras van
+ * con bemoles ("Db4") en vez de sostenidos ("C#4"). Es lo que un campo
+ * numérico conserva en la caja.
  */
-export interface Presentacion {
+export interface EstadoNumerico {
   modo: Modo;
   bemoles: boolean;
 }
 
 /**
- * La presentación guardada en la caja, revisada: si falta, o su modo no es uno
- * de los que ofrece el parámetro, el primero de ellos, con sostenidos.
+ * El estado guardado en la caja, revisado: si falta, o su modo no es uno de
+ * los que se ofrecen, el primero de ellos, con sostenidos.
  */
-export function presentacionActual(
+export function estadoRevisado(
   declaracion: DeclaracionNumerica,
   guardada: unknown,
-): Presentacion {
-  const leida: Partial<Presentacion> =
+): EstadoNumerico {
+  const leida: Partial<EstadoNumerico> =
     typeof guardada === "object" && guardada !== null ? guardada : {};
   const modos = modosDe(declaracion);
   return {
@@ -59,7 +62,7 @@ export function presentacionActual(
   };
 }
 
-export function mismaPresentacion(una: Presentacion, otra: Presentacion): boolean {
+export function mismoEstado(una: EstadoNumerico, otra: EstadoNumerico): boolean {
   return una.modo === otra.modo && una.bemoles === otra.bemoles;
 }
 
@@ -71,7 +74,7 @@ export function siguienteModo(declaracion: DeclaracionNumerica, modo: Modo): Mod
 
 /**
  * Lo que muestra el botón de modo (abreviado, y completo para los lectores de
- * pantalla), o `null` si el parámetro ofrece un solo modo y no hay botón.
+ * pantalla), o `null` si se ofrece un solo modo y no hay botón.
  */
 export function textoDelModo(
   declaracion: DeclaracionNumerica,
@@ -110,26 +113,25 @@ function conBemoles(nota: string, antes: boolean): boolean {
 }
 
 /**
- * Lee lo escrito probando los modos que ofrece el parámetro en el orden en que
- * rotan, empezando por el actual. Devuelve el número y la presentación nueva
- * (el modo en que se leyó y, si es una nota, si se escribió con bemol), o
- * `null` si ningún modo lo puede leer.
+ * Lee lo escrito probando los modos que se ofrecen en el orden en que rotan,
+ * empezando por el actual. Devuelve el número y el estado nuevo (el modo en
+ * que se leyó y, si es una nota, si se escribió con bemol), o `null` si ningún
+ * modo lo puede leer.
  */
 export function leer(
   texto: string,
-  presentacion: Presentacion,
+  estado: EstadoNumerico,
   declaracion: DeclaracionNumerica,
-): { numero: number; presentacion: Presentacion } | null {
+): { numero: number; estado: EstadoNumerico } | null {
   const modos = modosDe(declaracion);
-  const desde = Math.max(modos.indexOf(presentacion.modo), 0);
+  const desde = Math.max(modos.indexOf(estado.modo), 0);
   const limpio = texto.trim();
   for (let paso = 0; paso < modos.length; paso++) {
     const modo = modos[(desde + paso) % modos.length];
     const numero = LECTORES[modo](limpio);
     if (numero !== null) {
-      const bemoles =
-        modo === "nota" ? conBemoles(limpio, presentacion.bemoles) : presentacion.bemoles;
-      return { numero, presentacion: { modo, bemoles } };
+      const bemoles = modo === "nota" ? conBemoles(limpio, estado.bemoles) : estado.bemoles;
+      return { numero, estado: { modo, bemoles } };
     }
   }
   return null;

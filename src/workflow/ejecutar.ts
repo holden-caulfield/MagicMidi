@@ -1,4 +1,5 @@
 import { estado } from "@/estado/estado";
+import { escribir } from "@/formato";
 import { agregarAlLog } from "@/log/log";
 import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
 import { tieneSalida, TIPOS_DE_NODO } from "./nodos/catalogo";
@@ -49,12 +50,13 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
 
   const tipo = TIPOS_DE_NODO[nodo.tipo];
   // Una caja mal configurada no procesa nada: así `procesar` puede suponer
-  // que sus parámetros están bien.
-  const [primerError] = erroresDeConfiguracion(tipo, nodo.parametros, nodo.presentaciones);
+  // que sus parámetros están bien. Los valores del error van al log como
+  // texto común: ahí no hay un campo que los escriba en su modo.
+  const [primerError] = erroresDeConfiguracion(tipo, nodo.parametros);
   if (primerError) {
     const parametro = tipo.parametros.find((candidato) => candidato.clave === primerError.clave);
     throw new Error(
-      `La caja "${tipo.nombre}" está mal configurada: ${parametro?.etiqueta ?? primerError.clave}: ${primerError.mensaje}`,
+      `La caja "${tipo.nombre}" está mal configurada: ${parametro?.etiqueta ?? primerError.clave}: ${escribir(primerError.mensaje)}`,
     );
   }
 

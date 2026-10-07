@@ -1,8 +1,16 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 
+import { escribir, type Texto } from "@/formato";
 import { Componente } from "./componente";
 import { estilosBase } from "./estilos";
+
+/** El botón de modo de un campo: qué muestra, cómo se anuncia y qué hace al activarlo. */
+export interface BotonDeModo {
+  abreviatura: string;
+  nombre: string;
+  siguiente(): void;
+}
 
 /**
  * La base de los campos: pone la etiqueta (enlazada al control, que tiene que
@@ -10,19 +18,25 @@ import { estilosBase } from "./estilos";
  * los unen. Todo queda en la raíz del campo, porque `<label for>` y
  * `aria-describedby` no cruzan de un shadow root a otro. Cada campo escribe
  * solo `control()` y avisa el valor nuevo con `avisar`.
+ *
+ * Lo que un campo quiere conservar entre montajes (como el modo de uno
+ * numérico) lo recibe en `estado` y avisa que cambió con `avisarEstado`: quien
+ * lo usa lo guarda sin leerlo y se lo vuelve a pasar.
  */
 export abstract class Campo<V> extends Componente {
   static styles = estilosBase;
 
   @property() etiqueta = "";
-  /** El texto del error, o `null`. */
-  @property({ attribute: false }) error: string | null = null;
   /**
-   * Si no es `null`, junto a la etiqueta va un botón que muestra la
-   * `abreviatura` y se anuncia con el `nombre`. Al activarlo, el campo avisa
-   * `siguiente-modo`: qué cambia lo decide quien lo usa.
+   * El texto del error, o `null`. Si nombra valores, los escribe el campo con
+   * `formatearValor`.
    */
-  @property({ attribute: false }) modo: { abreviatura: string; nombre: string } | null = null;
+  @property({ attribute: false }) error: Texto | null = null;
+  /**
+   * Lo que el campo conservó en la caja, tal como lo avisó con
+   * `cambio-de-estado`, o `undefined`. Un campo que no conserva nada lo ignora.
+   */
+  @property({ attribute: false }) estado: unknown = undefined;
 
   /** Con `true`, el control va antes de la etiqueta y en la misma línea, como una casilla. */
   protected enLinea = false;
@@ -37,31 +51,58 @@ export abstract class Campo<V> extends Componente {
 
   protected abstract control(): TemplateResult;
 
+  /**
+   * Si no es `null`, junto a la etiqueta va un botón que muestra la
+   * `abreviatura`, se anuncia con el `nombre` y llama a `siguiente`.
+   */
+  protected botonDeModo(): BotonDeModo | null {
+    return null;
+  }
+
+  /**
+   * Cómo escribe el campo un valor que nombra su error: el número de un campo
+   * numérico, por ejemplo, va en su modo. Lo que no reconoce, como texto común.
+   */
+  protected formatearValor(valor: unknown): string {
+    return String(valor);
+  }
+
+  // Los dos avisos suben (`bubbles`) para que los reciba quien envuelve al
+  // campo, como el panel de configuración, pero no salen de la raíz donde está
+  // dibujado: los campos de un rango le avisan solo al rango.
+
   /** Avisa el valor nuevo con el evento `cambio`. El campo no lo guarda: lo recibe de vuelta. */
   protected avisar(valor: V) {
-    this.dispatchEvent(new CustomEvent("cambio", { detail: valor }));
+    this.dispatchEvent(new CustomEvent("cambio", { detail: valor, bubbles: true }));
+  }
+
+  /** Avisa con `cambio-de-estado` lo que el campo quiere conservar. */
+  protected avisarEstado(estado: unknown) {
+    this.dispatchEvent(new CustomEvent("cambio-de-estado", { detail: estado, bubbles: true }));
   }
 
   render() {
     const texto = this.esGrupo
       ? html`<span id="etiqueta" class="etiqueta">${this.etiqueta}</span>`
       : html`<label for="control" class="etiqueta">${this.etiqueta}</label>`;
-    const etiqueta = this.modo
-      ? html`<div class="fila-de-etiqueta">${texto}${this.botonDeModo(this.modo)}</div>`
+    const boton = this.botonDeModo();
+    const etiqueta = boton
+      ? html`<div class="fila-de-etiqueta">${texto}${this.dibujarBotonDeModo(boton)}</div>`
       : texto;
-    const error = this.error ? html`<p id="error" class="error">${this.error}</p>` : nothing;
+    const escrito = this.error && escribir(this.error, (valor) => this.formatearValor(valor));
+    const error = escrito ? html`<p id="error" class="error">${escrito}</p>` : nothing;
     return this.enLinea
       ? html`<div class="campo en-linea">${this.control()}${etiqueta}</div>${error}`
       : html`<div class="campo">${etiqueta}${this.control()}${error}</div>`;
   }
 
-  private botonDeModo({ abreviatura, nombre }: { abreviatura: string; nombre: string }) {
+  private dibujarBotonDeModo({ abreviatura, nombre, siguiente }: BotonDeModo) {
     return html`
       <button
         type="button"
         class="control modo"
         aria-label="Modo de ${this.etiqueta}: ${nombre}"
-        @click=${() => this.dispatchEvent(new CustomEvent("siguiente-modo"))}
+        @click=${siguiente}
       >
         ${abreviatura}
       </button>

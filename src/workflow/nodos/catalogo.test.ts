@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { MensajeMidi } from "@/midi/mensaje";
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import { erroresDeConfiguracion } from "../validacion";
-import { modosDe } from "../parametros/modos";
+import { modosDe } from "@/componentes/modos";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.

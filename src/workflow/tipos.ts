@@ -1,5 +1,6 @@
 import type { IconNode } from "lucide";
 
+import type { Texto } from "@/formato";
 import type { MensajeMidi } from "@/midi/mensaje";
 import type { Parametro, ValorDeParametro } from "./parametros/catalogo";
 
@@ -7,7 +8,11 @@ import type { Parametro, ValorDeParametro } from "./parametros/catalogo";
 export interface ErrorDeConfiguracion {
   /** La clave del parámetro debajo del cual se muestra el error. */
   clave: string;
-  mensaje: string;
+  /**
+   * Si nombra valores, van marcados con `formato`: los escribe el campo donde
+   * se muestra (un número, en su modo), y el log, como texto común.
+   */
+  mensaje: Texto;
 }
 
 /**
@@ -23,14 +28,11 @@ export interface TipoDeNodo {
   /**
    * Reglas que miran varios parámetros juntos. Es opcional, y se llama solo si
    * cada parámetro, por separado, ya tiene un valor que le sirve. Devuelve los
-   * errores que encontró, o una lista vacía. Para nombrar un número en un
-   * error, `formatear(clave, numero)` lo escribe como lo muestra el parámetro
-   * de esa clave.
+   * errores que encontró, o una lista vacía. Para nombrar un valor en un
+   * error, se lo marca con `formato`: lo escribe el campo debajo del cual se
+   * muestra, como él lo muestra.
    */
-  validar?(
-    parametros: Record<string, ValorDeParametro>,
-    formatear: (clave: string, numero: number) => string,
-  ): ErrorDeConfiguracion[];
+  validar?(parametros: Record<string, ValorDeParametro>): ErrorDeConfiguracion[];
   /**
    * Recibe una copia del mensaje (se puede modificar sin afectar a otras
    * ramas) y devuelve el mensaje que pasa a las cajas siguientes, o nada para

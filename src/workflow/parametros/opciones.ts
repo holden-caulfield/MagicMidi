@@ -1,8 +1,8 @@
 import { html } from "lit";
-import { customElement } from "lit/decorators.js";
 
 import "@/componentes/campo-opciones";
-import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
+import type { Texto } from "@/formato";
+import type { ParametroBase } from "./parametro";
 
 type Valor = number | string;
 
@@ -12,8 +12,8 @@ export interface ParametroDeOpciones<T extends Valor> extends ParametroBase<T[]>
   opciones: { valor: T; texto: string }[];
 }
 
-/** El texto del error si el valor no le sirve al parámetro, o `null`. */
-export function error(parametro: ParametroDeOpciones<Valor>, valor: Valor[]): string | null {
+/** Si el valor le sirve al parámetro: `null`, o el texto del error. */
+export function validar(parametro: ParametroDeOpciones<Valor>, valor: Valor[]): string | null {
   const valores = parametro.opciones.map((opcion) => opcion.valor);
   if (
     !Array.isArray(valor) ||
@@ -25,27 +25,13 @@ export function error(parametro: ParametroDeOpciones<Valor>, valor: Valor[]): st
   return null;
 }
 
-@customElement("parametro-opciones")
-export class CampoDeOpciones extends CampoDeParametro<ParametroDeOpciones<Valor>, Valor[]> {
-  render() {
-    return html`
-      <campo-opciones
-        etiqueta=${this.parametro.etiqueta}
-        .opciones=${this.parametro.opciones}
-        .valor=${this.valor}
-        .error=${this.error}
-        @cambio=${(evento: CustomEvent<Valor[]>) => this.avisarCambio(evento.detail)}
-      ></campo-opciones>
-    `;
-  }
-}
-
 export default {
-  error,
-  dibujar: (parametro: ParametroDeOpciones<Valor>, valor: Valor[], error: string | null) =>
-    html`<parametro-opciones
-      .parametro=${parametro}
+  validar,
+  dibujar: (parametro: ParametroDeOpciones<Valor>, valor: Valor[], error: Texto | null) =>
+    html`<campo-opciones
+      etiqueta=${parametro.etiqueta}
+      .opciones=${parametro.opciones}
       .valor=${valor}
       .error=${error}
-    ></parametro-opciones>`,
+    ></campo-opciones>`,
 };

@@ -108,7 +108,7 @@ Ninguna.
   `editor/panel-de-configuracion.ts` y `src/estado/estado.ts`.
 - Tests: `entero.test.ts`, `rango.test.ts`, `opciones.test.ts`,
   `autocompletar.test.ts`, `modos.test.ts` (se muda),
-  `validacion.test.ts`, `fijar.test.ts`, `desplazar.test.ts`,
+  `validacion.test.ts`, `ejecutar.test.ts`, `fijar.test.ts`, `desplazar.test.ts`,
   `catalogo.test.ts`, `campo-rango.test.ts`, `describir.test.ts`, más
   `formato.test.ts` y `notas.test.ts` nuevos.
 - Documentación: `parametros/LEEME.md`, `nodos/LEEME.md` y AGENTS.md.

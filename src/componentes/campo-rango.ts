@@ -3,7 +3,8 @@ import { customElement, property } from "lit/decorators.js";
 
 import "./campo-numero";
 import { Campo } from "./campo";
-import type { Paso } from "./campo-numero";
+import { ModoNumerico } from "./modo-numerico";
+import type { Modo } from "./modos";
 
 export interface Rango {
   desde: number;
@@ -63,32 +64,27 @@ export function extremoMasCercano(rango: Rango, valor: number): Extremo {
 }
 
 /**
- * El rango después de un paso de las flechas en el campo de un extremo: el
- * número leído más el paso, movido como con la perilla (frenado o cruzado).
+ * Hasta dónde llegan las flechas en el campo de un extremo, para que se frene
+ * como su perilla: si el rango no se puede invertir, en el otro extremo (o en
+ * el borde, si el otro quedó afuera); si se puede, en el mínimo y el máximo.
  */
-export function pasarExtremo(
+export function limitesDelExtremo(
   rango: Rango,
   extremo: Extremo,
-  leido: number,
-  cantidad: number,
-  limites: Limites,
-): Rango {
-  return moverExtremo(rango, extremo, leido + cantidad, limites);
-}
-
-/**
- * El número escrito en uno de los campos, o `null` si no es un entero. Es lo
- * que usa el control si no recibe otra forma de leer.
- */
-export function interpretarExtremo(texto: string): number | null {
-  const numero = Number(texto);
-  return texto.trim() !== "" && Number.isInteger(numero) ? numero : null;
+  { minimo, maximo, invertible }: Limites,
+): { minimo: number; maximo: number } {
+  if (invertible) {
+    return { minimo, maximo };
+  }
+  const otro = Math.min(Math.max(extremo === "desde" ? rango.hasta : rango.desde, minimo), maximo);
+  return extremo === "desde" ? { minimo, maximo: otro } : { minimo: otro, maximo };
 }
 
 /**
  * Dos extremos enteros, con una barra de dos perillas y un campo numérico a
  * cada lado. El tramo entre las perillas lleva marcas que apuntan de "desde" a
- * "hasta". Avisa el rango nuevo.
+ * "hasta". Avisa el rango nuevo. Los dos campos comparten un modo, el del
+ * rango, que se cambia con un solo botón.
  */
 @customElement("campo-rango")
 export class CampoRango extends Campo<Rango> {
@@ -171,14 +167,23 @@ export class CampoRango extends Campo<Rango> {
   @property({ type: Number }) minimo = 0;
   @property({ type: Number }) maximo = 127;
   @property({ type: Boolean }) invertible = false;
-  /** Cómo se escribe cada extremo en su campo y se anuncia en su perilla. */
-  @property({ attribute: false }) formatear: (numero: number) => string = String;
-  /** Cómo se lee lo escrito en un campo: el número, o `null` si no se puede. */
-  @property({ attribute: false }) leer: (texto: string) => number | null = interpretarExtremo;
+  /** Los modos que ofrece, en el orden en que rotan. Si se omite, los tres. */
+  @property({ attribute: false }) modos?: Modo[];
 
   protected esGrupo = true;
 
   private arrastrando: Extremo | null = null;
+
+  private modo = new ModoNumerico(this, (estado) => this.avisarEstado(estado));
+
+  protected formatearValor(valor: unknown) {
+    return typeof valor === "number" ? this.modo.formatear(valor) : String(valor);
+  }
+
+  protected botonDeModo() {
+    const boton = this.modo.boton;
+    return boton && { ...boton, siguiente: () => this.modo.siguiente() };
+  }
 
   private get limites(): Limites {
     return { minimo: this.minimo, maximo: this.maximo, invertible: this.invertible };
@@ -209,27 +214,23 @@ export class CampoRango extends Campo<Rango> {
     `;
   }
 
+  // Los dos campos muestran el modo del rango: si uno lee lo escrito en otro
+  // modo, el rango lo adopta y se lo pasa a los dos.
   private campo(extremo: Extremo) {
+    const { minimo, maximo } = limitesDelExtremo(this.valor, extremo, this.limites);
     return html`
       <campo-numero
         compacto
         etiqueta=${extremo}
-        .valor=${this.formatear(this.valor[extremo])}
-        @cambio=${(evento: CustomEvent<string>) => {
-          const numero = this.leer(evento.detail);
+        .valor=${this.valor[extremo]}
+        .modos=${this.modos}
+        .minimo=${minimo}
+        .maximo=${maximo}
+        .estado=${this.modo.estado}
+        @cambio-de-estado=${(evento: CustomEvent<unknown>) => this.modo.cambiar(evento.detail)}
+        @cambio=${(evento: CustomEvent<number>) =>
           // Lo escrito se guarda aunque no sirva: el error lo muestra el panel.
-          if (numero !== null) {
-            this.avisar({ ...this.valor, [extremo]: numero });
-          }
-        }}
-        @paso=${(evento: CustomEvent<Paso>) => {
-          const numero = this.leer(evento.detail.texto);
-          if (numero !== null) {
-            this.avisar(
-              pasarExtremo(this.valor, extremo, numero, evento.detail.cantidad, this.limites),
-            );
-          }
-        }}
+          this.avisar({ ...this.valor, [extremo]: evento.detail })}
       ></campo-numero>
     `;
   }
@@ -244,7 +245,7 @@ export class CampoRango extends Campo<Rango> {
         aria-valuemin=${this.minimo}
         aria-valuemax=${this.maximo}
         aria-valuenow=${this.valor[extremo]}
-        aria-valuetext=${this.formatear(this.valor[extremo])}
+        aria-valuetext=${this.modo.formatear(this.valor[extremo])}
         style="left: ${posicion}%"
         @keydown=${(evento: KeyboardEvent) => this.teclaEnPerilla(evento, extremo)}
       ></button>

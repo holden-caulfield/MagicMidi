@@ -73,18 +73,24 @@ límites que recibe un campo numérico), `modosDe`, `siguienteModo`,
   bemoles, cambia el estado;
 - `siguiente()`, para el botón;
 - `boton`: lo que muestra el botón de modo, o `null` con un solo modo;
-- `recuperar(guardado)`: adopta un estado guardado, revisado con
-  `estadoRevisado` (si falta o su modo no se ofrece, el primero, con
-  sostenidos).
+- `cambiar(estado)`: el cambio que nace en el campo (o en un campo hijo del
+  rango).
+
+El estado se revisa en cada lectura con `estadoRevisado` (si falta o su modo
+no se ofrece, el primero, con sostenidos), así un cambio de `modos` no deja
+un modo inválido.
 
 Cuando el estado cambia desde el campo (el botón, leer en otro modo, o un
 campo hijo del rango), el controlador pide un redibujado y el campo avisa
-`cambio-de-estado`. `recuperar` no avisa nada: así, cuando el panel le
-devuelve al campo lo que guardó, no se arma un ida y vuelta sin fin.
-
-El campo llama a `recuperar` en `willUpdate` cuando cambian `estado` o
-`modos`: la primera vez es al montarse, y después sirve para que el rango
-maneje a sus dos campos (ver más abajo).
+`cambio-de-estado`. Lo que el campo recibe en `estado` lo adopta el
+controlador en `hostUpdate`, cada vez que cambia: la primera vez es al
+montarse, y después sirve para que el rango maneje a sus dos campos (ver más
+abajo). Adoptarlo no avisa nada: así, cuando el panel le devuelve al campo lo
+que guardó, no se arma un ida y vuelta sin fin. Y lo que el propio campo avisó
+y le vuelve no se adopta: no trae nada nuevo, y puede ser viejo (con dos
+cambios en una misma tarea, el panel devuelve el primero después del
+segundo). Que lo haga el controlador, y
+no un `willUpdate` en cada campo, deja el protocolo en un solo lugar.
 
 Alternativas: un mixin (con decoradores *legacy* y la base genérica
 `Campo<V>` el tipado se complica y se lee peor; descartado en la revisión);
@@ -134,11 +140,11 @@ escrito, que es el evento `paso` que este cambio saca.
 ### `Campo` dibuja el botón con lo que le da el campo, y escribe el error
 
 `Campo` deja la propiedad `modo` y el evento `siguiente-modo`. Un campo que
-tiene modo redefine `protected modo()`, que devuelve el texto del botón y
-qué hacer al activarlo (o `null`); `Campo` sigue dibujando el botón junto a la
-etiqueta, con el mismo `aria-label`.
+tiene modo redefine `protected botonDeModo()`, que devuelve el texto del botón
+y qué hacer al activarlo (o `null`); `Campo` sigue dibujando el botón junto a
+la etiqueta, con el mismo `aria-label`.
 
-`error` pasa a ser `string | TextoConValores | null`. `Campo` lo escribe con
+`error` pasa a ser `Texto | null`. `Campo` lo escribe con
 `escribir(this.error, (valor) => this.formatearValor(valor))`, y
 `formatearValor` es `String` salvo en los numéricos, que escriben un número
 en su modo y el resto con `String`.
@@ -158,8 +164,9 @@ lugar.
 
 ```ts
 export interface TextoConValores { partes: string[]; valores: unknown[] }
+export type Texto = string | TextoConValores;
 export function formato(partes: TemplateStringsArray, ...valores: unknown[]): TextoConValores;
-export function escribir(texto: string | TextoConValores, escribirValor = String): string;
+export function escribir(texto: Texto, escribirValor = String): string;
 ```
 
 Es un archivo suelto de `src/`, así que es un módulo propio: lo importan
@@ -171,8 +178,9 @@ arreglo común, así un test compara con `toEqual` dos textos escritos en
 lugares distintos: `expect(validar(…)).toEqual(formato\`Tiene que ir de ${0} a
 ${127}\`)`.
 
-Los mensajes sin valores siguen siendo `string`.
-`ErrorDeConfiguracion.mensaje` es `string | TextoConValores`.
+Los mensajes sin valores siguen siendo `string`. `Texto` evita repetir la
+unión en cada tipo de parámetro: `ErrorDeConfiguracion.mensaje` es `Texto`,
+`validar` devuelve `Texto | null` y `dibujar` recibe `error: Texto | null`.
 
 ### Las firmas y el catálogo
 
@@ -240,9 +248,11 @@ semitonos) pasan a `midi/notas.ts`, y sus tests de `describir.test.ts`, a
 - `validacion.test.ts`: se van los de presentación; quedan los de cómo se
   combinan los errores. Los de escribir un texto con valores van a
   `formato.test.ts`.
-- `fijar.test.ts`: `validar` sin `enDecimal`, comparando con `formato`; el
-  test de los errores en hexadecimal pasa a revisar que el 1 y el 16 van
-  marcados como valores.
+- `fijar.test.ts`: `validar` sin `enDecimal`, comparando con `formato`, que
+  ya revisa que el 1 y el 16 van marcados como valores; el test de los
+  errores en hexadecimal se va.
+- `ejecutar.test.ts`: el error de una caja Fijar en hexadecimal llega al log
+  en decimal.
 - `desplazar.test.ts`: lo que hoy prueba con `interpretar` lo prueba con
   `leer` y la declaración del desplazamiento.
 - `campo-rango.test.ts`: `limitesDelExtremo` reemplaza a `pasarExtremo` y a
@@ -280,8 +290,12 @@ que funciona con las herramientas.
 
 ## Risks / Trade-offs
 
-- [El panel devuelve lo guardado y el campo vuelve a avisarlo] → `recuperar`
-  no avisa; solo avisan los cambios que nacen en el campo.
+- [El panel devuelve lo guardado y el campo vuelve a avisarlo] → adoptar lo
+  recibido no avisa; solo avisan los cambios que nacen en el campo.
+- [Dos cambios del campo antes de que el panel se dibuje, y el eco del primero
+  pisa al segundo] → el controlador recuerda lo que avisó y no adopta sus
+  propios ecos. Apareció en la verificación en el navegador, con dos clics en
+  el botón de modo en la misma tarea.
 - [El rango le pasa a sus campos un objeto de estado nuevo en cada dibujado]
   → el campo lo adopta sin avisar, así que solo cuesta revisarlo.
 - [Sin los `parametro-…`, algo del panel se acomoda distinto, por ejemplo lo

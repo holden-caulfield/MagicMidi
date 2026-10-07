@@ -1,8 +1,8 @@
 import { html } from "lit";
-import { customElement } from "lit/decorators.js";
 
 import "@/componentes/campo-autocompletar";
-import { CampoDeParametro, type ParametroBase } from "./campo-de-parametro";
+import type { Texto } from "@/formato";
+import type { ParametroBase } from "./parametro";
 
 type Valor = number | string;
 
@@ -17,8 +17,8 @@ export interface ParametroAutocompletar<T extends Valor> extends ParametroBase<T
   textoDeAyuda?: string;
 }
 
-/** El texto del error si el valor no le sirve al parámetro, o `null`. */
-export function error(parametro: ParametroAutocompletar<Valor>, valor: Valor[]): string | null {
+/** Si el valor le sirve al parámetro: `null`, o el texto del error. */
+export function validar(parametro: ParametroAutocompletar<Valor>, valor: Valor[]): string | null {
   const valores = parametro.opciones.map((opcion) => opcion.valor);
   if (
     !Array.isArray(valor) ||
@@ -30,28 +30,14 @@ export function error(parametro: ParametroAutocompletar<Valor>, valor: Valor[]):
   return null;
 }
 
-@customElement("parametro-autocompletar")
-export class CampoAutocompletar extends CampoDeParametro<ParametroAutocompletar<Valor>, Valor[]> {
-  render() {
-    return html`
-      <campo-autocompletar
-        etiqueta=${this.parametro.etiqueta}
-        .opciones=${this.parametro.opciones}
-        .valor=${this.valor}
-        .textoDeAyuda=${this.parametro.textoDeAyuda}
-        .error=${this.error}
-        @cambio=${(evento: CustomEvent<Valor[]>) => this.avisarCambio(evento.detail)}
-      ></campo-autocompletar>
-    `;
-  }
-}
-
 export default {
-  error,
-  dibujar: (parametro: ParametroAutocompletar<Valor>, valor: Valor[], error: string | null) =>
-    html`<parametro-autocompletar
-      .parametro=${parametro}
+  validar,
+  dibujar: (parametro: ParametroAutocompletar<Valor>, valor: Valor[], error: Texto | null) =>
+    html`<campo-autocompletar
+      etiqueta=${parametro.etiqueta}
+      .opciones=${parametro.opciones}
       .valor=${valor}
+      .textoDeAyuda=${parametro.textoDeAyuda}
       .error=${error}
-    ></parametro-autocompletar>`,
+    ></campo-autocompletar>`,
 };

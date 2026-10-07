@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
+import { leer } from "@/componentes/modos";
 import { MensajeMidi } from "@/midi/mensaje";
-import { interpretar } from "../parametros/entero";
 import desplazar from "./desplazar";
 
 // Cada `test` prueba una sola cosa: le pasa un mensaje y unos parámetros a
@@ -166,7 +166,10 @@ test("el desplazamiento se escribe solo en decimal", () => {
   const parametro = desplazar.parametros.find(({ clave }) => clave === "desplazamiento")!;
   if (parametro.tipo !== "entero") throw new Error("el desplazamiento es un entero");
 
-  expect(interpretar("E4", parametro, { modo: "decimal", bemoles: false })).toBeNull();
-  expect(interpretar("0x0C", parametro, { modo: "decimal", bemoles: false })).toBeNull();
-  expect(interpretar("-12", parametro, { modo: "decimal", bemoles: false })).toEqual({ numero: -12, presentacion: { modo: "decimal", bemoles: false } });
+  // El campo lee lo escrito con los modos que declara el parámetro.
+  const decimal = { modo: "decimal" as const, bemoles: false };
+
+  expect(leer("E4", decimal, parametro)).toBeNull();
+  expect(leer("0x0C", decimal, parametro)).toBeNull();
+  expect(leer("-12", decimal, parametro)?.numero).toBe(-12);
 });
