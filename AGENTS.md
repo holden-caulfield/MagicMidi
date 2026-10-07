@@ -92,17 +92,20 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   agrega contexto (`ventana-principal`, no `ventana`). La lógica que no dibuja
   (las acciones que llaman al backend o responden a sus eventos, el
   ejecutor, los tipos de nodo) queda en módulos sin componentes.
-- **Estado de la interfaz**: en dos niveles. Lo que necesita más de un
-  componente, o la lógica, vive en `src/estado/estado.ts` y se modifica solo
-  con `actualizar()`; los componentes se enganchan con `ControladorDeEstado`
-  (`estado/controlador.ts`), que los vuelve a dibujar con cada cambio. Lo que
-  solo le importa a un componente y puede perderse si se desmonta (como el
-  texto a medio escribir en un campo) es estado local, con `@state`. Ante la
-  duda, va al store. Ningún componente lee el estado del DOM. El dibujado es
-  asíncrono: después de `actualizar()`, el DOM todavía no cambió, y hay que
-  esperar `elemento.updateComplete` para mirarlo.
+- **Estado de la interfaz**: vive en el ancestro común más cercano de los
+  componentes que lo usan, así cada dato tiene un solo dueño. Si lo usa un
+  componente solo, es suyo (`@state`); si lo usan varios de una misma área,
+  es del contenedor del área (`@state`), que lo baja por propiedades y lo
+  recibe con eventos; si lo usa la lógica o componentes de áreas distintas,
+  va al store (`src/estado/estado.ts`), que se modifica solo con
+  `actualizar()` y al que los componentes se enganchan con
+  `ControladorDeEstado` (`estado/controlador.ts`). Ante la duda, lo más cerca
+  posible: se sube cuando aparece otro uso. Ningún componente lee el estado
+  del DOM. El dibujado es asíncrono: después de `actualizar()`, el DOM
+  todavía no cambió, y hay que esperar `elemento.updateComplete` para mirarlo.
 - **Componentes**: los de área (`panel-conexion`, `panel-workflow`,
-  `panel-de-configuracion`…) leen el store y llaman a las acciones. Los hoja
+  `panel-de-configuracion`…) leen el store y llaman a las acciones, y pueden
+  recibir por propiedades lo que vive en el contenedor de su área. Los hoja
   (los `campo-…` y `boton-de-accion` de `componentes/`, los `parametro-…`)
   reciben lo que necesitan por
   propiedades y avisan con `CustomEvent` de nombre en castellano (`cambio`,
@@ -358,10 +361,11 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   el layout puede comportarse distinto. Un problema de tamaños que no se
   reproduce en el navegador, sobre todo al entrar o salir de pantalla
   completa, hay que probarlo en la ventana real antes de darlo por resuelto.
-- Como la interfaz se dibuja desde `src/estado/estado.ts`, en el navegador se
-  puede manejar el estado a mano desde la consola
+- Lo que vive en el store se puede manejar a mano desde la consola
   (`const m = await import('/src/estado/estado.ts'); m.actualizar({ conectado: true })`)
   y revisar cómo responde la pantalla sin el puente de IPC ni hardware MIDI.
+  Lo que vive en un componente se maneja con clics, como la persona usuaria,
+  o asignándole la propiedad al componente.
   Antes de mirar el DOM hay que esperar el dibujado:
   `await document.querySelector('ventana-principal').updateComplete` (y el del
   componente que interese, si está más adentro; el log, además, espera al
