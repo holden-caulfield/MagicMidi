@@ -19,7 +19,8 @@ Tauri. Una persona prueba la aplicación con `npm run tauri dev`, como dice
 - **`ayudas/comun.js`**: funciones que `correr.sh` agrega arriba de cada
   prueba: buscar entrando en los shadow roots (`todos`, `uno`, `boton`),
   esperar el dibujado (`dibujado`), importar la misma copia de un módulo que
-  cargó la página (`modulo`), simular el puntero (`arrastrar`), correr algo en
+  cargó la página (`modulo`), simular el puntero (`arrastrar`), encontrar una
+  caja del lienzo para hacerle clic (`cajaDelLienzo`), correr algo en
   su propia tarea como un mensaje MIDI (`enTarea`), medir cuadros
   (`medirCuadros`) y ocultar, mostrar o cambiar el tamaño de la ventana
   (`ventana`).

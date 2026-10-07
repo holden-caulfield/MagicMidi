@@ -20,7 +20,7 @@ elegir(entrada, 'IAC (2)'); elegir(salida, 'Salida'); await dibujado();
 r.elegidos = [m.estado.puertoEntradaElegido, m.estado.puertoSalidaElegido];
 m.actualizar({ conectado: true }); await dibujado();
 r.conectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: listas().map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, actualizar: boton('Actualizar puertos').disabled };
-m.actualizar({ panelActivo: 'log' }); await dibujado(); m.actualizar({ panelActivo: 'conexion', mensajeConexion: 'algo' }); await dibujado();
+boton('Log').click(); await dibujado(); boton('Conexión').click(); m.actualizar({ mensajeConexion: 'algo' }); await dibujado();
 r.trasRedibujar = { entrada: textoDe(listas()[0]), mensaje: todos('p').find((p) => p.className === 'mensaje')?.textContent.trim(), visible: visible(todos('p').find((p) => p.className === 'mensaje')) };
 m.actualizar({ conectado: false, mensajeConexion: '' }); await dibujado();
 r.desconectado = { indicador: uno('.barra-de-estado').textContent.replace(/\s+/g, ' ').trim(), selects: listas().map((s) => s.disabled), conectar: boton('Conectar').disabled, desconectar: boton('Desconectar').disabled, mensajeVisible: visible(todos('p').find((p) => p.className === 'mensaje')) };

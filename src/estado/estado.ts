@@ -33,8 +33,9 @@ export interface Flujo {
 }
 
 /**
- * Todo lo que la pantalla muestra vive acá: los componentes lo leen para
- * dibujarse y nadie lo modifica sin pasar por `actualizar`.
+ * Lo que usa la lógica o componentes de áreas distintas: la conexión y el
+ * flujo. Los componentes lo leen para dibujarse y nadie lo modifica sin pasar
+ * por `actualizar`. Lo que usa un área sola vive en sus componentes.
  */
 export interface Estado {
   conectado: boolean;
@@ -44,9 +45,7 @@ export interface Estado {
   puertoEntradaElegido: string;
   puertoSalidaElegido: string;
   mensajeConexion: string;
-  panelActivo: string;
   flujo: Flujo;
-  nodoSeleccionado: string | null;
 }
 
 export const estado: Estado = {
@@ -56,7 +55,6 @@ export const estado: Estado = {
   puertoEntradaElegido: "",
   puertoSalidaElegido: "",
   mensajeConexion: "",
-  panelActivo: "conexion",
   flujo: {
     nodos: [
       { id: "trigger", tipo: "trigger", parametros: {} },
@@ -64,7 +62,6 @@ export const estado: Estado = {
     ],
     conexiones: [{ desde: "trigger", hacia: "emitir-inicial" }],
   },
-  nodoSeleccionado: null,
 };
 
 const observadores: Array<() => void> = [];

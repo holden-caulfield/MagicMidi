@@ -8,11 +8,13 @@ document.documentElement.style.width = '800px'; await espera(200); document.docu
 boton('Workflow').click(); await espera(1200);
 const l = uno('lienzo-workflow');
 const vista = (id) => l.area.nodeViews.get(id);
-const caja = (id) => vista(id).element.querySelector('caja-del-flujo');
+const caja = cajaDelLienzo;
 const div = (id) => caja(id).shadowRoot.querySelector('.caja');
 const conector = (id, lado) => caja(id).shadowRoot.querySelector(`.conector-${lado}`);
 const conexiones = () => m.estado.flujo.conexiones.map((c) => `${c.desde}->${c.hacia}`).sort();
 const ids = () => m.estado.flujo.nodos.map((n) => n.id);
+// La selección, por lo que se ve: las cajas marcadas en el lienzo.
+const seleccionadas = () => ids().filter((id) => div(id)?.classList.contains('seleccionada'));
 r.montaje = { cajas: todos('caja-del-flujo').length, conexionDibujada: todos('cable-del-flujo', l.shadowRoot).some((c) => todos('path', c.shadowRoot ?? c).some((p) => p.getAttribute('d'))) };
 r.colores = { trigger: div('trigger').className, emitir: div('emitir-inicial').className };
 // Agregar con clic en la barra
@@ -33,7 +35,7 @@ r.soltar = desplazar ? { centro: centro(caja(desplazar)), punto, clase: div(desp
 const antes = { ...vista(filtrar).position };
 await arrastrar(caja(filtrar), centro(caja(filtrar)), { x: centro(caja(filtrar)).x + 50, y: centro(caja(filtrar)).y + 40 });
 r.mover = { antes, despues: { ...vista(filtrar).position } };
-r.seleccion = { estado: m.estado.nodoSeleccionado === filtrar, clase: div(filtrar).className, panel: uno('panel-de-configuracion').shadowRoot.querySelector('h3')?.textContent };
+r.seleccion = { soloElla: seleccionadas().join() === filtrar, clase: div(filtrar).className, panel: uno('panel-de-configuracion').shadowRoot.querySelector('h3')?.textContent };
 // Conectar trigger -> desplazar -> filtrar
 await arrastrar(conector('trigger', 'salida'), centro(conector('trigger', 'salida')), centro(conector(desplazar, 'entrada')));
 await arrastrar(conector(desplazar, 'salida'), centro(conector(desplazar, 'salida')), centro(conector(filtrar, 'entrada')));
@@ -47,7 +49,7 @@ await arrastrar(conector('emitir-inicial', 'entrada'), centro(conector('emitir-i
 r.desconectar = conexiones();
 // Clic en el fondo deselecciona
 puntero('pointerdown', l.shadowRoot.querySelector('.lienzo'), { x: rect.right - 10, y: rect.bottom - 10 }); puntero('pointerup', window, { x: rect.right - 10, y: rect.bottom - 10 }); await dibujado();
-r.fondo = { seleccionado: m.estado.nodoSeleccionado, clase: div(filtrar).className };
+r.fondo = { seleccionadas: seleccionadas(), clase: div(filtrar).className };
 // Seleccionar desplazar y borrarlo desde el panel: se van sus conexiones
 await arrastrar(caja(desplazar), centro(caja(desplazar)), centro(caja(desplazar)));
 boton('Eliminar caja').click(); await espera(400); await dibujado();

@@ -9,12 +9,17 @@ const panel = () => uno('panel-de-configuracion').shadowRoot;
 const campos = () => todos('campo-numero, campo-lista, campo-interruptor, campo-opciones');
 const campoDe = (etiqueta) => campos().find((c) => c.shadowRoot.querySelector('.etiqueta').textContent.trim() === etiqueta);
 const campo = (etiqueta) => campoDe(etiqueta)?.shadowRoot.querySelector('#control');
-boton('Workflow').click(); await espera(500);
+// Se seleccionan con un clic, como la persona usuaria; la selección se lee de
+// las cajas marcadas en el lienzo.
+const seleccionar = async (id) => { const c = cajaDelLienzo(id); await arrastrar(c, centro(c), centro(c)); await dibujado(); };
+const seleccionadas = () => m.estado.flujo.nodos.map((n) => n.id).filter((id) => cajaDelLienzo(id)?.shadowRoot.querySelector('.caja').classList.contains('seleccionada'));
+// Las cajas se agregan antes de mostrar el tab: el lienzo copia el flujo al montarse.
 m.actualizar({ flujo: { ...m.estado.flujo, nodos: [...m.estado.flujo.nodos,
   { id: 'd1', tipo: 'desplazar', parametros: { byte: 1, desplazamiento: 4, overflow: false } },
   { id: 'd2', tipo: 'desplazar', parametros: { byte: 1, desplazamiento: 0, overflow: false } }] } });
+boton('Workflow').click(); await espera(1200);
 r.nadaSeleccionado = panel().textContent.trim();
-m.actualizar({ nodoSeleccionado: 'd1' }); await dibujado();
+await seleccionar('d1');
 r.d1 = { titulo: panel().querySelector('h3').textContent, campos: todos('label').map((l) => l.textContent.trim()).filter((t) => ['Byte', 'Desplazamiento', 'Overflow'].includes(t)), desplazamiento: campo('Desplazamiento').value };
 const d = campo('Desplazamiento');
 d.value = '7'; d.dispatchEvent(new Event('change', { bubbles: true })); await dibujado();
@@ -27,7 +32,7 @@ const opcionesDe = (control) => [...control.getRootNode().querySelectorAll('[rol
 opcionesDe(campo('Byte'))[2].click();
 const ov = campo('Overflow'); ov.checked = true; ov.dispatchEvent(new Event('change', { bubbles: true })); await dibujado();
 r.otros = { byte: nodo('d1').parametros.byte, overflow: nodo('d1').parametros.overflow };
-m.actualizar({ nodoSeleccionado: 'd2' }); await dibujado();
+await seleccionar('d2');
 r.d2 = { desplazamiento: campo('Desplazamiento').value, byte: opcionesDe(campo('Byte')).findIndex((o) => o.getAttribute('aria-selected') === 'true'), overflow: campo('Overflow').checked };
 // la etiqueta lleva al control
 const etiquetaDe = (t) => campoDe(t).shadowRoot.querySelector('.etiqueta');
@@ -35,12 +40,11 @@ etiquetaDe('Desplazamiento').click(); await espera(50);
 r.foco = { desplazamiento: campoDe('Desplazamiento').shadowRoot.activeElement?.id };
 etiquetaDe('Overflow').click(); await dibujado();
 r.casillaPorEtiqueta = nodo('d2').parametros.overflow;
-m.actualizar({ nodoSeleccionado: 'trigger' }); await dibujado();
+await seleccionar('trigger');
 r.trigger = panel().textContent.replace(/\s+/g, ' ').trim();
-m.actualizar({ nodoSeleccionado: 'emitir-inicial' }); await dibujado();
+await seleccionar('emitir-inicial');
 r.emitir = panel().textContent.replace(/\s+/g, ' ').trim();
-// borrar la caja seleccionada (con el lienzo actual: se borra del lienzo y del estado)
-m.actualizar({ nodoSeleccionado: 'emitir-inicial' }); await dibujado();
+// borrar la caja seleccionada: se borra del lienzo y del estado
 boton('Eliminar caja').click(); await espera(300); await dibujado();
-r.borrar = { seleccionado: m.estado.nodoSeleccionado, panel: panel().textContent.trim(), sigue: !!nodo('emitir-inicial') };
+r.borrar = { seleccionadas: seleccionadas(), panel: panel().textContent.trim(), sigue: !!nodo('emitir-inicial') };
 return r;

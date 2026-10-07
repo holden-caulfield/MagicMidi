@@ -82,6 +82,13 @@ const arrastrar = async (el, desde, hasta) => {
   await espera(250);
 };
 
+/**
+ * El `<caja-del-flujo>` de una caja del lienzo. El lienzo copia el flujo al
+ * montarse: una caja agregada al estado después no está.
+ */
+const cajaDelLienzo = (id) =>
+  uno("lienzo-workflow").area.nodeViews.get(id)?.element.querySelector("caja-del-flujo");
+
 /** Corre `funcion` en su propia tarea, como llega cada evento `mensaje-midi`. */
 const enTarea = (() => {
   const canal = new MessageChannel();

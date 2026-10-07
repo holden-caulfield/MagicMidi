@@ -1,5 +1,5 @@
 import { css, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { Trash2 } from "lucide";
 
 import "@/componentes/boton-de-accion";
@@ -34,7 +34,10 @@ function cambiarPresentacion(nodoId: string, clave: string, presentacion: unknow
   });
 }
 
-/** Pide borrar la caja con el evento `eliminar-caja`, con su `id`. */
+/**
+ * Configura la caja de `nodoSeleccionado`. Pide borrarla con el evento
+ * `eliminar-caja`, con su `id`.
+ */
 @customElement("panel-de-configuracion")
 export class PanelDeConfiguracion extends Componente {
   static styles = css`
@@ -77,13 +80,15 @@ export class PanelDeConfiguracion extends Componente {
     }
   `;
 
+  @property({ attribute: false }) nodoSeleccionado: string | null = null;
+
   constructor() {
     super();
     new ControladorDeEstado(this);
   }
 
   render() {
-    const nodo = estado.flujo.nodos.find((candidato) => candidato.id === estado.nodoSeleccionado);
+    const nodo = estado.flujo.nodos.find((candidato) => candidato.id === this.nodoSeleccionado);
     if (!nodo) {
       return html`
         <aside aria-label="Configuración de la caja">

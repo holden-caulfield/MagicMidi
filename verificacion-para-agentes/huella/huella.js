@@ -50,7 +50,6 @@ est.actualizar({
       },
     ],
   },
-  nodoSeleccionado: "d",
 });
 
 const log = await modulo("/src/log/log.ts");
@@ -68,12 +67,13 @@ for (const tab of todos("[role=tab]")) {
   await espera(800);
   salida[tab.textContent.trim()] = hojas().map(describir);
 }
-// Las cajas se seleccionan con el tab Workflow a la vista, que ya no es el
+// Las cajas se seleccionan con un clic, con el tab Workflow a la vista, que ya no es el
 // último de la barra.
 todos("[role=tab]").find((tab) => tab.textContent.trim() === "Workflow").click();
 await espera(800);
 for (const id of ["d", "f", "trigger"]) {
-  est.actualizar({ nodoSeleccionado: id });
+  const caja = cajaDelLienzo(id);
+  await arrastrar(caja, centro(caja), centro(caja));
   await espera(400);
   salida[`Workflow, seleccionada ${id}`] = hojas().map(describir);
   salida[`valores, seleccionada ${id}`] = valores();
