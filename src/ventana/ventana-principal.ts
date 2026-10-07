@@ -1,13 +1,11 @@
 import { css, html, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { type IconNode, List, Plug, Workflow } from "lucide";
 
 import { Componente } from "@/componentes/componente";
 import { dibujarIcono } from "@/componentes/icono";
 import "@/conexion/barra-de-estado";
 import "@/conexion/panel-conexion";
-import { ControladorDeEstado } from "@/estado/controlador";
-import { actualizar, estado } from "@/estado/estado";
 import "@/log/panel-log";
 import "@/workflow/editor/panel-workflow";
 
@@ -132,10 +130,7 @@ export class VentanaPrincipal extends Componente {
     estilosDeLosPaneles,
   ];
 
-  constructor() {
-    super();
-    new ControladorDeEstado(this);
-  }
+  @state() private panelActivo = "conexion";
 
   // La barra de tabs va primera para que el recorrido con el teclado siga el
   // orden visual.
@@ -158,8 +153,8 @@ export class VentanaPrincipal extends Componente {
                 type="button"
                 role="tab"
                 aria-controls="panel-${panel.id}"
-                aria-selected=${panel.id === estado.panelActivo}
-                @click=${() => actualizar({ panelActivo: panel.id })}
+                aria-selected=${panel.id === this.panelActivo}
+                @click=${() => (this.panelActivo = panel.id)}
               >
                 ${dibujarIcono(panel.icono, 13)} ${panel.titulo}
               </button>
@@ -182,7 +177,7 @@ export class VentanaPrincipal extends Componente {
               class="panel"
               role="tabpanel"
               aria-labelledby="tab-${panel.id}"
-              ?hidden=${estado.panelActivo !== panel.id}
+              ?hidden=${this.panelActivo !== panel.id}
             >
               ${panel.contenido()}
             </section>

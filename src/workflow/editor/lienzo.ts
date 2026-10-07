@@ -260,6 +260,11 @@ function quitarConexionDelEstado(desde: string, hacia: string) {
   });
 }
 
+/**
+ * Pide seleccionar una caja con el evento `seleccionar-caja`, con su `id` (o
+ * `null`, al hacer clic en el fondo), y marca la que recibe en
+ * `nodoSeleccionado`.
+ */
 @customElement("lienzo-workflow")
 export class LienzoWorkflow extends Componente {
   static styles = css`
@@ -290,6 +295,8 @@ export class LienzoWorkflow extends Componente {
       z-index: 10;
     }
   `;
+
+  @property({ attribute: false }) nodoSeleccionado: string | null = null;
 
   @query(".lienzo") private contenedor!: HTMLElement;
 
@@ -331,6 +338,7 @@ export class LienzoWorkflow extends Componente {
 
   updated() {
     this.marcarErrores();
+    this.marcarSeleccion();
   }
 
   private marcarErrores() {
@@ -340,6 +348,17 @@ export class LienzoWorkflow extends Componente {
       const conErrores = nodo ? tieneErrores(nodo) : false;
       if (caja.conErrores !== conErrores) {
         caja.conErrores = conErrores;
+        this.area.update("node", caja.id);
+      }
+    }
+  }
+
+  private marcarSeleccion() {
+    if (!this.editor) return;
+    for (const caja of this.editor.getNodes()) {
+      const seleccionada = caja.id === this.nodoSeleccionado;
+      if (caja.selected !== seleccionada) {
+        caja.selected = seleccionada;
         this.area.update("node", caja.id);
       }
     }
@@ -374,7 +393,6 @@ export class LienzoWorkflow extends Componente {
 
     actualizar({
       flujo: { ...estado.flujo, nodos: estado.flujo.nodos.filter((nodo) => nodo.id !== id) },
-      nodoSeleccionado: estado.nodoSeleccionado === id ? null : estado.nodoSeleccionado,
     });
   }
 
@@ -390,11 +408,7 @@ export class LienzoWorkflow extends Componente {
   };
 
   private seleccionar(id: string | null) {
-    for (const caja of this.editor!.getNodes()) {
-      caja.selected = caja.id === id;
-      this.area.update("node", caja.id);
-    }
-    actualizar({ nodoSeleccionado: id });
+    this.dispatchEvent(new CustomEvent("seleccionar-caja", { detail: id }));
   }
 
   private centroVisible() {
@@ -481,6 +495,8 @@ export class LienzoWorkflow extends Componente {
       }
     }
     this.copiandoDesdeElEstado = false;
+    // La selección puede haber llegado antes de que hubiera cajas.
+    this.marcarSeleccion();
 
     await area.area.translate(40, 60);
   }
