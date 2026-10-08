@@ -2,9 +2,7 @@ import { expect, test } from "vitest";
 
 import {
   extremoMasCercano,
-  interpretarExtremo,
   moverExtremo,
-  pasarExtremo,
   proporcionDe,
   valorEnProporcion,
 } from "./campo-rango";
@@ -79,30 +77,4 @@ test("un clic en la barra mueve la perilla más cercana", () => {
 test("con las dos perillas juntas, se mueve la que puede ir hacia el clic", () => {
   expect(extremoMasCercano({ desde: 72, hasta: 72 }, 100)).toBe("hasta");
   expect(extremoMasCercano({ desde: 72, hasta: 72 }, 10)).toBe("desde");
-});
-
-test("los campos aceptan solo enteros", () => {
-  expect(interpretarExtremo("100")).toBe(100);
-  expect(interpretarExtremo(" 7 ")).toBe(7);
-  expect(interpretarExtremo("2.5")).toBeNull();
-  expect(interpretarExtremo("")).toBeNull();
-  expect(interpretarExtremo("mucho")).toBeNull();
-});
-
-test("un paso en el campo de un extremo se frena como la perilla", () => {
-  expect(pasarExtremo({ desde: 72, hasta: 72 }, "desde", 72, 1, fijo)).toEqual({
-    desde: 72,
-    hasta: 72,
-  });
-  expect(pasarExtremo({ desde: 60, hasta: 72 }, "desde", 60, 1, fijo)).toEqual({
-    desde: 61,
-    hasta: 72,
-  });
-});
-
-test("un paso usa lo escrito, aunque no se haya confirmado", () => {
-  expect(pasarExtremo({ desde: 0, hasta: 127 }, "desde", 100, -10, fijo)).toEqual({
-    desde: 90,
-    hasta: 127,
-  });
 });

@@ -106,8 +106,7 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
 - **Componentes**: los de área (`panel-conexion`, `panel-workflow`,
   `panel-de-configuracion`…) leen el store y llaman a las acciones, y pueden
   recibir por propiedades lo que vive en el contenedor de su área. Los hoja
-  (los `campo-…` y `boton-de-accion` de `componentes/`, los `parametro-…`)
-  reciben lo que necesitan por
+  (los controles de `componentes/`) reciben lo que necesitan por
   propiedades y avisan con `CustomEvent` de nombre en castellano (`cambio`,
   `agregar-caja`), sin conocer el store; un evento que tiene que cruzar una
   raíz lleva `bubbles: true, composed: true`. Toda pieza de interfaz que se
@@ -130,20 +129,23 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   dar ningún error.
 - **Controles**: ningún componente estiliza un `<button>`, `<select>` o
   `<input>` por su cuenta. Los controles son componentes de
-  `src/componentes/`: `boton-de-accion` y los campos (`campo-lista`,
-  `campo-numero`, `campo-interruptor`, `campo-opciones`,
-  `campo-autocompletar`, `campo-rango`), así un mismo control se ve igual en
-  cualquier panel. Cada campo dibuja en su propia raíz la etiqueta, el
-  control y el error (la base es `Campo`, en `componentes/campo.ts`), porque
-  `<label for>` y `aria-describedby` no cruzan de un shadow root a otro; avisa
-  con `cambio` y no guarda el valor: lo recibe de vuelta. `campo-numero`
-  avisa el texto tal como se escribió (interpretarlo es de quien lo usa) y se
-  vuelve a dibujar solo, así un valor rechazado desaparece sin que nadie le
-  pase uno nuevo. Con sus flechas, propias o del teclado, avisa `paso`, con
-  el texto y la cantidad a sumar. El `compacto` (el del rango) no tiene
-  etiqueta visible ni flechas propias. Un campo que recibe `modo` dibuja un
-  botón junto a la etiqueta que avisa `siguiente-modo`: el campo no sabe qué
-  modos hay. La apariencia común está en `componentes/estilos.ts`, sobre
+  `src/componentes/`, así un mismo control se ve igual en cualquier panel.
+  Cada campo dibuja en su propia raíz la etiqueta, el control y el error (la
+  base es `Campo`, en `componentes/campo.ts`), porque `<label for>` y
+  `aria-describedby` no cruzan de un shadow root a otro; avisa con `cambio` y
+  no guarda el valor: lo recibe de vuelta. Un campo recibe y avisa valores, no
+  texto: leer lo escrito es suyo, y lo que no puede leer lo resuelve solo
+  (vuelve a su valor, sin avisar nada), así sirve fuera del catálogo y ningún
+  tipo de parámetro repite esa lógica. Los numéricos son dueños de su modo y
+  de sus flechas (`ModoNumerico`): el modo es estado del campo, no del valor.
+  Lo que un campo quiere conservar entre montajes lo avisa con
+  `cambio-de-estado`, y quien lo usa lo guarda sin leerlo y se lo pasa en
+  `estado` la próxima vez que lo crea: el campo lo lee una sola vez, para que
+  su estado tenga un solo dueño. Ningún campo dibuja otro campo adentro: lo
+  que varios campos comparten va en un controlador (como `ModoNumerico`),
+  porque un campo compuesto obliga a sincronizar el estado de los dos. Los
+  valores que nombra un error los escribe el campo, con su formato (ver
+  "Workflow"). La apariencia común está en `componentes/estilos.ts`, sobre
   la clase `.control`: los estilos propios de un componente que la pisan
   (alto, padding) necesitan un selector más específico, como `button.control`,
   o pierden sin dar ningún error. `campo-lista` no usa `<select>`: la lista
@@ -200,10 +202,10 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   necesite usa esos getters en vez de calcularlos por su cuenta, y no se le
   agregan campos derivados que haya que mantener sincronizados. Un mensaje de
   sistema es el que no es desconocido y no tiene canal: no hay un tipo
-  `"sistema"`. La presentación (la descripción legible y el nombre de las
-  notas, con el Do central 60 como C4) vive en `describir.ts`, en el
-  frontend, porque también describe lo que sale del flujo, que nunca vuelve
-  del backend.
+  `"sistema"`. La presentación (la descripción legible, en `describir.ts`, y
+  el nombre de las notas, en `notas.ts`, con el Do central 60 como C4) vive
+  en el frontend, porque también describe lo que sale del flujo, que nunca
+  vuelve del backend.
 - **Log**: tiene su propio registro (`log/log.ts`: las últimas 500 entradas,
   la más nueva primero, cada una con un `id` y sin cambios después de
   creada), separado del store: si estuviera ahí, cada mensaje MIDI haría
@@ -234,21 +236,21 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
   el único que lo atrapa: el recorrido no revisa marcas de error.
 - Los errores de configuración de una caja salen de un solo lugar,
-  `erroresDeConfiguracion` (`validacion.ts`): primero el `error` de cada
-  parámetro y, solo si ninguno tiene, el `validar` opcional del tipo de
-  nodo, que revisa reglas entre parámetros. Cada error va asociado a la
-  `clave` de un parámetro. Lo usan el panel (el error debajo del campo), el
-  lienzo (borde rojo con `outline`, para no pisar la etapa ni la
-  selección), el ejecutor y `nodos/catalogo.test.ts`. No se guardan en
-  `estado.flujo`: se calculan cada vez, de los parámetros y de sus
-  presentaciones. Para nombrar un número en un error, `validar` recibe
-  `formatear(clave, numero)`, que lo escribe como lo muestra ese parámetro.
-  Un valor que se
-  puede interpretar pero no sirve se guarda igual y se muestra con su
-  error; solo lo que no se puede interpretar (un "2.5" en un entero) se
-  rechaza en el control. Si a una caja con errores le llega un mensaje, el
-  ejecutor la hace fallar sin llamar a `procesar`, así que `procesar`
-  puede suponer que la configuración está bien.
+  `erroresDeConfiguracion(nodo)` (`validacion.ts`): primero el
+  `validar` de cada parámetro y, solo si ninguno tiene, el `validar` opcional
+  del tipo de nodo, que revisa reglas entre parámetros. Cada error va
+  asociado a la `clave` de un parámetro. No se guardan en `estado.flujo`: se
+  calculan cada vez, solo de los valores. Un mensaje que nombra valores los
+  marca con `formato` (`src/formato.ts`) en lugar de escribirlos: los escribe
+  el campo donde se muestra, con su formato (el numérico, en su modo), y el
+  log, como texto común. Así la validación no depende de cómo se muestra
+  nada. `formato` es un módulo propio, y no de `componentes/`, porque los
+  tipos de nodo lo importan y no incluyen nada de la interfaz. Un valor que
+  se puede leer pero no sirve se guarda igual y se muestra con su error;
+  solo lo que no se puede leer (un "2.5" en un entero) lo rechaza el campo.
+  Si a una caja con errores le llega un mensaje, el ejecutor la hace fallar
+  sin llamar a `procesar`, así que `procesar` puede suponer que la
+  configuración está bien.
 - Un nodo que toca bytes ofrece "Canal" y no el byte de status entero: el
   status mezcla tipo y canal, y operar sobre él como un número cambia el tipo
   (`9F` + 1 da `A0`). Tampoco mira el tipo de mensaje, ni siquiera para
@@ -278,23 +280,21 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   barra). La guía para crear uno está en `nodos/LEEME.md`, y tiene que seguir
   alcanzando para alguien que recién empieza a programar.
 - Cada tipo de parámetro (lo que se configura en una caja) es un archivo en
-  `src/workflow/parametros/` registrado en `parametros/catalogo.ts`: la unión
-  `Parametro` y la lista `TIPOS_DE_PARAMETRO`, que el chequeo de tipos
-  mantiene de acuerdo. Cada uno extiende `CampoDeParametro` (que tiene el
-  parámetro, el valor, el error y `avisarCambio`) y dibuja el `campo-…` de
-  `src/componentes/` que le corresponde, sin estilos propios; en `error`
-  devuelve el texto si un valor no le sirve. El
-  panel de configuración no nombra ningún tipo. La guía está en
-  `parametros/LEEME.md`, para alguien con nociones básicas de programación.
-  Además del valor, un parámetro puede guardar en la caja su
-  **presentación** (`NodoDelFlujo.presentaciones`, que se cambia con
-  `avisarCambioDePresentacion`): cómo se muestra el valor, sin cambiarlo.
-  Solo la lee su tipo. El panel, el lienzo, el ejecutor y los tipos de nodo
-  la pasan sin mirarla. El entero y el rango la usan para sus modos
-  (decimal, nota y hexadecimal, y bemoles o sostenidos), definidos en
-  `parametros/modos.ts`: fuera de esos dos tipos, nadie sabe que existen.
-  Lo escrito se lee probando los modos desde el actual, en el orden en que
-  rotan, y el parámetro pasa al modo en que se leyó.
+  `src/workflow/parametros/` que exporta, con el nombre del tipo, la función
+  con que un tipo de nodo declara un parámetro (`entero({ … })`): devuelve la
+  declaración con su `validar` (si un valor le sirve) y su `dibujar` (qué
+  campo de `src/componentes/` lo muestra y con qué datos), sin componentes ni
+  estilos propios. No hay catálogo: sumar un tipo es escribir su archivo, y el
+  chequeo de tipos marca una declaración mal escrita. Esas funciones son lo
+  único de la interfaz de lo que dependen los tipos de nodo, que no incluyen
+  interfaz ni dependen del lienzo ni del estado. El panel de configuración no
+  nombra ningún tipo, y dibuja los parámetros con `repeat` por caja y clave:
+  los campos tienen estado propio, y reusarlos por posición pasaría el modo
+  de una caja a otra. Lo que un campo conserva va en
+  `NodoDelFlujo.estadoDeLosParametros`, y solo lo lee el campo: el panel lo
+  guarda y se lo devuelve, y ni el lienzo, ni el ejecutor, ni la validación
+  lo usan. La guía está en `parametros/LEEME.md`, para alguien con nociones
+  básicas de programación.
   Para elegir de una lista hay tres: `lista` (una, con un desplegable),
   `opciones` (varias, como píldoras, para pocas y cortas) y `autocompletar`
   (varias, buscándolas, para listas largas). Son tipos distintos y no uno
@@ -418,10 +418,10 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   que poder leerse sin saber nada más del proyecto. Si el nodo tiene
   `validar`, sus casos van en el mismo archivo. Además,
   `nodos/catalogo.test.ts` revisa lo que todo nodo tiene que cumplir.
-- Cada tipo de parámetro que interpreta lo que se escribe (como `entero.ts`)
-  trae al lado el test de esa interpretación y, si su `error` revisa algo
-  más que el tipo del valor (como el rango del entero), también el de
-  `error`. Lit carga sin problemas en el
+- Cada tipo de parámetro cuyo `validar` revisa algo más que el tipo del
+  valor (como el rango del entero) trae su test al lado. Leer lo escrito es
+  del campo, y se prueba al lado del campo (como los modos, en
+  `componentes/modo-numerico.test.ts`). Lit carga sin problemas en el
   entorno `node`, así que se puede importar un archivo que define un
   componente para probar sus funciones puras.
 - Queda afuera a propósito: la vista (componentes, lienzo de Rete, tabs),

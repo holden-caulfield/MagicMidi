@@ -1,5 +1,8 @@
 import { Pin } from "lucide";
 
+import { formato } from "@/formato";
+import { entero } from "../parametros/entero";
+import { lista } from "../parametros/lista";
 import type { TipoDeNodo } from "../tipos";
 
 // En el status, los 4 bits de arriba son el tipo de mensaje (con el leading
@@ -14,27 +17,25 @@ export default {
   nombre: "Fijar",
   icono: Pin,
   parametros: [
-    {
+    lista({
       clave: "byte",
       etiqueta: "Byte",
-      tipo: "lista",
       inicial: 2,
       opciones: [
         { valor: BYTE_CANAL, texto: "Canal" },
         { valor: 1, texto: "2.º (datos 1)" },
         { valor: 2, texto: "3.º (datos 2)" },
       ],
-    },
+    }),
     // De 0 a 127: un byte de datos con el leading bit en 0.
-    { clave: "valor", etiqueta: "Valor", tipo: "entero", inicial: 100, minimo: 0, maximo: 127 },
+    entero({ clave: "valor", etiqueta: "Valor", inicial: 100, minimo: 0, maximo: 127 }),
   ],
-  validar(parametros, formatear) {
+  validar(parametros) {
     const valor = Number(parametros.valor);
     if (Number(parametros.byte) === BYTE_CANAL && (valor < 1 || valor > 16)) {
-      // `formatear` escribe el 1 y el 16 como se muestra el valor en el panel.
-      const desde = formatear("valor", 1);
-      const hasta = formatear("valor", 16);
-      return [{ clave: "valor", mensaje: `Con Canal, tiene que ir de ${desde} a ${hasta}` }];
+      // El 1 y el 16 van marcados como valores: el campo los escribe como
+      // muestra el valor.
+      return [{ clave: "valor", mensaje: formato`Con Canal, tiene que ir de ${1} a ${16}` }];
     }
     return [];
   },

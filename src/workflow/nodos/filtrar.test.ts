@@ -204,13 +204,13 @@ test("una capa de velocidad: Nota On de 100 a 127", () => {
 // igual que en el panel y en el ejecutor.
 
 test("una caja nueva no tiene errores", () => {
-  expect(erroresDeConfiguracion(filtrar, CAJA_NUEVA)).toEqual([]);
+  expect(erroresDeConfiguracion({ tipo: "filtrar", parametros: CAJA_NUEVA })).toEqual([]);
 });
 
 test("un rango de datos 1 al revés es un error", () => {
   const parametros = { ...CAJA_NUEVA, datos1: { desde: 72, hasta: 60 } };
 
-  expect(erroresDeConfiguracion(filtrar, parametros)).toEqual([
+  expect(erroresDeConfiguracion({ tipo: "filtrar", parametros: parametros })).toEqual([
     { clave: "datos1", mensaje: "Desde tiene que ser igual o menor que hasta" },
   ]);
 });
@@ -218,7 +218,7 @@ test("un rango de datos 1 al revés es un error", () => {
 test("un rango de datos 2 al revés es un error", () => {
   const parametros = { ...CAJA_NUEVA, datos2: { desde: 100, hasta: 50 } };
 
-  expect(erroresDeConfiguracion(filtrar, parametros)).toEqual([
+  expect(erroresDeConfiguracion({ tipo: "filtrar", parametros: parametros })).toEqual([
     { clave: "datos2", mensaje: "Desde tiene que ser igual o menor que hasta" },
   ]);
 });
@@ -226,5 +226,5 @@ test("un rango de datos 2 al revés es un error", () => {
 test("un rango de un solo valor está bien", () => {
   const parametros = { ...CAJA_NUEVA, datos2: { desde: 64, hasta: 64 } };
 
-  expect(erroresDeConfiguracion(filtrar, parametros)).toEqual([]);
+  expect(erroresDeConfiguracion({ tipo: "filtrar", parametros: parametros })).toEqual([]);
 });

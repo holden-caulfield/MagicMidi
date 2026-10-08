@@ -1,6 +1,8 @@
 import { AlignCenterHorizontal } from "lucide";
 
 import type { Rango } from "@/componentes/campo-rango";
+import { lista } from "../parametros/lista";
+import { rango } from "../parametros/rango";
 import type { TipoDeNodo } from "../tipos";
 
 export default {
@@ -10,34 +12,31 @@ export default {
   // que siempre queda entre los extremos de salida, también lo es. Los dos
   // rangos se pueden invertir: una salida de 127 a 0 da vuelta el sentido.
   parametros: [
-    {
+    lista({
       clave: "byte",
       etiqueta: "Byte",
-      tipo: "lista",
       inicial: 2,
       opciones: [
         { valor: 1, texto: "2.º (datos 1)" },
         { valor: 2, texto: "3.º (datos 2)" },
       ],
-    },
-    {
+    }),
+    rango({
       clave: "entrada",
       etiqueta: "Entrada",
-      tipo: "rango",
       inicial: { desde: 0, hasta: 127 },
       minimo: 0,
       maximo: 127,
       invertible: true,
-    },
-    {
+    }),
+    rango({
       clave: "salida",
       etiqueta: "Salida",
-      tipo: "rango",
       inicial: { desde: 0, hasta: 127 },
       minimo: 0,
       maximo: 127,
       invertible: true,
-    },
+    }),
   ],
   validar(parametros) {
     // Con un solo valor de entrada no hay cómo repartir: dividiría por cero.

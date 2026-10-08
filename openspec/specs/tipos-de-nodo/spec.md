@@ -71,29 +71,31 @@ El archivo de un tipo de nodo SHALL declarar:
 - si la caja **no tiene salida**. Es opcional: si no se declara, la caja tiene
   salida. Todas tienen entrada; las que no tienen salida cierran el flujo, y
   por eso se ven con el color de las cajas de fin, sin declarar nada más;
-- la lista de **parámetros**, cada uno con una clave, una etiqueta visible, un
-  tipo y un valor inicial, más los datos propios de su tipo. Los tipos de
-  parámetro disponibles SHALL ser los registrados en el catálogo de tipos de
-  parámetro (ver "Un tipo de parámetro es un archivo registrado en su
-  catálogo");
+- la lista de **parámetros**, cada uno declarado con la función de su tipo
+  de parámetro, con una clave, una etiqueta visible y un valor inicial, más
+  los datos propios de su tipo (ver la spec `tipos-de-parametro`, "Un tipo de
+  parámetro es un archivo que arma sus parámetros");
 - **reglas de validación** propias, que miran los valores de varios
   parámetros juntos. Son opcionales: un tipo que no las declara se valida solo
   con lo que revisa cada parámetro. Cada regla que no se cumple SHALL dar un
   texto de error asociado a uno de los parámetros. Si ese texto nombra
-  un número, la regla SHALL poder pedirle a un parámetro que lo escriba como
-  él lo muestra (ver la spec `tipos-de-parametro`, "Un parámetro puede guardar
-  cómo se muestra"), sin saber cómo lo muestra. Las reglas del tipo SHALL
-  revisarse solo cuando cada parámetro, por separado, tiene un valor que le
-  sirve, así no tienen que repetir lo que ya revisan los parámetros;
+  valores, la regla SHALL marcarlos como valores, y los escribe el campo
+  debajo del cual se muestra el error (ver la spec `tipos-de-parametro`, "Los
+  mensajes de error nombran valores que escribe el campo"), sin que la regla
+  sepa cómo se muestran. Las reglas del tipo SHALL revisarse solo cuando cada
+  parámetro, por separado, tiene un valor que le sirve, así no tienen que
+  repetir lo que ya revisan los parámetros;
 - una única **función de procesamiento**.
 
 Los errores de configuración de una caja SHALL ser los de sus parámetros más
-los de las reglas de su tipo, y SHALL poder calcularse sin la interfaz, a
-partir del tipo, de los valores de la caja y de la presentación que guarda
-cada parámetro, que se pasa sin leerla. El texto de un error SHALL ser el mismo en el panel, en el lienzo y
-en el log. Los valores iniciales de todo tipo
-de nodo SHALL estar libres de errores, y eso SHALL revisarlo un test que
-recorre todos los tipos.
+los de las reglas de su tipo, y SHALL poder calcularse sin la interfaz, solo a
+partir del tipo y de los valores de la caja: no dependen de cómo se muestra
+cada parámetro. El texto de un error SHALL ser el mismo en el panel y en el
+log, salvo por cómo se escriben los valores que nombra: en el panel, con el
+formato del campo; en el log, como texto común. El lienzo SHALL mostrar solo
+si la caja tiene errores. Los valores iniciales de todo tipo de nodo SHALL
+estar libres de errores, y eso SHALL revisarlo un test que recorre todos los
+tipos.
 
 Un tipo de nodo no SHALL declarar su color: el color sale de la etapa de la caja
 en el flujo.
@@ -112,10 +114,11 @@ tipo de parámetro.
 
 #### Scenario: Un tipo de parámetro nuevo sin tocar el tipo de nodo
 
-- **GIVEN** se registra un tipo de parámetro nuevo en su catálogo
-- **WHEN** un tipo de nodo declara un parámetro de ese tipo
-- **THEN** el panel muestra el control del tipo nuevo, y el archivo del tipo de
-  nodo solo agregó la declaración del parámetro
+- **GIVEN** se crea un tipo de parámetro nuevo
+- **WHEN** un tipo de nodo declara un parámetro con su función
+- **THEN** el panel muestra el campo del tipo nuevo, y el archivo del tipo de
+  nodo solo agregó la declaración del parámetro y la importación de su
+  función
 
 #### Scenario: Tipo sin salida
 
@@ -150,10 +153,18 @@ tipo de parámetro.
 #### Scenario: La regla del tipo nombra un número como lo muestra el parámetro
 
 - **GIVEN** un tipo de nodo declara una regla que dice que el parámetro
-  "Hasta" tiene que ser mayor que 64, y le pide a "Hasta" que escriba el 64
+  "Hasta" tiene que ser mayor que 64, con el 64 marcado como valor
 - **WHEN** una caja de ese tipo tiene "Hasta" 10, mostrado en hexadecimal
-- **THEN** el error asociado a "Hasta" nombra el 64 como "40", y el archivo
-  del tipo de nodo no nombra ningún modo
+- **THEN** debajo de "Hasta" el error nombra el 64 como "40", y el archivo del
+  tipo de nodo no nombra ningún modo
+
+#### Scenario: Los errores no dependen de cómo se muestra la caja
+
+- **GIVEN** dos cajas "Fijar" con byte "Canal" y valor 100, una en modo
+  decimal y otra en modo hexadecimal
+- **WHEN** se calculan sus errores de configuración
+- **THEN** las dos tienen el mismo error, asociado a "Valor", que escrito como
+  texto común dice que con Canal tiene que ir de 1 a 16
 
 ### Requirement: La función de procesamiento
 
@@ -210,17 +221,20 @@ mensaje que recibe sin afectar al mensaje que reciben otras ramas.
 
 Este requisito no es negociable: ninguna decisión de diseño SHALL
 relajarlo. El archivo de un tipo de nodo no SHALL depender de la librería que
-dibuja el lienzo, ni de los componentes de la interfaz, ni del estado de la pantalla.
-Reemplazar la librería del lienzo no SHALL obligar a cambiar ningún archivo de
-tipo de nodo.
+dibuja el lienzo ni del estado de la pantalla, ni SHALL incluir nada de la
+interfaz: declara sus parámetros con las funciones de los tipos de parámetro,
+que son las que saben qué campo los dibuja. Reemplazar la librería del lienzo
+no SHALL obligar a cambiar ningún archivo de tipo de nodo.
 
 #### Scenario: Archivo autocontenido
 
 - **WHEN** se revisa lo que importa el archivo de un tipo de nodo
 - **THEN** solo importa la definición del contrato de tipos de nodo, su ícono
-  de la librería de íconos y, si hace falta, funciones auxiliares propias del
-  procesamiento MIDI que no tengan efectos (por ejemplo, una que calcule el
-  canal de un status), nunca la librería del lienzo, módulos de la interfaz
+  de la librería de íconos, las funciones de los tipos de parámetro que
+  declara, la forma de marcar valores en un mensaje de error y, si hace
+  falta, funciones auxiliares propias del procesamiento MIDI que no tengan
+  efectos (por ejemplo, una que calcule el canal de un status), nunca la
+  librería del lienzo, el estado de la pantalla, componentes de la interfaz
   ni el envío al puerto de salida
 
 ### Requirement: La carpeta de tipos de nodo explica cómo crear uno

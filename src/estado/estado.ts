@@ -1,16 +1,16 @@
 import type { IdDeTipo } from "@/workflow/nodos/catalogo";
-import type { ValorDeParametro } from "@/workflow/parametros/catalogo";
 
 export interface NodoDelFlujo {
   id: string;
   tipo: "trigger" | IdDeTipo;
-  parametros: Record<string, ValorDeParametro>;
+  parametros: Record<string, unknown>;
   /**
-   * Cómo se muestra cada parámetro, por clave. Solo lo lee el tipo de ese
-   * parámetro: el resto lo guarda y lo pasa sin saber qué tiene. Si falta, el
-   * tipo usa la que corresponde por defecto.
+   * Lo que el campo de cada parámetro quiere conservar entre montajes (como el
+   * modo de uno numérico), por clave. Solo lo lee el campo: el panel lo guarda y
+   * se lo devuelve sin saber qué tiene, y nadie más lo usa. Si falta, el campo
+   * arranca como en una caja nueva.
    */
-  presentaciones?: Record<string, unknown>;
+  estadoDeLosParametros?: Record<string, unknown>;
 }
 
 export interface Conexion {

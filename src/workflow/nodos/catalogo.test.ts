@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
 import { MensajeMidi } from "@/midi/mensaje";
-import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
+import { etapaDelTipo, type IdDeTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import { erroresDeConfiguracion } from "../validacion";
-import { modosDe } from "../parametros/modos";
+import type { Modo } from "@/componentes/modo-numerico";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
@@ -17,21 +17,25 @@ const MENSAJES_TIPICOS = [
   [0xfa],
 ];
 
-describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => {
+describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (id, tipo) => {
   test("sus valores iniciales no tienen errores de configuración", () => {
     const iniciales = Object.fromEntries(
       tipo.parametros.map((parametro) => [parametro.clave, parametro.inicial]),
     );
-    expect(erroresDeConfiguracion(tipo, iniciales)).toEqual([]);
+    expect(erroresDeConfiguracion({ tipo: id as IdDeTipo, parametros: iniciales })).toEqual([]);
   });
 
   // Una nota va de 0 a 127, y el hexadecimal no tiene negativos: un parámetro
-  // numérico solo puede ofrecer esos modos si sus límites entran ahí.
+  // numérico solo puede ofrecer esos modos si sus límites entran ahí. Los
+  // numéricos (el entero y el rango) son los que llevan sus modos.
   test("sus parámetros numéricos ofrecen solo modos que les entran", () => {
     for (const parametro of tipo.parametros) {
-      if (parametro.tipo !== "entero" && parametro.tipo !== "rango") continue;
-      const modos = modosDe(parametro);
-      const { minimo, maximo } = parametro;
+      if (!("modos" in parametro)) continue;
+      const { modos, minimo, maximo } = parametro as {
+        modos: Modo[];
+        minimo?: number;
+        maximo?: number;
+      };
       if (modos.includes("nota")) {
         expect(
           minimo !== undefined && maximo !== undefined && minimo >= 0 && maximo <= 127,

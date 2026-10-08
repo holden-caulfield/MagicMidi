@@ -506,7 +506,9 @@ test("Fijar con el canal fuera de rango hace que no salga nada", () => {
   });
 });
 
-test("el error de Fijar en el log dice los números como los muestra el panel", () => {
+// El log no tiene un campo que escriba los valores en su modo: van como texto
+// común, aunque el panel los muestre en hexadecimal.
+test("el error de Fijar en el log escribe los números en decimal", () => {
   actualizar({
     flujo: flujo(
       [
@@ -514,7 +516,7 @@ test("el error de Fijar en el log dice los números como los muestra el panel", 
           id: "fijar",
           tipo: "fijar",
           parametros: { byte: 0, valor: 100 },
-          presentaciones: { valor: { modo: "hexadecimal" } },
+          estadoDeLosParametros: { valor: { modo: "hexadecimal", bemoles: false } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
@@ -527,7 +529,7 @@ test("el error de Fijar en el log dice los números como los muestra el panel", 
 
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
-    error: 'La caja "Fijar" está mal configurada: Valor: Con Canal, tiene que ir de 01 a 10',
+    error: 'La caja "Fijar" está mal configurada: Valor: Con Canal, tiene que ir de 1 a 16',
   });
 });
 

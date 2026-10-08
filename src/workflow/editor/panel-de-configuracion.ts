@@ -1,5 +1,6 @@
 import { css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { repeat } from "lit/directives/repeat.js";
 import { Trash2 } from "lucide";
 
 import "@/componentes/boton-de-accion";
@@ -7,10 +8,9 @@ import { Componente } from "@/componentes/componente";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado } from "@/estado/estado";
 import { TIPOS_DE_NODO, TRIGGER } from "../nodos/catalogo";
-import { dibujarParametro, type ValorDeParametro } from "../parametros/catalogo";
 import { erroresDeConfiguracion } from "../validacion";
 
-function cambiarParametro(nodoId: string, clave: string, valor: ValorDeParametro) {
+function cambiarParametro(nodoId: string, clave: string, valor: unknown) {
   actualizar({
     flujo: {
       ...estado.flujo,
@@ -21,13 +21,16 @@ function cambiarParametro(nodoId: string, clave: string, valor: ValorDeParametro
   });
 }
 
-function cambiarPresentacion(nodoId: string, clave: string, presentacion: unknown) {
+function cambiarEstado(nodoId: string, clave: string, estadoDelCampo: unknown) {
   actualizar({
     flujo: {
       ...estado.flujo,
       nodos: estado.flujo.nodos.map((nodo) =>
         nodo.id === nodoId
-          ? { ...nodo, presentaciones: { ...nodo.presentaciones, [clave]: presentacion } }
+          ? {
+              ...nodo,
+              estadoDeLosParametros: { ...nodo.estadoDeLosParametros, [clave]: estadoDelCampo },
+            }
           : nodo,
       ),
     },
@@ -100,34 +103,40 @@ export class PanelDeConfiguracion extends Componente {
     const tipo = nodo.tipo === "trigger" ? null : TIPOS_DE_NODO[nodo.tipo];
     const nombre = tipo ? tipo.nombre : TRIGGER.nombre;
     const parametros = tipo ? tipo.parametros : [];
-    const errores = tipo ? erroresDeConfiguracion(tipo, nodo.parametros, nodo.presentaciones) : [];
+    const errores = erroresDeConfiguracion(nodo);
     // Si un parámetro tiene varios errores, se muestra el primero.
     const errorDe = (clave: string) =>
       errores.find((error) => error.clave === clave)?.mensaje ?? null;
+
+    // Cada campo queda atado a su caja y su parámetro: si Lit los reusara por
+    // posición, el estado propio de un campo (como su modo) aparecería en otra
+    // caja.
+    const campos = repeat(
+      parametros,
+      (parametro) => `${nodo.id}/${parametro.clave}`,
+      (parametro) => html`
+        <div
+          class="parametro"
+          @cambio=${(evento: CustomEvent<unknown>) =>
+            cambiarParametro(nodo.id, parametro.clave, evento.detail)}
+          @cambio-de-estado=${(evento: CustomEvent<unknown>) =>
+            cambiarEstado(nodo.id, parametro.clave, evento.detail)}
+        >
+          ${parametro.dibujar(
+            nodo.parametros[parametro.clave],
+            errorDe(parametro.clave),
+            nodo.estadoDeLosParametros?.[parametro.clave],
+          )}
+        </div>
+      `,
+    );
 
     return html`
       <aside aria-label="Configuración de la caja">
         <h3>${nombre}</h3>
         ${parametros.length === 0
           ? html`<p class="vacia">Esta caja no tiene nada para configurar.</p>`
-          : parametros.map(
-              (parametro) => html`
-                <div
-                  class="parametro"
-                  @cambio=${(evento: CustomEvent<ValorDeParametro>) =>
-                    cambiarParametro(nodo.id, parametro.clave, evento.detail)}
-                  @cambio-de-presentacion=${(evento: CustomEvent<unknown>) =>
-                    cambiarPresentacion(nodo.id, parametro.clave, evento.detail)}
-                >
-                  ${dibujarParametro(
-                    parametro,
-                    nodo.parametros[parametro.clave],
-                    errorDe(parametro.clave),
-                    nodo.presentaciones?.[parametro.clave],
-                  )}
-                </div>
-              `,
-            )}
+          : campos}
         ${tipo
           ? html`<boton-de-accion .icono=${Trash2} @click=${() => this.pedirEliminar(nodo.id)}>
               Eliminar caja

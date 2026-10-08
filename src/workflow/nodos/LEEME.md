@@ -66,10 +66,21 @@ Un tipo de nodo es un objeto con estos campos:
   sale por el puerto MIDI (ver más abajo). Las cajas sin salida se ven
   naranjas, como Emitir, sin que tengas que declarar ningún color.
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
-  parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
-  (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
-  disponibles son los de la carpeta `src/workflow/parametros/`. Por ejemplo:
-  - `"entero"`: un número entero (acepta negativos). Si solo sirven algunos,
+  parámetro se declara con la función de su tipo, que se importa de la carpeta
+  `src/workflow/parametros/` (por ejemplo,
+  `import { entero } from "../parametros/entero";`), y tiene una `clave` (el
+  nombre con que lo vas a leer), una `etiqueta` (el texto que se ve en el
+  panel) y un valor `inicial`, más lo propio de su tipo:
+
+  ```ts
+  parametros: [
+    entero({ clave: "valor", etiqueta: "Valor", inicial: 100, minimo: 0, maximo: 127 }),
+    interruptor({ clave: "overflow", etiqueta: "Overflow", inicial: false }),
+  ],
+  ```
+
+  Los tipos que hay:
+  - `entero`: un número entero (acepta negativos). Si solo sirven algunos,
     declarale `minimo`, `maximo` o los dos: por ejemplo, `minimo: 0, maximo:
     127` para un byte de datos. Un número fuera de ese rango se guarda igual,
     y el panel muestra el error debajo del campo. El número se puede mostrar
@@ -81,14 +92,14 @@ Un tipo de nodo es un objeto con estos campos:
     `modos: ["decimal"]`. La nota solo se puede ofrecer si el parámetro va de
     0 a 127, y el hexadecimal, si no tiene negativos. Para `procesar`, el
     valor es siempre un número, en cualquier modo.
-  - `"interruptor"`: una casilla para prender o apagar algo.
-  - `"lista"`: una opción de una lista cerrada. Cada opción tiene un `valor` y
+  - `interruptor`: una casilla para prender o apagar algo.
+  - `lista`: una opción de una lista cerrada. Cada opción tiene un `valor` y
     un `texto`.
-  - `"opciones"` y `"autocompletar"`: varias opciones de una lista cerrada (o
+  - `opciones` y `autocompletar`: varias opciones de una lista cerrada (o
     ninguna). El valor es una lista con los valores elegidos. El primero
     muestra todas como píldoras, para pocas opciones cortas; el segundo las
     busca escribiendo, para listas largas.
-  - `"rango"`: dos extremos, "desde" y "hasta", entre un `minimo` y un
+  - `rango`: dos extremos, "desde" y "hasta", entre un `minimo` y un
     `maximo`, con una barra de dos perillas. Se declara si se puede invertir
     (`invertible: true`, "desde" mayor que "hasta"). El valor es un objeto
     `{ desde, hasta }`: en `procesar` se lee como
@@ -96,11 +107,11 @@ Un tipo de nodo es un objeto con estos campos:
     de `@/componentes/campo-rango`), y después `datos1.desde` y
     `datos1.hasta`. Tiene los mismos modos que el entero.
 
-  Los que hay están en `parametros/catalogo.ts`. Si ninguno te sirve, se puede
+  Cada uno es un archivo de `parametros/`. Si ninguno te sirve, se puede
   crear uno nuevo: la guía está en
   [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
   poné `parametros: []`.
-- **`validar(parametros, formatear)`**: opcional. Solo hace falta si algún valor depende
+- **`validar(parametros)`**: opcional. Solo hace falta si algún valor depende
   de otro, o si dentro de un parámetro hay una regla que el tipo no conoce:
   por ejemplo, en Mapear, los dos extremos del rango de entrada no pueden ser
   iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
@@ -321,39 +332,48 @@ validar(parametros) {
   muestra, y el `mensaje`. Si está todo bien, devuelve una lista vacía.
 - Se llama **solo si cada parámetro ya está bien por separado**: no hace falta
   revisar que un número esté en su rango, eso ya lo hizo el parámetro.
-- Si el mensaje nombra un número de un parámetro, escribilo con
-  `formatear(clave, numero)`, el segundo argumento: lo escribe como lo
-  muestra ese parámetro, en el modo que eligió la persona. Fijar, por ejemplo,
-  dice "Con Canal, tiene que ir de 1 a 16", y con el valor en hexadecimal,
-  "de 01 a 10":
+- Si el mensaje nombra un valor, como un número, no lo escribas: marcalo.
+  Para eso, el texto se arma con `formato` (importado de `@/formato`) en lugar
+  de comillas, y cada valor va entre `${` y `}`. El valor lo escribe el campo
+  debajo del cual se muestra el error, como lo muestra él, en el modo que
+  eligió la persona. Fijar, por ejemplo, dice "Con Canal, tiene que ir de 1 a
+  16", y con el valor en hexadecimal, "de 01 a 10", sin saber nada de modos:
 
   ```ts
-  validar(parametros, formatear) {
+  validar(parametros) {
     const valor = Number(parametros.valor);
     if (Number(parametros.byte) === BYTE_CANAL && (valor < 1 || valor > 16)) {
-      const desde = formatear("valor", 1);
-      const hasta = formatear("valor", 16);
-      return [{ clave: "valor", mensaje: `Con Canal, tiene que ir de ${desde} a ${hasta}` }];
+      return [{ clave: "valor", mensaje: formato`Con Canal, tiene que ir de ${1} a ${16}` }];
     }
     return [];
   },
   ```
 
-  Si no nombra números, como en Mapear, no hace falta declararlo.
+  Si no nombra valores, como en Mapear, alcanza con comillas.
 - La aplicación guarda igual el valor con error, lo muestra debajo del campo y
   marca la caja con un borde rojo. Si llega un mensaje a una caja así, la caja
   falla (como si `procesar` tirara un error) y nunca se llama a `procesar`: por
   eso `procesar` puede suponer que la configuración está bien.
 
 `validar` se prueba en el mismo `.test.ts` que `procesar`, llamándolo con
-valores (y, si usa `formatear`, con uno que escribe en decimal, como
-`(_clave, numero) => String(numero)`):
+valores:
 
 ```ts
 test("una entrada de un solo valor es un error", () => {
   expect(
     mapear.validar({ byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } }),
   ).toEqual([{ clave: "entrada", mensaje: "Desde tiene que ser distinto de hasta" }]);
+});
+```
+
+Si el mensaje nombra valores, se compara con el mismo texto armado con
+`formato`: el test no necesita saber cómo los va a mostrar el campo.
+
+```ts
+test("con Canal, el 0 es un error", () => {
+  expect(fijar.validar({ byte: 0, valor: 0 })).toEqual([
+    { clave: "valor", mensaje: formato`Con Canal, tiene que ir de ${1} a ${16}` },
+  ]);
 });
 ```
 
@@ -400,6 +420,7 @@ Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
 solo usa `../tipos` (el contrato), `@/midi/mensaje` (`MensajeMidi` y los tipos
-de mensaje), su ícono de `lucide` y, si le hace falta, funciones auxiliares para
-MIDI que calculen algo sin efectos. Tampoco importes `../salida`: para que un
+de mensaje), su ícono de `lucide`, las funciones de los tipos de parámetro que
+declara (`../parametros/…`), `@/formato` si sus errores nombran valores y, si
+le hace falta, funciones auxiliares para MIDI que calculen algo sin efectos. Tampoco importes `../salida`: para que un
 mensaje salga por el puerto, alcanza con que una caja sin salida lo devuelva.

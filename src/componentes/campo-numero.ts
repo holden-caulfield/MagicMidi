@@ -5,28 +5,31 @@ import { ChevronDown, ChevronUp } from "lucide";
 
 import { Campo } from "./campo";
 import { dibujarIcono } from "./icono";
+import { type Modo, ModoNumerico } from "./modo-numerico";
 
-/**
- * Un paso de las flechas: lo que hay escrito en el campo en ese momento (aunque
- * no se haya confirmado) y cuánto sumarle (1, o 10 con Mayúsculas, con signo).
- */
-export interface Paso {
-  texto: string;
-  cantidad: number;
+/** El número limitado al mínimo y al máximo, si los hay. */
+export function limitar(
+  { minimo = -Infinity, maximo = Infinity }: { minimo?: number; maximo?: number },
+  numero: number,
+): number {
+  return Math.min(Math.max(numero, minimo), maximo);
 }
 
 /**
- * Un número escrito. Avisa el texto tal como se escribió, al salir del campo:
- * interpretarlo le toca a quien lo usa, que devuelve el valor que corresponde.
- * Con las flechas del teclado (y las propias, si no es `compacto`) avisa un
- * `paso`, con el texto y cuánto sumarle.
+ * Un número escrito, que se muestra y se lee en un modo (decimal, nota o
+ * hexadecimal, ver `ModoNumerico`). Lo escrito se lee al salir del campo,
+ * probando los modos desde el actual: si se puede leer, avisa el número (y,
+ * si se leyó en otro modo, el campo pasa a ese); si no, vuelve solo al valor
+ * que tiene, sin avisar nada. Las flechas (las propias y las del teclado)
+ * suman 1, o 10 con Mayúsculas, a lo escrito en ese momento, y se frenan en
+ * el mínimo y el máximo.
  *
  * Es un campo de texto y no uno numérico: uno numérico decide por su cuenta
  * qué acepta (por ejemplo, qué separador de decimales, según el idioma del
  * sistema), y lo que no le gusta lo avisa vacío.
  */
 @customElement("campo-numero")
-export class CampoNumero extends Campo<string> {
+export class CampoNumero extends Campo<number> {
   static styles = [
     ...Campo.styles,
     css`
@@ -53,13 +56,6 @@ export class CampoNumero extends Campo<string> {
         width: 64px;
         text-align: center;
         font-variant-numeric: tabular-nums;
-      }
-
-      :host([compacto]) input {
-        width: 36px;
-        height: 18px;
-        padding: 0 3px;
-        font-size: 11px;
       }
 
       .flechas {
@@ -90,46 +86,50 @@ export class CampoNumero extends Campo<string> {
     `,
   ];
 
-  @property() valor = "";
-  /** Si acepta decimales: en una pantalla táctil, cambia el teclado que aparece. */
-  @property({ type: Boolean }) decimales = false;
-  /**
-   * Más chico, para ir dentro de otro control (como el rango): la etiqueta
-   * queda solo para los lectores de pantalla y no hay flechas propias, aunque
-   * las del teclado siguen funcionando.
-   */
-  @property({ type: Boolean, reflect: true }) compacto = false;
-  @property({ type: Boolean }) puedeSubir = true;
-  @property({ type: Boolean }) puedeBajar = true;
+  @property({ type: Number }) valor = 0;
+  /** Los modos que ofrece, en el orden en que rotan. Si se omite, los tres. */
+  @property({ attribute: false }) modos?: Modo[];
+  /** Si se omite, no hay mínimo. */
+  @property({ type: Number }) minimo?: number;
+  /** Si se omite, no hay máximo. */
+  @property({ type: Number }) maximo?: number;
+
+  private modo = new ModoNumerico(this, (estado) => this.avisarEstado(estado));
+
+  protected formatearValor(valor: unknown) {
+    return typeof valor === "number" ? this.modo.formatear(valor) : String(valor);
+  }
+
+  protected botonDeModo() {
+    return this.modo.boton;
+  }
 
   protected control() {
-    const input = html`
-      <input
-        id="control"
-        class="control"
-        type="text"
-        inputmode=${this.decimales ? "decimal" : "numeric"}
-        autocomplete="off"
-        .value=${live(this.valor)}
-        @change=${(evento: Event) => {
-          this.avisar((evento.target as HTMLInputElement).value);
-          // Si quien lo usa no aceptó lo escrito, no le pasa un valor nuevo y
-          // Lit no redibujaría: así el campo vuelve a mostrar el que tiene.
-          this.requestUpdate();
-        }}
-        @keydown=${this.tecla}
-      />
-    `;
-    if (this.compacto) {
-      return input;
-    }
     // Las flechas no se recorren con Tab: con el teclado se usa el campo.
     return html`
       <div class="numero">
-        ${input}
+        <input
+          id="control"
+          class="control"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          .value=${live(this.modo.formatear(this.valor))}
+          @change=${(evento: Event) => {
+            const numero = this.modo.leer((evento.target as HTMLInputElement).value);
+            if (numero !== null) {
+              this.avisar(numero);
+            }
+            // Si no se pudo leer, o quien lo usa no aceptó el número, no le
+            // pasa un valor nuevo y Lit no redibujaría: así el campo vuelve a
+            // mostrar el que tiene.
+            this.requestUpdate();
+          }}
+          @keydown=${this.tecla}
+        />
         <div class="flechas" aria-hidden="true">
-          ${this.flecha(1, ChevronUp, this.puedeSubir)}
-          ${this.flecha(-1, ChevronDown, this.puedeBajar)}
+          ${this.flecha(1, ChevronUp, this.maximo === undefined || this.valor < this.maximo)}
+          ${this.flecha(-1, ChevronDown, this.minimo === undefined || this.valor > this.minimo)}
         </div>
       </div>
     `;
@@ -158,22 +158,14 @@ export class CampoNumero extends Campo<string> {
     }
   }
 
-  /** Avisa el paso con lo que hay escrito ahora, confirmado o no. */
+  /** Suma el paso a lo escrito ahora, confirmado o no, sin pasar de los límites. */
   private pasar(cantidad: number) {
     const input = this.renderRoot.querySelector<HTMLInputElement>("#control");
-    const texto = input?.value ?? this.valor;
-    this.dispatchEvent(new CustomEvent<Paso>("paso", { detail: { texto, cantidad } }));
-    // Como con `change`: si no cambió nada, el campo vuelve a lo que tiene.
-    this.requestUpdate();
-  }
-
-  render() {
-    if (!this.compacto) {
-      return super.render();
+    const numero = input ? this.modo.leer(input.value) : this.valor;
+    if (numero !== null) {
+      this.avisar(limitar(this, numero + cantidad));
     }
-    return html`
-      <label for="control" class="texto-oculto">${this.etiqueta}</label>
-      ${this.control()}
-    `;
+    // Como al salir del campo: si no cambió nada, vuelve a lo que tiene.
+    this.requestUpdate();
   }
 }

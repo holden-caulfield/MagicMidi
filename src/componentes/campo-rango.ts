@@ -1,9 +1,9 @@
 import { css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { live } from "lit/directives/live.js";
 
-import "./campo-numero";
 import { Campo } from "./campo";
-import type { Paso } from "./campo-numero";
+import { type Modo, ModoNumerico } from "./modo-numerico";
 
 export interface Rango {
   desde: number;
@@ -63,32 +63,10 @@ export function extremoMasCercano(rango: Rango, valor: number): Extremo {
 }
 
 /**
- * El rango después de un paso de las flechas en el campo de un extremo: el
- * número leído más el paso, movido como con la perilla (frenado o cruzado).
- */
-export function pasarExtremo(
-  rango: Rango,
-  extremo: Extremo,
-  leido: number,
-  cantidad: number,
-  limites: Limites,
-): Rango {
-  return moverExtremo(rango, extremo, leido + cantidad, limites);
-}
-
-/**
- * El número escrito en uno de los campos, o `null` si no es un entero. Es lo
- * que usa el control si no recibe otra forma de leer.
- */
-export function interpretarExtremo(texto: string): number | null {
-  const numero = Number(texto);
-  return texto.trim() !== "" && Number.isInteger(numero) ? numero : null;
-}
-
-/**
  * Dos extremos enteros, con una barra de dos perillas y un campo numérico a
  * cada lado. El tramo entre las perillas lleva marcas que apuntan de "desde" a
- * "hasta". Avisa el rango nuevo.
+ * "hasta". Avisa el rango nuevo. Los dos campos de texto son del rango, y
+ * comparten su modo, que se cambia con un solo botón.
  */
 @customElement("campo-rango")
 export class CampoRango extends Campo<Rango> {
@@ -100,6 +78,15 @@ export class CampoRango extends Campo<Rango> {
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
         gap: 6px;
+      }
+
+      input.control {
+        width: 36px;
+        height: 18px;
+        padding: 0 3px;
+        font-size: 11px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
       }
 
       .barra {
@@ -171,14 +158,22 @@ export class CampoRango extends Campo<Rango> {
   @property({ type: Number }) minimo = 0;
   @property({ type: Number }) maximo = 127;
   @property({ type: Boolean }) invertible = false;
-  /** Cómo se escribe cada extremo en su campo y se anuncia en su perilla. */
-  @property({ attribute: false }) formatear: (numero: number) => string = String;
-  /** Cómo se lee lo escrito en un campo: el número, o `null` si no se puede. */
-  @property({ attribute: false }) leer: (texto: string) => number | null = interpretarExtremo;
+  /** Los modos que ofrece, en el orden en que rotan. Si se omite, los tres. */
+  @property({ attribute: false }) modos?: Modo[];
 
   protected esGrupo = true;
 
   private arrastrando: Extremo | null = null;
+
+  private modo = new ModoNumerico(this, (estado) => this.avisarEstado(estado));
+
+  protected formatearValor(valor: unknown) {
+    return typeof valor === "number" ? this.modo.formatear(valor) : String(valor);
+  }
+
+  protected botonDeModo() {
+    return this.modo.boton;
+  }
 
   private get limites(): Limites {
     return { minimo: this.minimo, maximo: this.maximo, invertible: this.invertible };
@@ -209,29 +204,51 @@ export class CampoRango extends Campo<Rango> {
     `;
   }
 
+  // El nombre de cada campo queda solo para los lectores de pantalla: a la
+  // vista, el lado ya dice qué extremo es.
   private campo(extremo: Extremo) {
     return html`
-      <campo-numero
-        compacto
-        etiqueta=${extremo}
-        .valor=${this.formatear(this.valor[extremo])}
-        @cambio=${(evento: CustomEvent<string>) => {
-          const numero = this.leer(evento.detail);
-          // Lo escrito se guarda aunque no sirva: el error lo muestra el panel.
-          if (numero !== null) {
-            this.avisar({ ...this.valor, [extremo]: numero });
-          }
-        }}
-        @paso=${(evento: CustomEvent<Paso>) => {
-          const numero = this.leer(evento.detail.texto);
-          if (numero !== null) {
-            this.avisar(
-              pasarExtremo(this.valor, extremo, numero, evento.detail.cantidad, this.limites),
-            );
-          }
-        }}
-      ></campo-numero>
+      <div>
+        <label for=${extremo} class="texto-oculto">${extremo}</label>
+        <input
+          id=${extremo}
+          class="control"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          .value=${live(this.modo.formatear(this.valor[extremo]))}
+          @change=${(evento: Event) => {
+            const numero = this.modo.leer((evento.target as HTMLInputElement).value);
+            // Lo escrito se guarda aunque no sirva: el error lo muestra el panel.
+            if (numero !== null) {
+              this.avisar({ ...this.valor, [extremo]: numero });
+            }
+            // Si no se pudo leer, Lit no redibujaría: así el campo vuelve a
+            // mostrar el que tiene.
+            this.requestUpdate();
+          }}
+          @keydown=${(evento: KeyboardEvent) => this.teclaEnCampo(evento, extremo)}
+        />
+      </div>
     `;
+  }
+
+  /**
+   * Las flechas en el campo de un extremo lo mueven como su perilla (de a 1, o
+   * de a 10 con Mayúsculas), desde lo escrito aunque no se haya confirmado.
+   */
+  private teclaEnCampo(evento: KeyboardEvent, extremo: Extremo) {
+    const sentido = evento.key === "ArrowUp" ? 1 : evento.key === "ArrowDown" ? -1 : 0;
+    if (sentido === 0) {
+      return;
+    }
+    evento.preventDefault();
+    const numero = this.modo.leer((evento.target as HTMLInputElement).value);
+    if (numero !== null) {
+      this.mover(extremo, numero + sentido * (evento.shiftKey ? 10 : 1));
+    }
+    // Como al salir del campo: si no cambió nada, vuelve a lo que tiene.
+    this.requestUpdate();
   }
 
   private perilla(extremo: Extremo, posicion: number) {
@@ -244,7 +261,7 @@ export class CampoRango extends Campo<Rango> {
         aria-valuemin=${this.minimo}
         aria-valuemax=${this.maximo}
         aria-valuenow=${this.valor[extremo]}
-        aria-valuetext=${this.formatear(this.valor[extremo])}
+        aria-valuetext=${this.modo.formatear(this.valor[extremo])}
         style="left: ${posicion}%"
         @keydown=${(evento: KeyboardEvent) => this.teclaEnPerilla(evento, extremo)}
       ></button>
