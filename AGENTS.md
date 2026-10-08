@@ -353,10 +353,12 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   tiene herramientas para agentes (no para personas): corren pruebas en el
   WebKit del sistema (el mismo motor que la ventana de Tauri, sin abrirla) o
   en Chromium, y comparan la huella de la interfaz (posición y estilos de
-  cada elemento) antes y después de un cambio. Cómo se usan, y qué hace falta
-  instalar, está en su `LEEME.md`. Al terminar un cambio que no debería
+  cada elemento) antes y después de un cambio. También mandan y escuchan MIDI
+  por el IAC Driver (`midi.sh`), para probar el flujo completo mientras la
+  persona usuaria tiene abierta la ventana real. Cómo se usan, y qué hace
+  falta instalar, está en su `LEEME.md`. Al terminar un cambio que no debería
   verse, la huella tiene que dar igual. No reemplazan a la ventana real para
-  la activación con teclado ni para el flujo MIDI completo.
+  la activación con teclado.
 - El navegador de desarrollo es Chromium, pero la ventana real usa WebKit, y
   el layout puede comportarse distinto. Un problema de tamaños que no se
   reproduce en el navegador, sobre todo al entrar o salir de pantalla
@@ -396,11 +398,13 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   habilitar el **IAC Driver** (Audio MIDI Setup → MIDI Studio). Hacen falta
   **dos buses**: uno como entrada de la aplicación y otro como salida. Con uno
   solo para las dos cosas, todo lo que la aplicación emite le vuelve a entrar
-  y se arma un bucle. Dos cosas que macOS hace por su cuenta, antes de que el
-  mensaje llegue a la aplicación: un Nota On con velocidad 0 mandado al IAC
-  llega como Nota Off con velocidad 64 (`90 3C 00` → `80 3C 40`), y los status
-  de sistema indefinidos (`F4`, `F9`, `FD`) se descartan. Para probar esos
-  casos hace falta un dispositivo físico, o leer el código.
+  y se arma un bucle. Un agente manda y escucha por esos buses con
+  `verificacion-para-agentes/midi.sh`. Dos cosas que macOS hace por su
+  cuenta, antes de que el mensaje llegue a la aplicación: un Nota On con
+  velocidad 0 mandado al IAC llega como Nota Off con velocidad 64
+  (`90 3C 00` → `80 3C 40`), y los status de sistema indefinidos (`F4`, `F9`,
+  `FD`) se descartan. Para probar esos casos hace falta un dispositivo
+  físico, o leer el código.
 
 ## Tests
 
