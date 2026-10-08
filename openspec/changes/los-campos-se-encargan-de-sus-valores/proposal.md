@@ -58,6 +58,14 @@ campos y el panel de configuración como los toma este cambio.
   los tipos de nodo y en línea con `dibujar`: la función dice si un valor
   sirve, y `error` queda como nombre de lo que devuelve, que es lo que recibe
   `dibujar`. `errorDelParametro` pasa a `validarParametro`.
+- **Los tipos de parámetro son funciones, sin catálogo.** Cada archivo de
+  `parametros/` exporta la función con que un tipo de nodo declara un
+  parámetro (`entero({ … })`, `lista({ … })`), que devuelve la declaración
+  con su `validar` y su `dibujar`. Desaparece `parametros/catalogo.ts`, y
+  sumar un tipo es escribir su archivo. `erroresDeConfiguracion` recibe la
+  caja y llama a `parametro.validar` directamente. Los archivos de nodo pasan
+  a importar esas funciones, que dependen de la interfaz: el requisito "Los
+  tipos de nodo no dependen del editor" se ajusta (decidido al revisar el PR).
 - **Desaparecen los `parametro-…` y `CampoDeParametro`.** El `dibujar` de cada
   tipo dibuja su campo directamente, y `Campo` avisa `cambio` con `bubbles`
   para que llegue al panel. Un tipo de parámetro queda en la declaración,
@@ -91,13 +99,18 @@ Ninguna.
   un número como lo muestra" de los tipos. Los errores con números los
   muestran en su modo el panel, no el log. La guía cambia su ejemplo a `nota`.
   Un escenario nuevo deja escrito que una caja no hereda el modo de la que se
-  seleccionó antes, que hoy ya se cumple y el cambio no tiene que romper.
+  seleccionó antes, que hoy ya se cumple y el cambio no tiene que romper. El
+  catálogo de tipos de parámetro se reemplaza por una función por tipo, sin
+  registro.
 - `tipos-de-nodo`: las reglas de validación nombran valores en sus mensajes
   sin pedirle nada a los parámetros, los errores se calculan sin la
   presentación, y el texto del error es el mismo en el panel y en el log salvo
   por cómo se escriben sus valores. El escenario "Archivo autocontenido" suma
-  la plantilla `formato` a lo que puede importar un tipo de nodo: no es de la
-  interfaz, así que el requisito no negociable no cambia.
+  la plantilla `formato` y las funciones de los tipos de parámetro a lo que
+  puede importar un tipo de nodo, y el requisito "Los tipos de nodo no
+  dependen del editor" se ajusta: un nodo no incluye interfaz ni depende del
+  lienzo ni del estado de la pantalla, pero sus parámetros sí dependen de la
+  interfaz (decidido al revisar el PR).
 - `ejecucion-de-workflow`: el error de una caja mal configurada escribe sus
   valores en decimal, cualquiera sea el modo del campo.
 

@@ -1,5 +1,8 @@
 import { ArrowUpDown } from "lucide";
 
+import { entero } from "../parametros/entero";
+import { interruptor } from "../parametros/interruptor";
+import { lista } from "../parametros/lista";
 import type { TipoDeNodo } from "../tipos";
 
 // En MIDI el primer bit de cada byte es fijo (1 en el status, 0 en los datos):
@@ -20,26 +23,24 @@ export default {
   nombre: "Desplazar",
   icono: ArrowUpDown,
   parametros: [
-    {
+    lista({
       clave: "byte",
       etiqueta: "Byte",
-      tipo: "lista",
       inicial: 1,
       opciones: [
         { valor: BYTE_CANAL, texto: "Canal" },
         { valor: 1, texto: "2.º (datos 1)" },
         { valor: 2, texto: "3.º (datos 2)" },
       ],
-    },
+    }),
     // Un intervalo, que puede ser negativo: solo tiene sentido en decimal.
-    {
+    entero({
       clave: "desplazamiento",
       etiqueta: "Desplazamiento",
-      tipo: "entero",
       inicial: 0,
       modos: ["decimal"],
-    },
-    { clave: "overflow", etiqueta: "Overflow", tipo: "interruptor", inicial: false },
+    }),
+    interruptor({ clave: "overflow", etiqueta: "Overflow", inicial: false }),
   ],
   procesar(mensaje, parametros) {
     const bytes = mensaje.bytes;

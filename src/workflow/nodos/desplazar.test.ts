@@ -166,5 +166,5 @@ test("el desplazamiento se escribe solo en decimal", () => {
   // hexadecimal. El campo ofrece solo los modos que declara el parámetro.
   const parametro = desplazar.parametros.find(({ clave }) => clave === "desplazamiento");
 
-  expect(parametro).toMatchObject({ tipo: "entero", modos: ["decimal"] });
+  expect(parametro).toMatchObject({ modos: ["decimal"] });
 });

@@ -2,7 +2,7 @@ import type { IconNode } from "lucide";
 
 import type { Texto } from "@/formato";
 import type { MensajeMidi } from "@/midi/mensaje";
-import type { Parametro, ValorDeParametro } from "./parametros/catalogo";
+import type { Parametro } from "./parametros/parametro";
 
 /** Un problema en la configuración de una caja, asociado a uno de sus parámetros. */
 export interface ErrorDeConfiguracion {
@@ -24,6 +24,7 @@ export interface TipoDeNodo {
   icono: IconNode;
   /** Si se omite, la caja tiene salida. */
   tieneSalida?: boolean;
+  /** Cada uno armado con la función de su tipo: `entero(…)`, `lista(…)`… */
   parametros: Parametro[];
   /**
    * Reglas que miran varios parámetros juntos. Es opcional, y se llama solo si
@@ -32,7 +33,7 @@ export interface TipoDeNodo {
    * error, se lo marca con `formato`: lo escribe el campo debajo del cual se
    * muestra, como él lo muestra.
    */
-  validar?(parametros: Record<string, ValorDeParametro>): ErrorDeConfiguracion[];
+  validar?(parametros: Record<string, unknown>): ErrorDeConfiguracion[];
   /**
    * Recibe una copia del mensaje (se puede modificar sin afectar a otras
    * ramas) y devuelve el mensaje que pasa a las cajas siguientes, o nada para
@@ -41,6 +42,6 @@ export interface TipoDeNodo {
    */
   procesar(
     mensaje: MensajeMidi,
-    parametros: Record<string, ValorDeParametro>,
+    parametros: Record<string, unknown>,
   ): MensajeMidi | null | void;
 }

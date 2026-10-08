@@ -52,7 +52,7 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
   // Una caja mal configurada no procesa nada: así `procesar` puede suponer
   // que sus parámetros están bien. Los valores del error van al log como
   // texto común: ahí no hay un campo que los escriba en su modo.
-  const [primerError] = erroresDeConfiguracion(tipo, nodo.parametros);
+  const [primerError] = erroresDeConfiguracion(nodo);
   if (primerError) {
     const parametro = tipo.parametros.find((candidato) => candidato.clave === primerError.clave);
     throw new Error(

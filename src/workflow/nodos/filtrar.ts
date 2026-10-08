@@ -2,6 +2,9 @@ import { Filter } from "lucide";
 
 import type { Rango } from "@/componentes/campo-rango";
 import { NOMBRES_DE_TIPO, TIPOS_ELEGIBLES } from "@/midi/mensaje";
+import { autocompletar } from "../parametros/autocompletar";
+import { opciones } from "../parametros/opciones";
+import { rango } from "../parametros/rango";
 import type { TipoDeNodo } from "../tipos";
 
 /**
@@ -22,44 +25,40 @@ export default {
   nombre: "Filtrar",
   icono: Filter,
   parametros: [
-    {
+    autocompletar({
       clave: "tipos",
       etiqueta: "Tipos de mensaje",
-      tipo: "autocompletar",
       inicial: [],
       opciones: TIPOS_ELEGIBLES.map((tipo) => ({ valor: tipo, texto: NOMBRES_DE_TIPO[tipo] })),
       textoDeAyuda: "Cualquier tipo",
-    },
-    {
+    }),
+    opciones({
       clave: "canales",
       etiqueta: "Canales",
-      tipo: "opciones",
       inicial: [],
       opciones: Array.from({ length: 16 }, (_, indice) => ({
         valor: indice + 1,
         texto: String(indice + 1),
       })),
-    },
+    }),
     // Los rangos van de 0 a 127, como un byte de datos, y no se pueden
     // invertir: "desde" mayor que "hasta" no dejaría pasar nada.
-    {
+    rango({
       clave: "datos1",
       etiqueta: "Datos 1",
-      tipo: "rango",
       inicial: { desde: 0, hasta: 127 },
       minimo: 0,
       maximo: 127,
       invertible: false,
-    },
-    {
+    }),
+    rango({
       clave: "datos2",
       etiqueta: "Datos 2",
-      tipo: "rango",
       inicial: { desde: 0, hasta: 127 },
       minimo: 0,
       maximo: 127,
       invertible: false,
-    },
+    }),
   ],
   procesar(mensaje, parametros) {
     // Hay que decirle a TypeScript qué es cada parámetro: dos listas y dos

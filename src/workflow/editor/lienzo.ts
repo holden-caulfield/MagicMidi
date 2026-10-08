@@ -57,8 +57,7 @@ type Esquema = GetSchemes<Caja, Enlace>;
 type Senales = LitArea2D<Esquema>;
 
 function tieneErrores(nodo: NodoDelFlujo): boolean {
-  if (nodo.tipo === "trigger") return false;
-  return erroresDeConfiguracion(TIPOS_DE_NODO[nodo.tipo], nodo.parametros).length > 0;
+  return erroresDeConfiguracion(nodo).length > 0;
 }
 
 function crearCaja(nodo: NodoDelFlujo): Caja {

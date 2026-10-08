@@ -13,11 +13,10 @@ El archivo de un tipo de nodo SHALL declarar:
 - si la caja **no tiene salida**. Es opcional: si no se declara, la caja tiene
   salida. Todas tienen entrada; las que no tienen salida cierran el flujo, y
   por eso se ven con el color de las cajas de fin, sin declarar nada más;
-- la lista de **parámetros**, cada uno con una clave, una etiqueta visible, un
-  tipo y un valor inicial, más los datos propios de su tipo. Los tipos de
-  parámetro disponibles SHALL ser los registrados en el catálogo de tipos de
-  parámetro (ver "Un tipo de parámetro es un archivo registrado en su
-  catálogo");
+- la lista de **parámetros**, cada uno declarado con la función de su tipo
+  de parámetro, con una clave, una etiqueta visible y un valor inicial, más
+  los datos propios de su tipo (ver la spec `tipos-de-parametro`, "Un tipo de
+  parámetro es un archivo que arma sus parámetros");
 - **reglas de validación** propias, que miran los valores de varios
   parámetros juntos. Son opcionales: un tipo que no las declara se valida solo
   con lo que revisa cada parámetro. Cada regla que no se cumple SHALL dar un
@@ -57,10 +56,11 @@ tipo de parámetro.
 
 #### Scenario: Un tipo de parámetro nuevo sin tocar el tipo de nodo
 
-- **GIVEN** se registra un tipo de parámetro nuevo en su catálogo
-- **WHEN** un tipo de nodo declara un parámetro de ese tipo
-- **THEN** el panel muestra el control del tipo nuevo, y el archivo del tipo de
-  nodo solo agregó la declaración del parámetro
+- **GIVEN** se crea un tipo de parámetro nuevo
+- **WHEN** un tipo de nodo declara un parámetro con su función
+- **THEN** el panel muestra el campo del tipo nuevo, y el archivo del tipo de
+  nodo solo agregó la declaración del parámetro y la importación de su
+  función
 
 #### Scenario: Tipo sin salida
 
@@ -112,16 +112,18 @@ tipo de parámetro.
 
 Este requisito no es negociable: ninguna decisión de diseño SHALL
 relajarlo. El archivo de un tipo de nodo no SHALL depender de la librería que
-dibuja el lienzo, ni de los componentes de la interfaz, ni del estado de la pantalla.
-Reemplazar la librería del lienzo no SHALL obligar a cambiar ningún archivo de
-tipo de nodo.
+dibuja el lienzo ni del estado de la pantalla, ni SHALL incluir nada de la
+interfaz: declara sus parámetros con las funciones de los tipos de parámetro,
+que son las que saben qué campo los dibuja. Reemplazar la librería del lienzo
+no SHALL obligar a cambiar ningún archivo de tipo de nodo.
 
 #### Scenario: Archivo autocontenido
 
 - **WHEN** se revisa lo que importa el archivo de un tipo de nodo
 - **THEN** solo importa la definición del contrato de tipos de nodo, su ícono
-  de la librería de íconos, la forma de marcar valores en un mensaje de
-  error (que no es parte de la interfaz) y, si hace falta, funciones
-  auxiliares propias del procesamiento MIDI que no tengan efectos (por
-  ejemplo, una que calcule el canal de un status), nunca la librería del
-  lienzo, módulos de la interfaz ni el envío al puerto de salida
+  de la librería de íconos, las funciones de los tipos de parámetro que
+  declara, la forma de marcar valores en un mensaje de error y, si hace
+  falta, funciones auxiliares propias del procesamiento MIDI que no tengan
+  efectos (por ejemplo, una que calcule el canal de un status), nunca la
+  librería del lienzo, el estado de la pantalla, componentes de la interfaz
+  ni el envío al puerto de salida

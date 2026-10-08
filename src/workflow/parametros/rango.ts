@@ -2,13 +2,11 @@ import { html } from "lit";
 
 import "@/componentes/campo-rango";
 import type { Rango } from "@/componentes/campo-rango";
-import type { ParametroBase } from "./parametro";
-import type { Modo } from "@/componentes/modo-numerico";
-import { formato, type Texto } from "@/formato";
+import { type Modo, MODOS_POR_DEFECTO } from "@/componentes/modo-numerico";
+import { formato } from "@/formato";
+import type { Declaracion, Parametro } from "./parametro";
 
-/** Dos extremos enteros, "desde" y "hasta", entre un mínimo y un máximo. */
-export interface ParametroRango extends ParametroBase<Rango> {
-  tipo: "rango";
+export interface DeclaracionDeRango extends Declaracion<Rango> {
   minimo: number;
   maximo: number;
   /** Si "desde" puede ser mayor que "hasta", para recorrer el rango al revés. */
@@ -17,33 +15,38 @@ export interface ParametroRango extends ParametroBase<Rango> {
   modos?: Modo[];
 }
 
-/** Si el valor le sirve al parámetro: `null`, o el texto del error. */
-export function validar(parametro: ParametroRango, valor: Rango): Texto | null {
-  const { minimo, maximo, invertible } = parametro;
-  const extremos = [valor?.desde, valor?.hasta];
-  if (!extremos.every((extremo) => Number.isInteger(extremo))) {
-    return "Tiene que ser un número entero";
-  }
-  if (extremos.some((extremo) => extremo < minimo || extremo > maximo)) {
-    return formato`Tiene que ir de ${minimo} a ${maximo}`;
-  }
-  if (!invertible && valor.desde > valor.hasta) {
-    return "Desde tiene que ser igual o menor que hasta";
-  }
-  return null;
+/**
+ * Dos extremos enteros, "desde" y "hasta", entre un mínimo y un máximo, con
+ * una barra de dos perillas. Como el entero, lleva sus modos ya resueltos.
+ */
+export function rango(declaracion: DeclaracionDeRango): Parametro<Rango> & DeclaracionDeRango {
+  const { etiqueta, minimo, maximo, invertible, modos = MODOS_POR_DEFECTO } = declaracion;
+  return {
+    ...declaracion,
+    modos,
+    validar(valor) {
+      const extremos = [valor?.desde, valor?.hasta];
+      if (!extremos.every((extremo) => Number.isInteger(extremo))) {
+        return "Tiene que ser un número entero";
+      }
+      if (extremos.some((extremo) => extremo < minimo || extremo > maximo)) {
+        return formato`Tiene que ir de ${minimo} a ${maximo}`;
+      }
+      if (!invertible && valor.desde > valor.hasta) {
+        return "Desde tiene que ser igual o menor que hasta";
+      }
+      return null;
+    },
+    dibujar: (valor, error, estado) =>
+      html`<campo-rango
+        etiqueta=${etiqueta}
+        .valor=${valor}
+        .error=${error}
+        .modos=${modos}
+        .minimo=${minimo}
+        .maximo=${maximo}
+        .invertible=${invertible}
+        .estado=${estado}
+      ></campo-rango>`,
+  };
 }
-
-export default {
-  validar,
-  dibujar: (parametro: ParametroRango, valor: Rango, error: Texto | null, estado: unknown) =>
-    html`<campo-rango
-      etiqueta=${parametro.etiqueta}
-      .valor=${valor}
-      .error=${error}
-      .modos=${parametro.modos}
-      .minimo=${parametro.minimo}
-      .maximo=${parametro.maximo}
-      .invertible=${parametro.invertible}
-      .estado=${estado}
-    ></campo-rango>`,
-};

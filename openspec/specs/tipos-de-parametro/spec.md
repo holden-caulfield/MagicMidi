@@ -4,8 +4,8 @@
 Fija el contrato para sumar tipos de parámetro nuevos, los que pueden declarar
 los tipos de nodo para que la persona usuaria configure una caja. Como con los
 tipos de nodo, tiene que ser una tarea chica y autocontenida, que pueda encarar
-alguien con nociones básicas de programación: un archivo con el tipo y su
-control, más una línea en el catálogo de tipos de parámetro.
+alguien con nociones básicas de programación: un archivo con la función del
+tipo, que dice qué valores le sirven y qué campo lo dibuja.
 
 ## Requirements
 

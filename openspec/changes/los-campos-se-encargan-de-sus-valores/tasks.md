@@ -192,3 +192,26 @@ decimal los valores de un error.
       versión anterior y con la adaptada) y con el cambio. Correr el resto de
       las pruebas y tomar la huella sobre `main` y con el cambio, y verificar
       que `diferencias.py` termine en 0
+
+## 11. Los tipos de parámetro son funciones (después de revisar el PR)
+
+- [x] 11.1 Pasar cada tipo de parámetro a una función con el nombre del tipo,
+      que recibe la declaración y devuelve el parámetro con su `validar` y su
+      `dibujar` (`Declaracion<V>` y `Parametro<V>` en `parametros/parametro.ts`),
+      y borrar `parametros/catalogo.ts`. Verificar con `npx tsc --noEmit` que
+      compilen los tipos de parámetro, y con un archivo de prueba que una
+      declaración con un tipo que no existe, un valor inicial de otra clase o
+      un dato que falta no compile
+- [x] 11.2 Declarar los parámetros de los tipos de nodo con esas funciones, y
+      pasar `erroresDeConfiguracion` a recibir la caja, con el panel, el lienzo
+      y el ejecutor. Verificar con `npx tsc --noEmit`
+- [x] 11.3 Ajustar los tests (los de cada tipo de parámetro arman el
+      parámetro con su función; `validacion.test.ts` usa Fijar y Desplazar) y
+      las guías de parámetros y de nodos. Verificar con `npm test`, que no
+      quede `catalogo` de parámetros ni `tipo: "…"` en las declaraciones, y
+      compilando el ejemplo `nota` de la guía
+- [x] 11.4 Delta specs: el catálogo se reemplaza por "Un tipo de parámetro es
+      un archivo que arma sus parámetros", y se ajusta "Los tipos de nodo no
+      dependen del editor". Verificar con `openspec validate --strict`
+- [x] 11.5 Correr la prueba de los modos, las demás pruebas y la huella, y
+      verificar que den lo mismo que en el grupo 10

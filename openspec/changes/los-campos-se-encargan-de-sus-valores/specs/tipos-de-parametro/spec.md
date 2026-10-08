@@ -2,6 +2,54 @@
 
 ## ADDED Requirements
 
+### Requirement: Un tipo de parámetro es un archivo que arma sus parámetros
+
+Cada tipo de parámetro SHALL estar definido entero en un único archivo, dentro
+de una carpeta del código dedicada a los tipos de parámetro, que vive junto a
+la de los tipos de nodo. El archivo SHALL exportar, con el nombre del tipo, la
+función con que un tipo de nodo declara un parámetro de ese tipo: recibe la
+declaración (la clave, la etiqueta, el valor inicial y los datos propios del
+tipo) y devuelve el parámetro, que sabe qué valores le sirven y qué campo lo
+dibuja. Crear el archivo SHALL alcanzar para que un tipo de nodo pueda declarar
+parámetros de ese tipo y el panel de configuración los muestre con su campo,
+sin registrar el tipo en ningún lado y sin tocar el panel, los otros tipos de
+parámetro ni ningún otro archivo.
+
+Un tipo de nodo que declare un parámetro de un tipo que no existe, o con una
+declaración que no corresponde a su tipo (un dato que falta, o un valor
+inicial de otra clase), SHALL detectarse al compilar, antes de que la
+aplicación arranque.
+
+#### Scenario: Agregar un tipo de parámetro
+
+- **GIVEN** una persona desarrolladora copia el archivo de un tipo de parámetro
+  existente en la misma carpeta, con otro nombre, le cambia el nombre de la
+  función y el campo que dibuja
+- **WHEN** un tipo de nodo declara un parámetro con esa función y la persona
+  usuaria selecciona una caja de ese tipo
+- **THEN** el panel de configuración muestra el campo nuevo con la etiqueta
+  del parámetro, y cambiarlo cambia la configuración de esa caja, sin haber
+  modificado otros archivos que ese y el del tipo de nodo
+
+#### Scenario: Tipo de parámetro que no existe
+
+- **GIVEN** un tipo de nodo declara un parámetro con una función de tipo que
+  no existe
+- **WHEN** corre el chequeo de tipos del proyecto
+- **THEN** el chequeo falla y señala el parámetro con el problema
+
+#### Scenario: Valor inicial del tipo equivocado
+
+- **GIVEN** un tipo de nodo declara un parámetro entero con valor inicial "sí"
+- **WHEN** corre el chequeo de tipos del proyecto
+- **THEN** el chequeo falla y señala el parámetro con el problema
+
+#### Scenario: Falta un dato del tipo
+
+- **GIVEN** un tipo de nodo declara un parámetro lista sin opciones
+- **WHEN** corre el chequeo de tipos del proyecto
+- **THEN** el chequeo falla y señala el parámetro con el problema
+
 ### Requirement: Los mensajes de error nombran valores que escribe el campo
 
 Un texto de error que nombra valores, sea de un tipo de parámetro o de una
@@ -82,8 +130,8 @@ dependen de él.
 
 El archivo de un tipo de parámetro SHALL definir:
 
-- su **identificador**, el que escribe un tipo de nodo para declarar un
-  parámetro de ese tipo;
+- la **función** con que un tipo de nodo declara un parámetro de ese tipo,
+  con el nombre del tipo;
 - la **forma de la declaración**: además de la clave, la etiqueta y el valor
   inicial, que tienen todos los parámetros, los datos propios de ese tipo (por
   ejemplo, la lista de opciones, o el rango de un entero);
@@ -167,8 +215,8 @@ depender de la librería que dibuja el lienzo.
 
 La carpeta de tipos de parámetro SHALL incluir una guía breve, en castellano,
 pensada para quien tiene nociones básicas de programación. SHALL explicar qué
-archivo crear, cómo registrarlo en el catálogo, qué definir, cómo elegir el
-campo que lo dibuja y qué datos pasarle, cómo decir qué valores no le sirven
+archivo crear y qué función exportar, qué definir, cómo elegir el campo que lo
+dibuja y qué datos pasarle, cómo declararlo desde un tipo de nodo, cómo decir qué valores no le sirven
 (nombrando valores en el error, para que el campo los escriba) y cómo
 probarlo. SHALL decir que, si ningún campo sirve, hace falta uno nuevo entre
 los componentes de la interfaz, y que ahí va también interpretar lo que se
@@ -187,6 +235,22 @@ aplicación, con su test.
 - **THEN** es un tipo "nota", para una nota MIDI de C-1 (0) a G9 (127), que se
   escribe y se muestra solo como nota, sin botón de modo, y cuyo error nombra
   sus extremos como valores, así el panel los muestra como notas
+
+### Requirement: Los tipos de parámetro disponibles incluyen el rango
+
+Los tipos de parámetro disponibles SHALL ser número entero, sí/no, lista (una
+sola opción de una lista cerrada), dos para elegir varias opciones de una
+lista cerrada (opciones y autocompletar) y rango (dos extremos enteros). En
+los de lista, cada opción tiene un valor y un texto visible. Cada uno SHALL
+estar definido en su propio archivo, con la misma forma que cualquier tipo
+nuevo, sin recibir un trato especial fuera de él.
+
+#### Scenario: Los seis tipos en su carpeta
+
+- **WHEN** se revisa la carpeta de tipos de parámetro
+- **THEN** entero, sí/no, lista, opciones, autocompletar y rango están
+  definidos cada uno en su propio archivo, que exporta su función, y el panel
+  de configuración no nombra a ninguno
 
 ### Requirement: El parámetro entero puede limitar los valores que le sirven
 
@@ -399,3 +463,15 @@ que necesita para volver a mostrarse"). Para nombrar un número en un error,
 se lo marca como valor y lo escribe el campo (ver "Los mensajes de error
 nombran valores que escribe el campo"). El flujo vive solo mientras la
 aplicación está abierta, así que no hay cajas guardadas que migrar.
+
+### Requirement: Un tipo de parámetro es un archivo registrado en su catálogo
+
+**Reason**: El catálogo existía para unir una declaración escrita como datos
+(con un campo `tipo`) con la validación y el dibujo de ese tipo, y pedía
+registrar cada tipo nuevo en una unión y una lista. Ahora la declaración la
+arma la función de su tipo, y el parámetro trae su `validar` y su `dibujar`.
+
+**Migration**: Un tipo de parámetro exporta su función (ver "Un tipo de
+parámetro es un archivo que arma sus parámetros"), y un tipo de nodo declara
+sus parámetros con ella, en lugar de escribir un objeto con `tipo`. No hay que
+registrarlo en ningún lado.

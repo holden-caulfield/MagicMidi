@@ -1,10 +1,9 @@
 import type { IdDeTipo } from "@/workflow/nodos/catalogo";
-import type { ValorDeParametro } from "@/workflow/parametros/catalogo";
 
 export interface NodoDelFlujo {
   id: string;
   tipo: "trigger" | IdDeTipo;
-  parametros: Record<string, ValorDeParametro>;
+  parametros: Record<string, unknown>;
   /**
    * Lo que el campo de cada parámetro quiere conservar entre montajes (como el
    * modo de uno numérico), por clave. Solo lo lee el campo: el panel lo guarda y

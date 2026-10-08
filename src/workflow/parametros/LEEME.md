@@ -3,10 +3,11 @@
 Un *parámetro* es algo que la persona usuaria configura en una caja, desde el
 panel que aparece a la derecha del lienzo al seleccionarla: el desplazamiento
 de Desplazar, por ejemplo. Cada parámetro tiene un *tipo*, que decide qué
-campo se ve en el panel y qué valores acepta: por ejemplo, `"entero"` (un
-campo para escribir un número entero) o `"interruptor"` (una casilla para
-prender o apagar algo). Cada tipo es un archivo de esta carpeta, y los que hay
-son los que figuran en `catalogo.ts`.
+campo se ve en el panel y qué valores acepta: por ejemplo, `entero` (un campo
+para escribir un número entero) o `interruptor` (una casilla para prender o
+apagar algo). Cada tipo es un archivo de esta carpeta, que exporta la función
+con que un tipo de nodo declara un parámetro de ese tipo: `entero({ … })`,
+`interruptor({ … })`.
 
 Hace falta un tipo nuevo cuando una caja necesita que se configure algo que
 los que hay no expresan bien. Si alcanza con uno de los que hay, usá ese: ver
@@ -16,7 +17,7 @@ Crear un tipo de parámetro es un paso más que crear un tipo de nodo: además d
 la lógica, hay que elegir el campo que se ve en el panel. Pero los campos ya
 están hechos (son los componentes de `src/componentes/`, con su etiqueta, su
 error y sus estilos, y ellos leen lo que se escribe), y guardar el valor en la
-caja también está resuelto: tu archivo solo dice qué valores sirven y qué
+caja también está resuelto: tu función solo dice qué valores sirven y qué
 campo dibujar, con qué datos.
 
 ## Los que hay
@@ -47,66 +48,56 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
 
 1. **Creá el archivo** en esta carpeta, con un nombre en minúsculas que diga
    qué se configura: por ejemplo, `nota.ts`. Lo más fácil es copiar el de un
-   tipo parecido (por ejemplo, `entero.ts`) y cambiarlo.
-2. **Registralo en el catálogo.** Abrí `catalogo.ts`, en esta misma carpeta,
-   y hacé tres cosas: importá tu archivo arriba, sumá su declaración a la
-   lista `Parametro` y su entrada a `TIPOS_DE_PARAMETRO`:
-
-   ```ts
-   import nota, { type ParametroNota } from "./nota";
-
-   export type Parametro =
-     | ParametroNota
-     // …los que ya estaban
-
-   const TIPOS_DE_PARAMETRO = {
-     nota,
-     // …los que ya estaban
-   } satisfies …;
-   ```
-
-   El nombre en `TIPOS_DE_PARAMETRO` tiene que ser el mismo que pusiste en
-   `tipo` (ver más abajo). A diferencia de los tipos de nodo, si te olvidás de
-   alguna de las tres cosas, el chequeo de tipos te avisa: corré
-   `npx tsc --noEmit` desde la raíz del proyecto.
-3. **Escribí el test** de `validar` (ver
+   tipo parecido (por ejemplo, `entero.ts`) y cambiarlo. No hay que
+   registrarlo en ningún lado: alcanza con que exporte su función.
+2. **Escribí el test** de `validar` (ver
    [Qué va en el archivo](#qué-va-en-el-archivo)). Va al lado, terminado en
    `.test.ts`: para `nota.ts`, `nota.test.ts`. Lo más fácil es copiar el test
    de un tipo parecido. Después corré `npm test`, que tiene que terminar
    diciendo que pasaron todos.
-4. **Usalo desde un tipo de nodo**, declarando un parámetro con tu `tipo`:
+3. **Usalo desde un tipo de nodo**: importá tu función arriba del archivo del
+   nodo y declará el parámetro con ella.
 
    ```ts
-   parametros: [{ clave: "nota", etiqueta: "Nota", tipo: "nota", inicial: 60 }],
+   import { nota } from "../parametros/nota";
+
+   // …
+   parametros: [nota({ clave: "nota", etiqueta: "Nota", inicial: 60 })],
    ```
 
-   Levantá la aplicación, agregá esa caja desde la barra, seleccionala y
-   probá el campo en el panel: que muestre el valor inicial, que guarde lo que
-   escribís, que rechace lo que no corresponde y que muestre el error de lo
-   que no sirve.
+   Si la declaración no corresponde a tu tipo (falta un dato, o el valor
+   `inicial` es de otra clase), el chequeo de tipos te avisa: corré
+   `npx tsc --noEmit` desde la raíz del proyecto. Después levantá la
+   aplicación, agregá esa caja desde la barra, seleccionala y probá el campo
+   en el panel: que muestre el valor inicial, que guarde lo que escribís, que
+   rechace lo que no corresponde y que muestre el error de lo que no sirve.
 
 ## Qué va en el archivo
 
-- **La forma de la declaración**: lo que escribe un tipo de nodo para declarar
-  un parámetro de tu tipo. Es una `interface` que extiende `ParametroBase`
-  (de `./parametro`), con el tipo del valor entre `<>` (por ejemplo
-  `ParametroBase<number>`) y un campo `tipo` con el nombre del tipo.
-  `ParametroBase` ya trae la `clave`, la `etiqueta` y el valor `inicial`. Si
-  tu tipo necesita algo más, va acá: la lista, por ejemplo, agrega sus
-  opciones, y el entero, un `minimo` y un `maximo` opcionales.
-- **La entrada para el catálogo** (el `export default`), con dos funciones:
-  - **`validar(parametro, valor)`**: si un valor le sirve a este parámetro.
-    Devuelve `null` si le sirve, o el texto que se muestra debajo del campo si
-    no: el entero, por ejemplo, devuelve que tiene que ir de 0 a 127 para un
-    200 cuando el parámetro se declaró con ese rango. Si el texto nombra
-    valores, como ese 0 y ese 127, se escriben con `formato` (ver
+- **La forma de la declaración**: lo que escribe un tipo de nodo al declarar
+  un parámetro de tu tipo. Es una `interface` que extiende `Declaracion` (de
+  `./parametro`), con el tipo del valor entre `<>` (por ejemplo
+  `Declaracion<number>`). `Declaracion` ya trae la `clave`, la `etiqueta` y
+  el valor `inicial`. Si tu tipo necesita algo más, va acá: la lista, por
+  ejemplo, agrega sus opciones, y el entero, un `minimo` y un `maximo`
+  opcionales. Si no necesita nada más, alcanza con `Declaracion<…>`, como en
+  `interruptor.ts`.
+- **La función del tipo**, exportada con el nombre del tipo: recibe la
+  declaración y devuelve el parámetro, que es la declaración más dos
+  funciones. Lo que devuelve es un `Parametro` (de `./parametro`), con el tipo
+  del valor entre `<>`:
+  - **`validar(valor)`**: si un valor le sirve a este parámetro. Devuelve
+    `null` si le sirve, o el texto que se muestra debajo del campo si no: el
+    entero, por ejemplo, devuelve que tiene que ir de 0 a 127 para un 200
+    cuando el parámetro se declaró con ese rango. Si el texto nombra valores,
+    como ese 0 y ese 127, se escriben con `formato` (ver
     [Nombrar valores en un error](#nombrar-valores-en-un-error-formato)). El
     panel lo muestra, el lienzo marca la caja en rojo, y el test que revisa
     todas las cajas (`src/workflow/nodos/catalogo.test.ts`) lo usa para
     comprobar que el valor `inicial` de cada parámetro no tenga errores.
-  - **`dibujar(parametro, valor, error, estado)`**: devuelve el campo que
-    muestra el parámetro, uno de los de `src/componentes/` (importado arriba,
-    como `import "@/componentes/campo-numero";`):
+  - **`dibujar(valor, error, estado)`**: devuelve el campo que muestra el
+    parámetro, uno de los de `src/componentes/` (importado arriba, como
+    `import "@/componentes/campo-numero";`):
     - `campo-numero` (un número entero escrito), `campo-interruptor` (una
       casilla), `campo-lista` (un desplegable), `campo-opciones` (píldoras),
       `campo-autocompletar` (buscar y elegir varias) o `campo-rango` (dos
@@ -195,39 +186,39 @@ puede leer como nota y vuelve a mostrar la que tenía.
 import { html } from "lit";
 
 import "@/componentes/campo-numero";
-import { formato, type Texto } from "@/formato";
-import type { ParametroBase } from "./parametro";
+import { formato } from "@/formato";
+import type { Declaracion, Parametro } from "./parametro";
 
 /** Una nota MIDI, de C-1 (0) a G9 (127), que se escribe y se muestra como nota. */
-export interface ParametroNota extends ParametroBase<number> {
-  tipo: "nota";
+export function nota(declaracion: Declaracion<number>): Parametro<number> {
+  return {
+    ...declaracion,
+    validar(valor) {
+      if (!Number.isInteger(valor) || valor < 0 || valor > 127) {
+        return formato`Tiene que ser una nota, de ${0} a ${127}`;
+      }
+      return null;
+    },
+    dibujar: (valor, error, estado) =>
+      html`<campo-numero
+        etiqueta=${declaracion.etiqueta}
+        .valor=${valor}
+        .error=${error}
+        .modos=${["nota"]}
+        .minimo=${0}
+        .maximo=${127}
+        .estado=${estado}
+      ></campo-numero>`,
+  };
 }
-
-/** Si el valor le sirve al parámetro: `null`, o el texto del error. */
-export function validar(_parametro: ParametroNota, valor: number): Texto | null {
-  if (!Number.isInteger(valor) || valor < 0 || valor > 127) {
-    return formato`Tiene que ser una nota, de ${0} a ${127}`;
-  }
-  return null;
-}
-
-export default {
-  validar,
-  dibujar: (parametro: ParametroNota, valor: number, error: Texto | null, estado: unknown) =>
-    html`<campo-numero
-      etiqueta=${parametro.etiqueta}
-      .valor=${valor}
-      .error=${error}
-      .modos=${["nota"]}
-      .minimo=${0}
-      .maximo=${127}
-      .estado=${estado}
-    ></campo-numero>`,
-};
 ```
 
 Lo que hace cada parte:
 
+- `Declaracion<number>`: una nota no necesita más datos que la clave, la
+  etiqueta y el valor inicial, así que no hace falta una `interface` propia.
+- `...declaracion` copia esos tres datos al parámetro, y al lado van
+  `validar` y `dibujar`.
 - `.modos=${["nota"]}`: el campo ofrece un solo modo, así que no tiene botón y
   solo lee notas.
 - `.minimo` y `.maximo`: las flechas del campo se frenan en C-1 y en G9. Lo
@@ -237,8 +228,6 @@ Lo que hace cada parte:
   lee "Tiene que ser una nota, de C-1 a G9".
 - `estado`: aunque haya un solo modo, el campo conserva si las notas van con
   bemoles.
-- `_parametro` empieza con guion bajo porque `validar` no lo usa: siempre va
-  de 0 a 127.
 
 Y su test, en `nota.test.ts`. Como el error nombra valores, se compara con el
 mismo texto armado con `formato`: el test no necesita saber cómo los muestra
@@ -248,42 +237,43 @@ el campo.
 import { expect, test } from "vitest";
 
 import { formato } from "@/formato";
-import { validar } from "./nota";
+import { nota } from "./nota";
 
-const parametro = { clave: "nota", etiqueta: "Nota", tipo: "nota" as const, inicial: 60 };
+const parametro = nota({ clave: "nota", etiqueta: "Nota", inicial: 60 });
 
 test("acepta el Do central", () => {
-  expect(validar(parametro, 60)).toBeNull();
+  expect(parametro.validar(60)).toBeNull();
 });
 
 test("acepta la nota más grave y la más aguda", () => {
-  expect(validar(parametro, 0)).toBeNull();
-  expect(validar(parametro, 127)).toBeNull();
+  expect(parametro.validar(0)).toBeNull();
+  expect(parametro.validar(127)).toBeNull();
 });
 
 test("marca una nota por encima de G9", () => {
-  expect(validar(parametro, 128)).toEqual(formato`Tiene que ser una nota, de ${0} a ${127}`);
+  expect(parametro.validar(128)).toEqual(formato`Tiene que ser una nota, de ${0} a ${127}`);
 });
 
 test("marca un número negativo", () => {
-  expect(validar(parametro, -1)).toEqual(formato`Tiene que ser una nota, de ${0} a ${127}`);
+  expect(parametro.validar(-1)).toEqual(formato`Tiene que ser una nota, de ${0} a ${127}`);
 });
 
 test("marca un número con decimales", () => {
-  expect(validar(parametro, 60.5)).toEqual(formato`Tiene que ser una nota, de ${0} a ${127}`);
+  expect(parametro.validar(60.5)).toEqual(formato`Tiene que ser una nota, de ${0} a ${127}`);
 });
 ```
 
-Para usarlo, una caja declara `tipo: "nota"` en uno de sus parámetros, como
-en el paso 4.
+Para usarlo, una caja importa `nota` y declara un parámetro con ella, como
+en el paso 3.
 
 ## Cómo escribir el test
 
 Es igual que el de un tipo de nodo (ver
 [Cómo escribir el test](../nodos/LEEME.md#cómo-escribir-el-test)), pero lo
-que se prueba es `validar`: se le pasa una declaración y un valor, y se revisa
-el texto que devuelve, o que devuelva `null`. Si el texto nombra valores, se
-compara con `formato`, como en el ejemplo. Para elegir los casos:
+que se prueba es `validar`: se arma un parámetro con la función de tu tipo,
+se le pasa un valor a su `validar` y se revisa el texto que devuelve, o que
+devuelva `null`. Si el texto nombra valores, se compara con `formato`, como
+en el ejemplo. Para elegir los casos:
 
 - **El caso normal**: un valor que se usa todos los días.
 - **Los bordes**: el valor más chico y el más grande que se aceptan, y los
@@ -293,4 +283,4 @@ compara con `formato`, como en el ejemplo. Para elegir los casos:
 
 Lo que se escribe en el campo lo lee el campo, y eso se prueba al lado del
 campo, en `src/componentes/`. El campo en sí no se testea: se prueba en la
-aplicación, como en el paso 4.
+aplicación, como en el paso 3.

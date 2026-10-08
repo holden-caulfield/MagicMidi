@@ -183,15 +183,66 @@ Los mensajes sin valores siguen siendo `string`. `Texto` evita repetir la
 unión en cada tipo de parámetro: `ErrorDeConfiguracion.mensaje` es `Texto`,
 `validar` devuelve `Texto | null` y `dibujar` recibe `error: Texto | null`.
 
-### Las firmas y el catálogo
+### Las firmas
 
-- `TipoDeParametro`: `validar(parametro, valor)` y `dibujar(parametro, valor,
-  error, estado)`, donde `error` es lo que devolvió `validar`. Se van
-  `formatear` y `formatearParametro`. `validarParametro(parametro, valor)` y
-  `dibujarParametro(parametro, valor, error, estado)`.
-- `erroresDeConfiguracion(tipo, parametros)`; `TipoDeNodo.validar(parametros)`.
+- Un parámetro: `validar(valor)` y `dibujar(valor, error, estado)`, donde
+  `error` es lo que devolvió `validar` (ver "Los tipos de parámetro son
+  funciones, sin catálogo"). Se van `formatear` y `formatearParametro`.
+- `erroresDeConfiguracion(nodo)`; `TipoDeNodo.validar(parametros)`.
 - El ejecutor arma su texto con `escribir(primerError.mensaje)`. El lienzo
-  llama a `erroresDeConfiguracion(tipo, nodo.parametros)` y solo mira si hay.
+  llama a `erroresDeConfiguracion(nodo)` y solo mira si hay.
+
+### Los tipos de parámetro son funciones, sin catálogo
+
+Cada archivo de `parametros/` exporta, con el nombre del tipo, la función con
+que un tipo de nodo declara un parámetro: `entero({ clave, etiqueta, inicial,
+minimo, maximo })`. Recibe la declaración y devuelve un `Parametro<V>`: la
+declaración más `validar(valor)` y `dibujar(valor, error, estado)`, que
+cierran sobre ella. `Declaracion<V>` (la clave, la etiqueta y el valor
+inicial) y `Parametro<V>` viven en `parametros/parametro.ts`, y cada tipo
+declara su forma extendiendo `Declaracion` (`DeclaracionDeEntero`,
+`DeclaracionDeLista<T>`…).
+
+Así, la validación y el panel llaman a `parametro.validar` y a
+`parametro.dibujar` directamente, y desaparece `parametros/catalogo.ts`: la
+unión `Parametro`, `TipoDeParametro`, el `satisfies`, `tipoDe` con su cast,
+`validarParametro`, `dibujarParametro` y `ValorDeParametro` (los valores de
+una caja son `Record<string, unknown>`; `procesar` ya los leía con `Number`
+o con `as`). Sumar un tipo es escribir su archivo, sin registrarlo.
+
+El chequeo de tipos sigue atrapando una declaración mal escrita: el tipo del
+argumento de cada función marca un dato que falta o un valor inicial de otra
+clase, y un tipo que no existe es una función que no existe. Los numéricos
+(el entero y el rango) dejan en el parámetro sus modos ya resueltos: así los
+reconoce el test del catálogo de nodos, que revisa que les entren.
+
+La consecuencia es que los archivos de nodo importan las funciones de sus
+parámetros, y esas funciones importan Lit y su campo. La persona usuaria
+decidió ajustar el requisito "Los tipos de nodo no dependen del editor": un
+archivo de nodo no incluye nada de la interfaz ni depende del lienzo ni del
+estado de la pantalla, y declara sus parámetros con esas funciones.
+
+Alternativas:
+
+- Declaraciones como datos (`{ tipo: "entero", … }`) y un catálogo que las une
+  con su `validar` y su `dibujar` (lo que había): deja a los nodos sin
+  importar la interfaz, pero a costa de esa ceremonia.
+- Los mismos archivos sin importar su campo, que registraría el panel: los
+  nodos igual dependen de Lit, y el campo queda unido a su tipo solo por el
+  nombre de la etiqueta.
+- Una clase por tipo de nodo con `validar()`, o la caja como instancia: mete
+  comportamiento en el store, que guarda datos y los copia en cada cambio, y
+  pasa los archivos de nodo a clases con `extends`, más difíciles para quien
+  recién empieza.
+
+### `erroresDeConfiguracion` recibe la caja
+
+`erroresDeConfiguracion(nodo)` recibe la caja (de ella mira solo el tipo y los
+valores), devuelve una lista vacía para el trigger, busca el tipo en
+`TIPOS_DE_NODO` y llama al `validar` de cada parámetro y, si ninguno falla, al
+del tipo de nodo. El panel, el lienzo y el ejecutor ya tienen la caja, y antes
+repetían la búsqueda del tipo y el chequeo del trigger. Sus tests usan cajas
+de verdad: Fijar, que tiene una regla, y Desplazar, que no tiene.
 
 ### El `error` de los tipos de parámetro se llama `validar`
 
@@ -199,14 +250,13 @@ La función dice si un valor le sirve al parámetro, así que se nombra con un
 verbo, como `dibujar` al lado y como el `validar` de los tipos de nodo; el
 sustantivo `error` queda para lo que devuelve, que es el nombre que ya tiene el
 argumento de `dibujar`. Se renombra en los seis tipos, en `TipoDeParametro`,
-en `errorDelParametro` (que pasa a `validarParametro`), en los tests y en la
-guía.
+en `errorDelParametro`, en los tests y en la guía.
 
 Los dos `validar` tienen contratos distintos, y el de cada uno lo dice su
 JSDoc: el de un tipo de parámetro revisa un valor solo y devuelve un texto o
 `null`; el de un tipo de nodo revisa varios parámetros juntos y devuelve una
-lista de errores, cada uno con su `clave`. No se cruzan: uno vive en el
-catálogo de parámetros y el otro en la declaración de cada tipo de nodo.
+lista de errores, cada uno con su `clave`. No se cruzan: uno es de cada
+parámetro y el otro, de la declaración de cada tipo de nodo.
 
 Alternativa: dejar `error`, como decía la revisión. Se descarta porque nombra
 el resultado y no lo que hace la función, y obliga a otro nombre para la
@@ -217,7 +267,7 @@ variable que lo guarda.
 `dibujar` devuelve el `campo-…` con la etiqueta, el valor, el error y los
 datos de la declaración; los numéricos, también `.modos`, `.minimo`,
 `.maximo` y `.estado`. Los seis `@customElement("parametro-…")` y
-`campo-de-parametro.ts` desaparecen; `ParametroBase` pasa a
+`campo-de-parametro.ts` desaparecen; lo que declara todo parámetro pasa a
 `parametros/parametro.ts`. Los campos no tienen estilos de `CampoDeParametro`
 que extrañar: los dos son `display: block`, así que el panel tiene que verse
 igual.
@@ -227,8 +277,8 @@ igual.
 `NodoDelFlujo.presentaciones` pasa a `estadoDeLosParametros?: Record<string,
 unknown>`, con el mismo contenido para los numéricos. `panel-de-configuracion`
 reemplaza `cambiarPresentacion` por `cambiarEstado`, que escucha
-`cambio-de-estado` en el `div.parametro`, y le pasa a `dibujarParametro` el
-de ese parámetro. Los parámetros se dibujan con `repeat` y la clave
+`cambio-de-estado` en el `div.parametro`, y le pasa al `dibujar` de cada
+parámetro el suyo. Los parámetros se dibujan con `repeat` y la clave
 `${nodo.id}/${parametro.clave}`, así al pasar de una caja a otra los campos
 se crean de nuevo y ninguno arrastra el estado de otra caja (el modo, pero
 también, por ejemplo, lo escrito en un autocompletar).
@@ -261,8 +311,13 @@ semitonos) pasan a `midi/notas.ts`, y sus tests de `describir.test.ts`, a
   interfaz: leer lo escrito se prueba al lado del campo.
 - `campo-rango.test.ts`: se van los de `pasarExtremo` e `interpretarExtremo`;
   las flechas de sus campos usan `moverExtremo`, que ya tiene los suyos.
-- `nodos/catalogo.test.ts` toma los modos de cada parámetro con
-  `parametro.modos ?? MODOS_POR_DEFECTO`.
+- `nodos/catalogo.test.ts` reconoce los parámetros numéricos porque llevan
+  sus modos, y arma una caja con los valores iniciales de cada tipo para
+  `erroresDeConfiguracion`.
+- Los tests de los tipos de parámetro arman el parámetro con la función de su
+  tipo y llaman a su `validar`. `validacion.test.ts` usa Fijar y Desplazar en
+  lugar de un tipo de prueba, y `filtrar.test.ts` le pasa una caja a
+  `erroresDeConfiguracion`.
 
 ### El orden, para que cada paso compile
 
@@ -282,6 +337,8 @@ semitonos) pasan a `midi/notas.ts`, y sus tests de `describir.test.ts`, a
 7. Las guías, la verificación y el diff de AGENTS.md.
 8. Después de la revisión del PR: `modos.ts` entra en `ModoNumerico`, el
    campo lee su estado una sola vez y el rango deja de usar `campo-numero`.
+9. También después de la revisión: los tipos de parámetro pasan a ser
+   funciones, sin catálogo, y `erroresDeConfiguracion` recibe la caja.
 
 ### La verificación
 
@@ -309,6 +366,14 @@ que funciona con las herramientas.
   campo escribe con `String` lo que no reconoce (decidido en la revisión).
 - [El log deja de escribir los valores como el panel] → es el comportamiento
   buscado, y queda en las specs `ejecucion-de-workflow` y `tipos-de-nodo`.
+- [Los archivos de nodo dependen de la interfaz a través de las funciones de
+  sus parámetros] → decidido por la persona usuaria, con el requisito
+  ajustado; un archivo de nodo sigue sin incluir interfaz, y sus tests corren
+  en el entorno `node`, donde Lit carga sin problemas.
+- [Inferir el tipo de los valores de una lista o de unas opciones da sus
+  valores literales (`1 | 2 | 10`)] → no molesta al declarar; un test que
+  quiere probar un valor que no está en la lista lo declara con
+  `opciones<number>(…)`.
 - [El rango repite el manejo de un campo de texto] → son pocas líneas, y sus
   flechas son otras (las de la perilla); la prueba de los modos las aprieta en
   los dos campos.

@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide";
 
 import { MensajeMidi, NOMBRES_DE_TIPO, type TipoDeMensaje } from "@/midi/mensaje";
+import { lista } from "../parametros/lista";
 import type { TipoDeNodo } from "../tipos";
 
 // Lo que significa un byte de datos: "ordinal" dice cuál (la nota, el
@@ -59,16 +60,15 @@ export default {
   nombre: "Convertir",
   icono: RefreshCw,
   parametros: [
-    {
+    lista({
       clave: "destino",
       etiqueta: "Convertir a",
-      tipo: "lista",
       inicial: "cambio-de-control",
       opciones: (Object.keys(FORMAS) as TipoConvertible[]).map((tipo) => ({
         valor: tipo,
         texto: NOMBRES_DE_TIPO[tipo],
       })),
-    },
+    }),
   ],
   procesar(mensaje, parametros) {
     const destino = parametros.destino as TipoConvertible;

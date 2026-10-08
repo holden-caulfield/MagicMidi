@@ -8,10 +8,9 @@ import { Componente } from "@/componentes/componente";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { actualizar, estado } from "@/estado/estado";
 import { TIPOS_DE_NODO, TRIGGER } from "../nodos/catalogo";
-import { dibujarParametro, type ValorDeParametro } from "../parametros/catalogo";
 import { erroresDeConfiguracion } from "../validacion";
 
-function cambiarParametro(nodoId: string, clave: string, valor: ValorDeParametro) {
+function cambiarParametro(nodoId: string, clave: string, valor: unknown) {
   actualizar({
     flujo: {
       ...estado.flujo,
@@ -104,7 +103,7 @@ export class PanelDeConfiguracion extends Componente {
     const tipo = nodo.tipo === "trigger" ? null : TIPOS_DE_NODO[nodo.tipo];
     const nombre = tipo ? tipo.nombre : TRIGGER.nombre;
     const parametros = tipo ? tipo.parametros : [];
-    const errores = tipo ? erroresDeConfiguracion(tipo, nodo.parametros) : [];
+    const errores = erroresDeConfiguracion(nodo);
     // Si un parámetro tiene varios errores, se muestra el primero.
     const errorDe = (clave: string) =>
       errores.find((error) => error.clave === clave)?.mensaje ?? null;
@@ -118,13 +117,12 @@ export class PanelDeConfiguracion extends Componente {
       (parametro) => html`
         <div
           class="parametro"
-          @cambio=${(evento: CustomEvent<ValorDeParametro>) =>
+          @cambio=${(evento: CustomEvent<unknown>) =>
             cambiarParametro(nodo.id, parametro.clave, evento.detail)}
           @cambio-de-estado=${(evento: CustomEvent<unknown>) =>
             cambiarEstado(nodo.id, parametro.clave, evento.detail)}
         >
-          ${dibujarParametro(
-            parametro,
+          ${parametro.dibujar(
             nodo.parametros[parametro.clave],
             errorDe(parametro.clave),
             nodo.estadoDeLosParametros?.[parametro.clave],

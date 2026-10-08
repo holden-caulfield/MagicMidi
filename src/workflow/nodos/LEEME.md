@@ -66,10 +66,21 @@ Un tipo de nodo es un objeto con estos campos:
   sale por el puerto MIDI (ver más abajo). Las cajas sin salida se ven
   naranjas, como Emitir, sin que tengas que declarar ningún color.
 - **`parametros`**: lo que la persona usuaria puede configurar en la caja. Cada
-  parámetro tiene una `clave` (el nombre con que lo vas a leer), una `etiqueta`
-  (el texto que se ve en el panel), un `tipo` y un valor `inicial`. Los tipos
-  disponibles son los de la carpeta `src/workflow/parametros/`. Por ejemplo:
-  - `"entero"`: un número entero (acepta negativos). Si solo sirven algunos,
+  parámetro se declara con la función de su tipo, que se importa de la carpeta
+  `src/workflow/parametros/` (por ejemplo,
+  `import { entero } from "../parametros/entero";`), y tiene una `clave` (el
+  nombre con que lo vas a leer), una `etiqueta` (el texto que se ve en el
+  panel) y un valor `inicial`, más lo propio de su tipo:
+
+  ```ts
+  parametros: [
+    entero({ clave: "valor", etiqueta: "Valor", inicial: 100, minimo: 0, maximo: 127 }),
+    interruptor({ clave: "overflow", etiqueta: "Overflow", inicial: false }),
+  ],
+  ```
+
+  Los tipos que hay:
+  - `entero`: un número entero (acepta negativos). Si solo sirven algunos,
     declarale `minimo`, `maximo` o los dos: por ejemplo, `minimo: 0, maximo:
     127` para un byte de datos. Un número fuera de ese rango se guarda igual,
     y el panel muestra el error debajo del campo. El número se puede mostrar
@@ -81,14 +92,14 @@ Un tipo de nodo es un objeto con estos campos:
     `modos: ["decimal"]`. La nota solo se puede ofrecer si el parámetro va de
     0 a 127, y el hexadecimal, si no tiene negativos. Para `procesar`, el
     valor es siempre un número, en cualquier modo.
-  - `"interruptor"`: una casilla para prender o apagar algo.
-  - `"lista"`: una opción de una lista cerrada. Cada opción tiene un `valor` y
+  - `interruptor`: una casilla para prender o apagar algo.
+  - `lista`: una opción de una lista cerrada. Cada opción tiene un `valor` y
     un `texto`.
-  - `"opciones"` y `"autocompletar"`: varias opciones de una lista cerrada (o
+  - `opciones` y `autocompletar`: varias opciones de una lista cerrada (o
     ninguna). El valor es una lista con los valores elegidos. El primero
     muestra todas como píldoras, para pocas opciones cortas; el segundo las
     busca escribiendo, para listas largas.
-  - `"rango"`: dos extremos, "desde" y "hasta", entre un `minimo` y un
+  - `rango`: dos extremos, "desde" y "hasta", entre un `minimo` y un
     `maximo`, con una barra de dos perillas. Se declara si se puede invertir
     (`invertible: true`, "desde" mayor que "hasta"). El valor es un objeto
     `{ desde, hasta }`: en `procesar` se lee como
@@ -96,7 +107,7 @@ Un tipo de nodo es un objeto con estos campos:
     de `@/componentes/campo-rango`), y después `datos1.desde` y
     `datos1.hasta`. Tiene los mismos modos que el entero.
 
-  Los que hay están en `parametros/catalogo.ts`. Si ninguno te sirve, se puede
+  Cada uno es un archivo de `parametros/`. Si ninguno te sirve, se puede
   crear uno nuevo: la guía está en
   [`parametros/LEEME.md`](../parametros/LEEME.md). Si la caja no se configura,
   poné `parametros: []`.
@@ -409,7 +420,7 @@ Esta carpeta es solo para los tipos de nodo, así queda claro qué hay.
 
 Tampoco importes nada del editor, del lienzo ni de la interfaz: un tipo de nodo
 solo usa `../tipos` (el contrato), `@/midi/mensaje` (`MensajeMidi` y los tipos
-de mensaje), su ícono de `lucide`, `@/formato` si sus errores nombran valores
-y, si le hace falta, funciones auxiliares para MIDI que calculen algo sin
-efectos. Tampoco importes `../salida`: para que un
+de mensaje), su ícono de `lucide`, las funciones de los tipos de parámetro que
+declara (`../parametros/…`), `@/formato` si sus errores nombran valores y, si
+le hace falta, funciones auxiliares para MIDI que calculen algo sin efectos. Tampoco importes `../salida`: para que un
 mensaje salga por el puerto, alcanza con que una caja sin salida lo devuelva.
