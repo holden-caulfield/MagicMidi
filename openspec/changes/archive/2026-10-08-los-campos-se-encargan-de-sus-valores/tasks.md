@@ -154,7 +154,7 @@ decimal los valores de un error.
 
 - [x] 9.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`, y verificar
       que pasen sin errores
-- [ ] 9.2 Proponerle a la persona usuaria el diff de AGENTS.md, con el
+- [x] 9.2 Proponerle a la persona usuaria el diff de AGENTS.md, con el
       criterio de "Cómo se escribe este archivo", y aplicarlo solo con su
       aprobación explícita: en "Controles", que los campos numéricos reciben
       y avisan números y son dueños del modo y de las flechas, sin la lista
