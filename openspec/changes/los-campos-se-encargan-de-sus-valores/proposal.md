@@ -22,13 +22,17 @@ campos y el panel de configuración como los toma este cambio.
   probando los modos, resuelven solos lo que no se puede leer y manejan las
   flechas, frenándolas en los límites. **BREAKING** (interno): desaparecen el
   evento `paso`, el evento `siguiente-modo` y las propiedades `modo`,
-  `puedeSubir`, `puedeBajar` y `decimales` de los campos, y `formatear` y
-  `leer` de `campo-rango`. El rasgo es un controlador reactivo,
-  `ModoNumerico`; en el rango hay un solo modo, que el rango le pasa a sus dos
-  campos.
-- **`modos.ts` se muda de `workflow/parametros/` a `componentes/`**, con sus
-  tests, y `nombreDeNota` y `numeroDeNota` pasan de `midi/describir.ts` a
-  `midi/notas.ts`, que usan los modos y `describir.ts`.
+  `puedeSubir`, `puedeBajar`, `decimales` y `compacto` de los campos, y
+  `formatear` y `leer` de `campo-rango`. El rasgo es un controlador reactivo,
+  `ModoNumerico`, único dueño del modo: el campo lee lo que conservó la caja
+  una sola vez, al crearse.
+- **Ningún campo dibuja otro campo adentro.** El rango dibuja sus dos campos
+  de texto, que comparten su modo, en lugar de dos `campo-numero` compactos:
+  lo que dos campos tienen en común va en un controlador, no en un campo
+  compuesto.
+- **`parametros/modos.ts` pasa a `componentes/modo-numerico.ts`**, junto con
+  el controlador y sus tests, y `nombreDeNota` y `numeroDeNota` pasan de
+  `midi/describir.ts` a `midi/notas.ts`, que usan los modos y `describir.ts`.
 - **Los mensajes llevan valores y los escribe el campo.** El `validar` de los
   tipos de parámetro (hoy `error`, ver abajo) y el de los tipos de nodo
   nombran valores con la plantilla marcada `formato`, en un módulo propio,
@@ -100,14 +104,14 @@ Ninguna.
 ## Impact
 
 - Código: `src/componentes/` (`campo.ts`, `campo-numero.ts`,
-  `campo-rango.ts`, más `modos.ts` y el controlador `ModoNumerico`),
+  `campo-rango.ts`, más el controlador `ModoNumerico`),
   `src/formato.ts` (nuevo), `src/midi/` (`notas.ts` nuevo, `describir.ts`),
   `src/workflow/parametros/` (se van `campo-de-parametro.ts` y `modos.ts`; los
   seis tipos y `catalogo.ts` cambian), `src/workflow/validacion.ts`,
   `tipos.ts`, `ejecutar.ts`, `nodos/fijar.ts`, `editor/lienzo.ts`,
   `editor/panel-de-configuracion.ts` y `src/estado/estado.ts`.
 - Tests: `entero.test.ts`, `rango.test.ts`, `opciones.test.ts`,
-  `autocompletar.test.ts`, `modos.test.ts` (se muda),
+  `autocompletar.test.ts`, `modos.test.ts` (pasa a `modo-numerico.test.ts`),
   `validacion.test.ts`, `ejecutar.test.ts`, `fijar.test.ts`, `desplazar.test.ts`,
   `catalogo.test.ts`, `campo-rango.test.ts`, `describir.test.ts`, más
   `formato.test.ts` y `notas.test.ts` nuevos.

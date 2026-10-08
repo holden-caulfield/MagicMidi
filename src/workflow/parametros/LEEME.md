@@ -165,8 +165,8 @@ va con comillas, como siempre.
 
 `campo-numero` y `campo-rango` muestran sus números en **modos**: decimal
 ("60"), nota ("C4", con el Do central 60 como C4) y hexadecimal ("3C"). Todo
-lo de los modos lo hace el campo (está en `src/componentes/modos.ts`): un tipo
-numérico solo le pasa qué modos ofrece, sus límites y su `estado`.
+lo de los modos lo hace el campo (con `ModoNumerico`, en `src/componentes/`):
+un tipo numérico solo le pasa qué modos ofrece, sus límites y su `estado`.
 
 - La declaración del parámetro puede decir qué modos ofrece, en orden, con
   `modos` (por ejemplo, `modos: ["nota", "decimal"]`). Si no lo dice, son

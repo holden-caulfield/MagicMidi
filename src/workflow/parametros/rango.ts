@@ -3,16 +3,18 @@ import { html } from "lit";
 import "@/componentes/campo-rango";
 import type { Rango } from "@/componentes/campo-rango";
 import type { ParametroBase } from "./parametro";
-import type { DeclaracionNumerica } from "@/componentes/modos";
+import type { Modo } from "@/componentes/modo-numerico";
 import { formato, type Texto } from "@/formato";
 
 /** Dos extremos enteros, "desde" y "hasta", entre un mínimo y un máximo. */
-export interface ParametroRango extends ParametroBase<Rango>, DeclaracionNumerica {
+export interface ParametroRango extends ParametroBase<Rango> {
   tipo: "rango";
   minimo: number;
   maximo: number;
   /** Si "desde" puede ser mayor que "hasta", para recorrer el rango al revés. */
   invertible: boolean;
+  /** Los modos de los dos extremos, como en el entero. */
+  modos?: Modo[];
 }
 
 /** Si el valor le sirve al parámetro: `null`, o el texto del error. */

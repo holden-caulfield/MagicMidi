@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
 
-import { leer } from "@/componentes/modos";
 import { MensajeMidi } from "@/midi/mensaje";
 import desplazar from "./desplazar";
 
@@ -163,13 +162,9 @@ test("en un byte de datos, nunca se prende el bit alto", () => {
 });
 
 test("el desplazamiento se escribe solo en decimal", () => {
-  const parametro = desplazar.parametros.find(({ clave }) => clave === "desplazamiento")!;
-  if (parametro.tipo !== "entero") throw new Error("el desplazamiento es un entero");
+  // Es un intervalo, que puede ser negativo: no tiene sentido como nota ni en
+  // hexadecimal. El campo ofrece solo los modos que declara el parámetro.
+  const parametro = desplazar.parametros.find(({ clave }) => clave === "desplazamiento");
 
-  // El campo lee lo escrito con los modos que declara el parámetro.
-  const decimal = { modo: "decimal" as const, bemoles: false };
-
-  expect(leer("E4", decimal, parametro)).toBeNull();
-  expect(leer("0x0C", decimal, parametro)).toBeNull();
-  expect(leer("-12", decimal, parametro)?.numero).toBe(-12);
+  expect(parametro).toMatchObject({ tipo: "entero", modos: ["decimal"] });
 });

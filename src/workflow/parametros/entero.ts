@@ -1,16 +1,23 @@
 import { html } from "lit";
 
 import "@/componentes/campo-numero";
-import type { DeclaracionNumerica } from "@/componentes/modos";
+import type { Modo } from "@/componentes/modo-numerico";
 import { formato, type Texto } from "@/formato";
 import type { ParametroBase } from "./parametro";
 
-export interface ParametroEntero extends ParametroBase<number>, DeclaracionNumerica {
+export interface ParametroEntero extends ParametroBase<number> {
   tipo: "entero";
   /** Si se omite, no hay mínimo. */
   minimo?: number;
   /** Si se omite, no hay máximo. */
   maximo?: number;
+  /**
+   * Los modos en que se muestra y se escribe, en el orden en que rotan; el
+   * primero es el de una caja nueva. Si se omite, son decimal, nota y
+   * hexadecimal. La nota pide mínimo y máximo dentro de 0 a 127, y el
+   * hexadecimal, un mínimo de 0 o más.
+   */
+  modos?: Modo[];
 }
 
 /** Si el valor le sirve al parámetro: `null`, o el texto del error. */

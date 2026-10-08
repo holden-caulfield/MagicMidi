@@ -166,9 +166,29 @@ decimal los valores de un error.
       declaración, `validar` y `dibujar`, sin la lista de quién usa
       `erroresDeConfiguracion`; y en "Tests", que interpretar lo escrito se
       prueba al lado del campo
-- [ ] 9.3 Pedirle a la persona usuaria que pruebe en la ventana real
+- [x] 9.3 Pedirle a la persona usuaria que pruebe en la ventana real
       (`npm run tauri dev`): escribir en cada modo, usar las flechas (propias
       y del teclado, con y sin Mayúsculas), cambiar de modo con el mouse, con
       Enter y con la barra espaciadora, pasar de una caja a otra y volver, y
       que los errores se lean en el modo del campo en el panel y en decimal
       en el log
+
+## 10. Simplificación después de revisar el PR
+
+- [x] 10.1 Juntar `modos.ts` en `componentes/modo-numerico.ts`: una tabla con
+      lo que cambia de un modo a otro y `ModoNumerico` como único dueño del
+      modo, que lee el `estado` del campo una sola vez, al dibujarse por
+      primera vez. Sin `DeclaracionNumerica` ni las funciones sueltas, y con
+      sus tests en `modo-numerico.test.ts`. Verificar con `npx tsc --noEmit` y
+      `npm test`
+- [x] 10.2 Que `campo-rango` dibuje sus dos campos de texto, con las flechas
+      del teclado movidas como la perilla, y sacar `compacto` de
+      `campo-numero` y `limitesDelExtremo` del rango. Verificar con
+      `npx tsc --noEmit`, `npm test` y que
+      `grep -rn "compacto\|limitesDelExtremo\|DeclaracionNumerica" src` no
+      encuentre nada
+- [x] 10.3 Adaptar `pruebas/modos.js` para que encuentre los campos del rango
+      en las dos estructuras, y verificar que dé lo mismo sobre `main` (con la
+      versión anterior y con la adaptada) y con el cambio. Correr el resto de
+      las pruebas y tomar la huella sobre `main` y con el cambio, y verificar
+      que `diferencias.py` termine en 0

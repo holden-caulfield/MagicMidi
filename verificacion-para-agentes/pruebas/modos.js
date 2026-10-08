@@ -10,16 +10,17 @@ const nodo = (id) => m.estado.flujo.nodos.find((n) => n.id === id);
 const campoDe = (etiqueta) =>
   todos('campo-numero, campo-rango, campo-lista').find((c) => c.shadowRoot.querySelector('.etiqueta')?.textContent.trim() === etiqueta);
 const control = (campo) => campo.shadowRoot.querySelector('#control');
-const extremos = (etiqueta) => [...campoDe(etiqueta).shadowRoot.querySelectorAll('campo-numero')];
+const entrada = (etiqueta) => control(campoDe(etiqueta));
+// Los dos campos de texto de un rango, estén en su raíz o dentro de otros campos.
+const extremos = (etiqueta) => todos('input', campoDe(etiqueta).shadowRoot);
 const seleccionar = async (id) => { const c = cajaDelLienzo(id); await arrastrar(c, centro(c), centro(c)); await dibujado(); };
-const escribirEn = async (campo, texto) => {
-  const input = control(campo);
+const escribirEn = async (input, texto) => {
   input.value = texto;
   input.dispatchEvent(new Event('change', { bubbles: true }));
   await dibujado();
 };
-const tecla = async (campo, key, shiftKey = false) => {
-  control(campo).dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, composed: true }));
+const tecla = async (input, key, shiftKey = false) => {
+  input.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, composed: true }));
   await dibujado();
 };
 const flecha = async (campo, cual, shiftKey = false) => {
@@ -43,7 +44,7 @@ const valor = (etiqueta) => {
   };
 };
 const rango = (etiqueta) => ({
-  campos: extremos(etiqueta).map((c) => control(c).value),
+  campos: extremos(etiqueta).map((input) => input.value),
   perillas: [...campoDe(etiqueta).shadowRoot.querySelectorAll('.perilla')].map((p) => p.getAttribute('aria-valuetext')),
   modo: botonDeModo(etiqueta)?.textContent.trim() ?? null,
   error: error(etiqueta),
@@ -70,7 +71,7 @@ for (let i = 0; i < 3; i++) { await rotar('Valor'); r.rotar.push(valor('Valor'))
 // Lo escrito elige el modo.
 r.escribir = {};
 for (const texto of ['C4', '3C', 'Db4', 'C#4', 'Db4', 'mucho']) {
-  await escribirEn(campoDe('Valor'), texto);
+  await escribirEn(entrada('Valor'), texto);
   r.escribir[texto + (r.escribir[texto] ? ' (otra vez)' : '')] = { ...valor('Valor'), caja: nodo('f1').parametros.valor };
 }
 
@@ -78,29 +79,29 @@ for (const texto of ['C4', '3C', 'Db4', 'C#4', 'Db4', 'mucho']) {
 r.flechas = [];
 await flecha(campoDe('Valor'), 'subir'); r.flechas.push(valor('Valor').campo);
 await flecha(campoDe('Valor'), 'subir'); r.flechas.push(valor('Valor').campo);
-await tecla(campoDe('Valor'), 'ArrowUp', true); r.flechas.push(valor('Valor').campo);
-await tecla(campoDe('Valor'), 'ArrowDown'); r.flechas.push(valor('Valor').campo);
-await escribirEn(campoDe('Valor'), 'F#4'); r.flechas.push(valor('Valor').campo);
+await tecla(entrada('Valor'), 'ArrowUp', true); r.flechas.push(valor('Valor').campo);
+await tecla(entrada('Valor'), 'ArrowDown'); r.flechas.push(valor('Valor').campo);
+await escribirEn(entrada('Valor'), 'F#4'); r.flechas.push(valor('Valor').campo);
 await flecha(campoDe('Valor'), 'subir'); r.flechas.push(valor('Valor').campo);
 
 // Tope en el máximo, en decimal.
 while (valor('Valor').modo !== 'DEC') await rotar('Valor');
-await escribirEn(campoDe('Valor'), '120');
+await escribirEn(entrada('Valor'), '120');
 await flecha(campoDe('Valor'), 'subir', true);
 r.tope = { ...valor('Valor'), caja: nodo('f1').parametros.valor };
-await tecla(campoDe('Valor'), 'ArrowUp');
+await tecla(entrada('Valor'), 'ArrowUp');
 r.topeConTeclado = nodo('f1').parametros.valor;
 
 // Lo escrito sin confirmar cuenta para la flecha.
-control(campoDe('Valor')).value = '50';
-await tecla(campoDe('Valor'), 'ArrowUp');
+entrada('Valor').value = '50';
+await tecla(entrada('Valor'), 'ArrowUp');
 r.sinConfirmar = { ...valor('Valor'), caja: nodo('f1').parametros.valor };
 
 // Los errores, en el modo del campo.
-await escribirEn(campoDe('Valor'), '200');
+await escribirEn(entrada('Valor'), '200');
 r.fueraDeRango = [];
 for (let i = 0; i < 3; i++) { r.fueraDeRango.push(valor('Valor')); await rotar('Valor'); }
-await escribirEn(campoDe('Valor'), '100');
+await escribirEn(entrada('Valor'), '100');
 await elegirByte(0);
 r.conCanal = [];
 for (let i = 0; i < 3; i++) { r.conCanal.push(valor('Valor')); await rotar('Valor'); }
@@ -135,6 +136,6 @@ r.rango.alVolver = rango('Datos 1');
 
 // Un solo modo: sin botón, y solo ese formato.
 await seleccionar('d1');
-await escribirEn(campoDe('Desplazamiento'), 'E4');
+await escribirEn(entrada('Desplazamiento'), 'E4');
 r.desplazamiento = { ...valor('Desplazamiento'), caja: nodo('d1').parametros.desplazamiento };
 return r;

@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { MensajeMidi } from "@/midi/mensaje";
 import { etapaDelTipo, tieneSalida, TIPOS_DE_NODO } from "./catalogo";
 import { erroresDeConfiguracion } from "../validacion";
-import { modosDe } from "@/componentes/modos";
+import { MODOS_POR_DEFECTO } from "@/componentes/modo-numerico";
 
 // Lo que todo tipo de nodo tiene que cumplir, sea cual sea. No reemplaza el
 // test propio de cada nodo: atrapa errores de forma que ese test puede no mirar.
@@ -30,7 +30,7 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (_, tipo) => 
   test("sus parámetros numéricos ofrecen solo modos que les entran", () => {
     for (const parametro of tipo.parametros) {
       if (parametro.tipo !== "entero" && parametro.tipo !== "rango") continue;
-      const modos = modosDe(parametro);
+      const modos = parametro.modos ?? MODOS_POR_DEFECTO;
       const { minimo, maximo } = parametro;
       if (modos.includes("nota")) {
         expect(

@@ -53,53 +53,53 @@ Ver proposal.md (Why). Lo que condiciona el enfoque:
 
 ## Decisions
 
-### `ModoNumerico` es un controlador reactivo, con las funciones puras aparte
+### `ModoNumerico`: un controlador, único dueño del modo
 
-`componentes/modos.ts` es el `parametros/modos.ts` de hoy mudado, con sus
-tests: `Modo`, `MODOS_POR_DEFECTO`, `DeclaracionNumerica` (los modos y los
-límites que recibe un campo numérico), `modosDe`, `siguienteModo`,
-`textoDelModo`, `formatear` y `leer`. `Presentacion` pasa a llamarse
-`EstadoNumerico` (`{ modo, bemoles }`), y `presentacionActual`,
-`estadoRevisado`. Importa `nombreDeNota` y `numeroDeNota` de
-`@/midi/notas`.
-
-`componentes/modo-numerico.ts` define `ModoNumerico`, que implementa
-`ReactiveController` y lo agregan `campo-numero` y `campo-rango`. Guarda el
-`EstadoNumerico` actual y le pide al campo, en cada uso, sus `modos`,
-`minimo` y `maximo`. Ofrece:
+`componentes/modo-numerico.ts` reemplaza al `parametros/modos.ts` de hoy.
+Tiene el tipo `Modo`, `MODOS_POR_DEFECTO`, una tabla `MODOS` con lo único
+que cambia de un modo a otro (la abreviatura, el nombre, cómo se escribe y
+cómo se lee un número) y la clase `ModoNumerico`, un `ReactiveController`
+que agregan `campo-numero` y `campo-rango`. La clase guarda el modo y si las
+notas van con bemoles, y ofrece:
 
 - `formatear(numero)`, en el modo actual;
-- `leer(texto)`: el número, o `null`; si se leyó en otro modo, o cambian los
-  bemoles, cambia el estado;
-- `siguiente()`, para el botón;
-- `boton`: lo que muestra el botón de modo, o `null` con un solo modo;
-- `cambiar(estado)`: el cambio que nace en el campo (o en un campo hijo del
-  rango).
+- `leer(texto)`: el número, o `null`; si se leyó en otro modo, o una nota
+  cambió los bemoles, el campo pasa a ese estado;
+- `boton`: lo que muestra el botón de modo y qué hacer al activarlo, o `null`
+  con un solo modo.
 
-El estado se revisa en cada lectura con `estadoRevisado` (si falta o su modo
-no se ofrece, el primero, con sostenidos), así un cambio de `modos` no deja
-un modo inválido.
+Cada cambio pide un redibujado y se avisa con `cambio-de-estado`. Del campo,
+el controlador lee solo `modos` y `estado`.
 
-Cuando el estado cambia desde el campo (el botón, leer en otro modo, o un
-campo hijo del rango), el controlador pide un redibujado y el campo avisa
-`cambio-de-estado`. Lo que el campo recibe en `estado` lo adopta el
-controlador en `hostUpdate`, cada vez que cambia: la primera vez es al
-montarse, y después sirve para que el rango maneje a sus dos campos (ver más
-abajo). Adoptarlo no avisa nada: así, cuando el panel le devuelve al campo lo
-que guardó, no se arma un ida y vuelta sin fin. Y lo que el propio campo avisó
-y le vuelve no se adopta: no trae nada nuevo, y puede ser viejo (con dos
-cambios en una misma tarea, el panel devuelve el primero después del
-segundo). Que lo haga el controlador, y
-no un `willUpdate` en cada campo, deja el protocolo en un solo lugar.
+El modo es solo del campo. La primera vez que el campo se dibuja
+(`hostUpdate`), el controlador recupera lo que conservó la caja, revisado (si
+falta o su modo no se ofrece, el primero, con sostenidos), y después no
+vuelve a leer `estado`. Alcanza con eso porque el panel crea un campo por caja
+y parámetro (ver más abajo): un campo nunca pasa a mostrar otra caja.
 
-Alternativas: un mixin (con decoradores *legacy* y la base genérica
-`Campo<V>` el tipado se complica y se lee peor; descartado en la revisión);
-dejar el estado en el tipo de parámetro (es lo que hay hoy).
+Se prueba sin la interfaz, con un campo de prueba (un objeto con `modos`,
+`estado` y los métodos de `ReactiveControllerHost`), mirando lo que escribe,
+lo que lee, el botón y lo que avisa.
+
+Alternativas:
+
+- Funciones puras en un `modos.ts` aparte, con la clase envolviéndolas (la
+  primera versión de este cambio): la clase era un pasamanos, y cada cambio de
+  estado pasaba de una capa a la otra. Descartado al revisar el PR.
+- Que el campo adopte `estado` cada vez que cambia: hace falta solo si el
+  modo le vuelve de afuera mientras vive (del panel, o de un rango que maneja
+  campos adentro), y obliga a reconciliar dos dueños (recordar lo recibido y
+  descartar los ecos de lo que el campo avisó). Descartado al revisar el PR,
+  junto con los campos compuestos.
+- Una clase base `ModoBase`: hay un solo tipo de campo con modos, y lo que
+  varía entre decimal, nota y hexadecimal son datos, que van en la tabla.
+- Un mixin (con decoradores *legacy* y la base genérica `Campo<V>` el tipado
+  se complica y se lee peor; descartado en la revisión de arquitectura).
 
 ### `campo-numero` recibe y avisa números, y maneja sus flechas
 
-Propiedades: `valor: number`, `modos`, `minimo`, `maximo` (opcionales) y
-`estado`. Al salir del campo lee lo escrito con el controlador: si se puede
+Propiedades: `valor: number`, y `modos`, `minimo` y `maximo`, opcionales
+(más el `estado` de `Campo`). Al salir del campo lee lo escrito con el controlador: si se puede
 leer, avisa `cambio` con el número (y, antes, `cambio-de-estado` si cambió el
 modo o los bemoles, como hoy se avisa primero la presentación); si no, se
 vuelve a dibujar con el valor que tiene, sin avisar nada.
@@ -108,34 +108,35 @@ Las flechas (las propias y las del teclado) leen lo escrito en ese momento,
 le suman el paso y lo frenan en `minimo` y `maximo` con una función pura
 `limitar`, que se muda de `entero.ts` a `campo-numero.ts` con su test. Las
 flechas propias se deshabilitan solas con el valor en un límite.
-Desaparecen el evento `paso`, `Paso`, `puedeSubir`, `puedeBajar` y
-`decimales` (este último solo lo usaba el ejemplo `real` de la guía).
+Desaparecen el evento `paso`, `Paso`, `puedeSubir`, `puedeBajar`,
+`decimales` (que solo usaba el ejemplo `real` de la guía) y `compacto` (que
+solo usaba el rango).
 
-### El rango tiene un modo y se lo pasa a sus dos campos
+### El rango dibuja sus dos campos de texto, sin campos adentro
 
 `campo-rango` agrega su propio `ModoNumerico` y recibe `modos`, `minimo`,
-`maximo`, `invertible` y `estado`. A cada `campo-numero` compacto le pasa
-`.estado` (el estado de su controlador), los mismos `modos` y los límites de
-ese extremo, y escucha de cada uno:
+`maximo` e `invertible`. En lugar de dos `campo-numero` compactos, dibuja en
+su raíz sus dos campos de texto, cada uno con su etiqueta solo para lectores
+de pantalla, y los dos usan su controlador: un solo modo, con un solo dueño.
+Lo escrito se lee como en `campo-numero`, y las flechas del teclado en un
+campo mueven ese extremo con `moverExtremo`, igual que la perilla, así que se
+frenan en el otro extremo si el rango no se puede invertir. Lo escrito no se
+frena: se guarda y, si no sirve, el panel muestra el error, como hoy.
 
-- `cambio-de-estado`: lo adopta en su controlador como un cambio propio, así
-  el otro extremo pasa a mostrarse igual y el rango lo avisa hacia afuera.
-  El evento del campo hijo no sale de la raíz del rango (no es `composed`);
-- `cambio`: avisa el rango con ese extremo cambiado.
-
-Los límites de cada extremo hacen que las flechas se frenen como la perilla:
-"desde" va de `minimo` a `hasta`, y "hasta", de `desde` a `maximo`, salvo
-que el rango se pueda invertir, en cuyo caso los dos van de `minimo` a
-`maximo`. Es una función pura, `limitesDelExtremo`, que reemplaza a
-`pasarExtremo` en los tests. Lo escrito no se frena: se guarda y, si no
-sirve, el panel muestra el error, como hoy.
-
-Se van las propiedades `formatear` y `leer` y la función
+Se van las propiedades `formatear` y `leer` y las funciones `pasarExtremo` e
 `interpretarExtremo`: la perilla anuncia su valor con el controlador.
 
-Alternativa: que el campo hijo avise el paso sin frenar y el rango lo frene
-con `moverExtremo`. Para eso el hijo tendría que distinguir un paso de lo
-escrito, que es el evento `paso` que este cambio saca.
+Ningún campo dibuja otro campo adentro: lo que dos campos comparten va en un
+controlador, como `ModoNumerico`. Un campo compuesto obliga a sincronizar su
+estado con el de los campos de adentro, y esa sincronización era la que
+complicaba el controlador. El costo es que el rango repite unas líneas del
+manejo de un campo de texto (leer al salir, volver al valor y las flechas del
+teclado), que además no son iguales: sus flechas se mueven como la perilla.
+
+Alternativa: los `campo-numero` compactos, con el rango pasándoles su modo y
+adoptando el que avisaran, y los límites de cada extremo calculados aparte
+para las flechas (la primera versión de este cambio). Descartado al revisar el
+PR.
 
 ### `Campo` dibuja el botón con lo que le da el campo, y escribe el error
 
@@ -149,11 +150,11 @@ la etiqueta, con el mismo `aria-label`.
 `formatearValor` es `String` salvo en los numéricos, que escriben un número
 en su modo y el resto con `String`.
 
-`Campo` declara también `estado` (lo que el campo guardó en la caja, que los
-campos que no conservan nada ignoran) y `avisarEstado`, que avisa
-`cambio-de-estado`. `avisar` y `avisarEstado` van con `bubbles: true`, sin
-`composed`: llegan al panel, que es de la misma raíz, y no salen de la de un
-rango.
+`Campo` declara también `estado` (lo que el campo conservó en la caja, que
+lee una sola vez, al dibujarse por primera vez; los campos que no conservan
+nada lo ignoran) y `avisarEstado`, que avisa `cambio-de-estado`. `avisar` y
+`avisarEstado` van con `bubbles: true`, sin `composed`: llegan al panel, que
+los escucha en el elemento que envuelve al campo, en su misma raíz.
 
 Alternativa: declarar `estado` solo en los dos campos numéricos. Se descarta
 porque el panel escucha `cambio-de-estado` en cualquier campo, y el
@@ -240,9 +241,11 @@ semitonos) pasan a `midi/notas.ts`, y sus tests de `describir.test.ts`, a
 
 ### Los tests
 
+- `modos.test.ts` pasa a `componentes/modo-numerico.test.ts`, y prueba la
+  clase con un campo de prueba.
 - `entero.test.ts`: quedan los de `validar`, comparando con `formato`; los de
-  interpretar van a `componentes/modos.test.ts` (los que no estén ya), y el
-  de `limitar`, a `campo-numero.test.ts`.
+  interpretar van a `modo-numerico.test.ts` (los que no estén ya), y el de
+  `limitar`, a `campo-numero.test.ts`.
 - `rango.test.ts`: prueba `validar` y compara con `formato`, y se va el del
   modo. `opciones.test.ts` y `autocompletar.test.ts` pasan a `validar`.
 - `validacion.test.ts`: se van los de presentación; quedan los de cómo se
@@ -253,11 +256,13 @@ semitonos) pasan a `midi/notas.ts`, y sus tests de `describir.test.ts`, a
   errores en hexadecimal se va.
 - `ejecutar.test.ts`: el error de una caja Fijar en hexadecimal llega al log
   en decimal.
-- `desplazar.test.ts`: lo que hoy prueba con `interpretar` lo prueba con
-  `leer` y la declaración del desplazamiento.
-- `campo-rango.test.ts`: `limitesDelExtremo` reemplaza a `pasarExtremo` y a
-  `interpretarExtremo`.
-- `nodos/catalogo.test.ts` importa `modosDe` de `@/componentes/modos`.
+- `desplazar.test.ts`: el de que el desplazamiento es solo decimal revisa lo
+  que declara el parámetro (`modos: ["decimal"]`), sin importar nada de la
+  interfaz: leer lo escrito se prueba al lado del campo.
+- `campo-rango.test.ts`: se van los de `pasarExtremo` e `interpretarExtremo`;
+  las flechas de sus campos usan `moverExtremo`, que ya tiene los suyos.
+- `nodos/catalogo.test.ts` toma los modos de cada parámetro con
+  `parametro.modos ?? MODOS_POR_DEFECTO`.
 
 ### El orden, para que cada paso compile
 
@@ -275,6 +280,8 @@ semitonos) pasan a `midi/notas.ts`, y sus tests de `describir.test.ts`, a
 6. Sin los `parametro-…`: `dibujar` dibuja el campo, `Campo` avisa con
    `bubbles`, y `presentaciones` pasa a `estadoDeLosParametros`.
 7. Las guías, la verificación y el diff de AGENTS.md.
+8. Después de la revisión del PR: `modos.ts` entra en `ModoNumerico`, el
+   campo lee su estado una sola vez y el rango deja de usar `campo-numero`.
 
 ### La verificación
 
@@ -290,25 +297,21 @@ que funciona con las herramientas.
 
 ## Risks / Trade-offs
 
-- [El panel devuelve lo guardado y el campo vuelve a avisarlo] → adoptar lo
-  recibido no avisa; solo avisan los cambios que nacen en el campo.
-- [Dos cambios del campo antes de que el panel se dibuje, y el eco del primero
-  pisa al segundo] → el controlador recuerda lo que avisó y no adopta sus
-  propios ecos. Apareció en la verificación en el navegador, con dos clics en
-  el botón de modo en la misma tarea.
-- [El rango le pasa a sus campos un objeto de estado nuevo en cada dibujado]
-  → el campo lo adopta sin avisar, así que solo cuesta revisarlo.
-- [Sin los `parametro-…`, algo del panel se acomoda distinto, por ejemplo lo
-  que flota sobre los parámetros siguientes] → la huella antes y después, y
-  la prueba de configuración.
+- [El campo no sigue lo que cambie en `estadoDeLosParametros` mientras está
+  montado] → nadie más lo cambia: solo el panel, con lo que el campo mismo
+  avisó, y la próxima vez que el campo se crea lo lee.
+- [Sin los `parametro-…` y con los campos del rango en su propia raíz, algo
+  del panel se acomoda distinto, por ejemplo lo que flota sobre los
+  parámetros siguientes] → la huella antes y después, y la prueba de
+  configuración.
 - [TypeScript no comprueba que los valores de `formato` sean de la clase del
   campo, porque el error se asocia por `clave` en tiempo de ejecución] → el
   campo escribe con `String` lo que no reconoce (decidido en la revisión).
 - [El log deja de escribir los valores como el panel] → es el comportamiento
   buscado, y queda en las specs `ejecucion-de-workflow` y `tipos-de-nodo`.
-- [Los límites de las flechas del rango dependen del otro extremo] → una
-  función pura con su test, y la prueba de los modos aprieta las flechas en
-  los campos del rango.
+- [El rango repite el manejo de un campo de texto] → son pocas líneas, y sus
+  flechas son otras (las de la perilla); la prueba de los modos las aprieta en
+  los dos campos.
 
 ## Migration Plan
 

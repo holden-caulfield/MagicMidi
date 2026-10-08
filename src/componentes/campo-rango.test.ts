@@ -2,7 +2,6 @@ import { expect, test } from "vitest";
 
 import {
   extremoMasCercano,
-  limitesDelExtremo,
   moverExtremo,
   proporcionDe,
   valorEnProporcion,
@@ -78,36 +77,4 @@ test("un clic en la barra mueve la perilla más cercana", () => {
 test("con las dos perillas juntas, se mueve la que puede ir hacia el clic", () => {
   expect(extremoMasCercano({ desde: 72, hasta: 72 }, 100)).toBe("hasta");
   expect(extremoMasCercano({ desde: 72, hasta: 72 }, 10)).toBe("desde");
-});
-
-// Las flechas en el campo de un extremo se frenan como su perilla: el campo
-// recibe hasta dónde puede llegar.
-
-test("si no se puede invertir, cada campo llega hasta el otro extremo", () => {
-  expect(limitesDelExtremo({ desde: 60, hasta: 72 }, "desde", fijo)).toEqual({
-    minimo: 0,
-    maximo: 72,
-  });
-  expect(limitesDelExtremo({ desde: 60, hasta: 72 }, "hasta", fijo)).toEqual({
-    minimo: 60,
-    maximo: 127,
-  });
-});
-
-test("si se puede invertir, cada campo llega a los dos bordes", () => {
-  expect(limitesDelExtremo({ desde: 60, hasta: 72 }, "desde", invertible)).toEqual({
-    minimo: 0,
-    maximo: 127,
-  });
-});
-
-test("si el otro extremo quedó afuera, el campo llega hasta el borde", () => {
-  expect(limitesDelExtremo({ desde: 200, hasta: 300 }, "hasta", fijo)).toEqual({
-    minimo: 127,
-    maximo: 127,
-  });
-  expect(limitesDelExtremo({ desde: 60, hasta: 300 }, "desde", fijo)).toEqual({
-    minimo: 0,
-    maximo: 127,
-  });
 });

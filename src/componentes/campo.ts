@@ -20,8 +20,8 @@ export interface BotonDeModo {
  * solo `control()` y avisa el valor nuevo con `avisar`.
  *
  * Lo que un campo quiere conservar entre montajes (como el modo de uno
- * numérico) lo recibe en `estado` y avisa que cambió con `avisarEstado`: quien
- * lo usa lo guarda sin leerlo y se lo vuelve a pasar.
+ * numérico) es solo suyo: avisa cada cambio con `avisarEstado`, y quien lo usa
+ * lo guarda sin leerlo para pasárselo en `estado` la próxima vez que lo cree.
  */
 export abstract class Campo<V> extends Componente {
   static styles = estilosBase;
@@ -34,7 +34,8 @@ export abstract class Campo<V> extends Componente {
   @property({ attribute: false }) error: Texto | null = null;
   /**
    * Lo que el campo conservó en la caja, tal como lo avisó con
-   * `cambio-de-estado`, o `undefined`. Un campo que no conserva nada lo ignora.
+   * `cambio-de-estado`, o `undefined`. El campo lo lee una sola vez, al
+   * dibujarse por primera vez; uno que no conserva nada lo ignora.
    */
   @property({ attribute: false }) estado: unknown = undefined;
 

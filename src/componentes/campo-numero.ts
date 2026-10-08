@@ -5,12 +5,11 @@ import { ChevronDown, ChevronUp } from "lucide";
 
 import { Campo } from "./campo";
 import { dibujarIcono } from "./icono";
-import { ModoNumerico } from "./modo-numerico";
-import type { DeclaracionNumerica, Modo } from "./modos";
+import { type Modo, ModoNumerico } from "./modo-numerico";
 
 /** El número limitado al mínimo y al máximo, si los hay. */
 export function limitar(
-  { minimo = -Infinity, maximo = Infinity }: DeclaracionNumerica,
+  { minimo = -Infinity, maximo = Infinity }: { minimo?: number; maximo?: number },
   numero: number,
 ): number {
   return Math.min(Math.max(numero, minimo), maximo);
@@ -18,7 +17,7 @@ export function limitar(
 
 /**
  * Un número escrito, que se muestra y se lee en un modo (decimal, nota o
- * hexadecimal, ver `modos.ts`). Lo escrito se lee al salir del campo,
+ * hexadecimal, ver `ModoNumerico`). Lo escrito se lee al salir del campo,
  * probando los modos desde el actual: si se puede leer, avisa el número (y,
  * si se leyó en otro modo, el campo pasa a ese); si no, vuelve solo al valor
  * que tiene, sin avisar nada. Las flechas (las propias y las del teclado)
@@ -59,13 +58,6 @@ export class CampoNumero extends Campo<number> {
         font-variant-numeric: tabular-nums;
       }
 
-      :host([compacto]) input {
-        width: 36px;
-        height: 18px;
-        padding: 0 3px;
-        font-size: 11px;
-      }
-
       .flechas {
         display: flex;
         flex-direction: column;
@@ -101,12 +93,6 @@ export class CampoNumero extends Campo<number> {
   @property({ type: Number }) minimo?: number;
   /** Si se omite, no hay máximo. */
   @property({ type: Number }) maximo?: number;
-  /**
-   * Más chico, para ir dentro de otro control (como el rango): la etiqueta
-   * queda solo para los lectores de pantalla y no hay flechas propias ni botón
-   * de modo, aunque las flechas del teclado siguen funcionando.
-   */
-  @property({ type: Boolean, reflect: true }) compacto = false;
 
   private modo = new ModoNumerico(this, (estado) => this.avisarEstado(estado));
 
@@ -115,39 +101,32 @@ export class CampoNumero extends Campo<number> {
   }
 
   protected botonDeModo() {
-    const boton = this.modo.boton;
-    return boton && { ...boton, siguiente: () => this.modo.siguiente() };
+    return this.modo.boton;
   }
 
   protected control() {
-    const input = html`
-      <input
-        id="control"
-        class="control"
-        type="text"
-        inputmode="numeric"
-        autocomplete="off"
-        .value=${live(this.modo.formatear(this.valor))}
-        @change=${(evento: Event) => {
-          const numero = this.modo.leer((evento.target as HTMLInputElement).value);
-          if (numero !== null) {
-            this.avisar(numero);
-          }
-          // Si no se pudo leer, o quien lo usa no aceptó el número, no le pasa
-          // un valor nuevo y Lit no redibujaría: así el campo vuelve a mostrar
-          // el que tiene.
-          this.requestUpdate();
-        }}
-        @keydown=${this.tecla}
-      />
-    `;
-    if (this.compacto) {
-      return input;
-    }
     // Las flechas no se recorren con Tab: con el teclado se usa el campo.
     return html`
       <div class="numero">
-        ${input}
+        <input
+          id="control"
+          class="control"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          .value=${live(this.modo.formatear(this.valor))}
+          @change=${(evento: Event) => {
+            const numero = this.modo.leer((evento.target as HTMLInputElement).value);
+            if (numero !== null) {
+              this.avisar(numero);
+            }
+            // Si no se pudo leer, o quien lo usa no aceptó el número, no le
+            // pasa un valor nuevo y Lit no redibujaría: así el campo vuelve a
+            // mostrar el que tiene.
+            this.requestUpdate();
+          }}
+          @keydown=${this.tecla}
+        />
         <div class="flechas" aria-hidden="true">
           ${this.flecha(1, ChevronUp, this.maximo === undefined || this.valor < this.maximo)}
           ${this.flecha(-1, ChevronDown, this.minimo === undefined || this.valor > this.minimo)}
@@ -188,15 +167,5 @@ export class CampoNumero extends Campo<number> {
     }
     // Como al salir del campo: si no cambió nada, vuelve a lo que tiene.
     this.requestUpdate();
-  }
-
-  render() {
-    if (!this.compacto) {
-      return super.render();
-    }
-    return html`
-      <label for="control" class="texto-oculto">${this.etiqueta}</label>
-      ${this.control()}
-    `;
   }
 }
