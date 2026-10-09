@@ -108,7 +108,7 @@ teclado se prueban con `npm run tauri dev` y dos buses del IAC Driver.
 - [x] 6.3 Comparar la huella de la interfaz con la de `main`
       (`verificacion-para-agentes/huella/`): solo tienen que cambiar la barra
       de navegación y la barra de herramientas del Workflow
-- [ ] 6.4 En `npm run tauri dev`, con dos buses del IAC Driver y `midi.sh`
+- [x] 6.4 En `npm run tauri dev`, con dos buses del IAC Driver y `midi.sh`
       escuchando la salida: el botón y Cmd+. mandan los 64 mensajes en el
       orden de la spec, también con el foco en un campo numérico; mantener
       Cmd+. apretado los manda una sola vez; con otra aplicación al frente,
