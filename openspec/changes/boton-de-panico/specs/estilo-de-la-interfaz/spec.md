@@ -12,11 +12,10 @@ foco del teclado. El texto sobre el ámbar SHALL ser oscuro en los dos modos.
 
 Los colores con significado propio no cambian: el verde de las cajas de
 inicio y de la conexión activa, el naranja de las cajas de fin, el rojo de los
-errores y los colores del log. El rojo de los errores SHALL marcar también el
-botón de pánico mientras está habilitado, porque avisa de una acción de
-emergencia; no SHALL usarse como acento en ningún otro control. El botón de
-pánico apretado, encendido o con el foco del teclado SHALL verse como
-cualquier otro botón en ese estado, con el ámbar.
+errores, las emergencias y las alertas (como el botón de pánico mientras está
+habilitado), y los colores del log. El rojo dice qué es algo, no en qué estado
+está: un control rojo apretado, encendido o con el foco del teclado SHALL
+verse como cualquier otro en ese estado, con el ámbar.
 
 #### Scenario: Sin azul
 
@@ -35,7 +34,7 @@ cualquier otro botón en ese estado, con el ámbar.
 - **GIVEN** hay una conexión activa
 - **WHEN** la persona usuaria mira la barra de navegación
 - **THEN** el botón "Pánico" se ve con el fondo y la letra roja de los
-  errores, y ningún otro botón de la ventana es rojo
+  errores
 
 #### Scenario: Apretar el botón de pánico
 

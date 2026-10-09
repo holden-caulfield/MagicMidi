@@ -60,8 +60,8 @@ en el controlador MIDI, para cuando la ventana de MagicMidi no está al frente.
   Pánico se ve como caja de fin.
 - `navegacion-por-tabs`: la barra de navegación lleva el botón de pánico a la
   derecha, y el recorrido con el teclado pasa por él después de los tabs.
-- `estilo-de-la-interfaz`: el rojo de los errores también marca el botón de
-  pánico habilitado.
+- `estilo-de-la-interfaz`: el rojo es el color de los errores, las emergencias
+  y las alertas, como el botón de pánico habilitado.
 - `log-de-mensajes`: lo que manda el pánico desde el botón o el atajo no
   aparece en el log.
 
@@ -82,7 +82,7 @@ en el controlador MIDI, para cuando la ventana de MagicMidi no está al frente.
   `enviarMensaje`, en la misma cola que lo que emite el flujo.
 - Documentación: "Qué hace hoy" y "Cajas disponibles" de `README.md`, y
   `nodos/LEEME.md` (devolver varios mensajes). Al archivar, se propondrá
-  ajustar en AGENTS.md la regla del color de acento (el rojo del pánico) y lo
-  que puede devolver una caja.
+  ajustar en AGENTS.md la regla de los colores (el rojo, para errores,
+  emergencias y alertas) y lo que puede devolver una caja.
 - La huella de la interfaz cambia en la barra de navegación, a propósito.
 - Roadmap: resuelve la idea "Botón de pánico".
