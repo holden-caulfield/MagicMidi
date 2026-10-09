@@ -56,9 +56,9 @@ arranque.
 #### Scenario: Los tipos de esta versión siguen el contrato
 
 - **WHEN** se revisa la carpeta de tipos de nodo
-- **THEN** "Filtrar", "Convertir", "Fijar", "Desplazar", "Mapear", "Emitir" y
-  "Descartar" están definidos cada uno en su propio archivo con la misma forma, y ninguno
-  recibe un trato especial fuera de él
+- **THEN** "Filtrar", "Convertir", "Fijar", "Desplazar", "Mapear", "Emitir",
+  "Descartar" y "Pánico" están definidos cada uno en su propio archivo con la
+  misma forma, y ninguno recibe un trato especial fuera de él
 
 ### Requirement: Qué declara un tipo de nodo
 
@@ -170,15 +170,19 @@ tipo de parámetro.
 
 La función de procesamiento SHALL recibir el mensaje MIDI que llega a la caja
 (ver "El mensaje dice su tipo y su canal") y los valores de los parámetros de
-esa caja. SHALL devolver el mensaje que la caja pasa a las siguientes, o nada,
-si lo descarta. Que una caja con salida descarte un mensaje corta solo ese
+esa caja. SHALL devolver el mensaje que la caja pasa a las siguientes, una
+lista de mensajes, o nada, si lo descarta. Si devuelve una lista, cada mensaje
+de la lista SHALL pasar a las cajas siguientes por separado, en el orden de la
+lista, como pasaría un mensaje solo. Una lista vacía SHALL valer lo mismo que
+no devolver nada. Que una caja con salida descarte un mensaje corta solo ese
 camino: no cancela el reenvío del original.
 
 En un tipo sin salida, lo que devuelva SHALL ser lo que sale por el puerto de
-salida (por ejemplo, Emitir devuelve el mensaje que recibe), y devolver nada
-SHALL significar que esa caja no agrega nada a la salida. En los dos casos,
-que el mensaje haya llegado a una caja sin salida SHALL cancelar el reenvío del
-original: una caja sin salida que no devuelve nada, como Descartar, es la
+salida (por ejemplo, Emitir devuelve el mensaje que recibe), y si devuelve una
+lista, salen todos sus mensajes, en orden. Devolver nada, o una lista vacía,
+SHALL significar que esa caja no agrega nada a la salida. En todos los casos,
+que el mensaje haya llegado a una caja sin salida SHALL cancelar el reenvío
+del original: una caja sin salida que no devuelve nada, como Descartar, es la
 forma de que un mensaje no salga.
 
 La función no SHALL enviar mensajes por su cuenta: devuelve lo que corresponde
@@ -216,6 +220,29 @@ mensaje que recibe sin afectar al mensaje que reciben otras ramas.
   trigger conectado solo a una caja de ese tipo
 - **WHEN** la caja recibe un mensaje
 - **THEN** no sale nada por el puerto de salida
+
+#### Scenario: Un tipo sin salida devuelve varios mensajes
+
+- **GIVEN** un tipo de nodo sin salida cuya función devuelve la lista
+  `B0 7B 00`, `B1 7B 00`, y el trigger conectado solo a una caja de ese tipo
+- **WHEN** la caja recibe `90 3C 64`
+- **THEN** salen `B0 7B 00` y `B1 7B 00`, en ese orden, y no sale `90 3C 64`
+
+#### Scenario: Un tipo con salida devuelve varios mensajes
+
+- **GIVEN** un tipo de nodo con salida cuya función devuelve, por cada
+  mensaje, la lista con el mensaje y una copia una octava más arriba, y
+  trigger → esa caja → "Emitir"
+- **WHEN** llega `90 3C 64`
+- **THEN** el "Emitir" recibe `90 3C 64` y después `90 48 64`, y salen los
+  dos, en ese orden
+
+#### Scenario: Una lista vacía descarta
+
+- **GIVEN** un tipo de nodo con salida cuya función devuelve una lista vacía,
+  y el trigger conectado solo a una caja de ese tipo, que va a un "Emitir"
+- **WHEN** la caja recibe `90 3C 64`
+- **THEN** el "Emitir" no recibe nada, y `90 3C 64` sale tal como llegó
 
 ### Requirement: Los tipos de nodo no dependen del editor
 

@@ -73,7 +73,10 @@ foco del teclado. El texto sobre el ámbar SHALL ser oscuro en los dos modos.
 
 Los colores con significado propio no cambian: el verde de las cajas de
 inicio y de la conexión activa, el naranja de las cajas de fin, el rojo de los
-errores y los colores del log.
+errores, las emergencias y las alertas (como el botón de pánico mientras está
+habilitado), y los colores del log. El rojo dice qué es algo, no en qué estado
+está: un control rojo apretado, encendido o con el foco del teclado SHALL
+verse como cualquier otro en ese estado, con el ámbar.
 
 #### Scenario: Sin azul
 
@@ -86,6 +89,21 @@ errores y los colores del log.
 - **GIVEN** una caja "Filtrar" seleccionada
 - **WHEN** la persona usuaria elige el canal 10
 - **THEN** la píldora "10" se ve con fondo ámbar y letra oscura
+
+#### Scenario: El rojo del pánico
+
+- **GIVEN** hay una conexión activa
+- **WHEN** la persona usuaria mira la barra de navegación
+- **THEN** el botón "Pánico" se ve con el fondo y la letra roja de los
+  errores
+
+#### Scenario: Apretar el botón de pánico
+
+- **GIVEN** hay una conexión activa
+- **WHEN** la persona usuaria aprieta el botón "Pánico" y lo mantiene
+  apretado
+- **THEN** el botón se ve con fondo ámbar y letra gris hasta que lo suelta,
+  como cualquier botón apretado
 
 ### Requirement: Los estados se leen en modo claro y en modo oscuro
 
