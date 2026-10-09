@@ -46,9 +46,7 @@ export class PanelWorkflow extends Componente {
         @agregar-caja=${(evento: CustomEvent<IdDeTipo>) => this.lienzo.agregarCaja(evento.detail)}
       ></barra-de-herramientas>
       <p class="ayuda">
-        Cada mensaje sale tal cual, salvo que llegue a una caja naranja: Emitir manda lo que
-        recibe y Descartar no manda nada. Para borrar una conexión, arrastrala desde su entrada
-        y soltala en un lugar vacío.
+        Para borrar una conexión, arrastrala desde su entrada y soltala en un lugar vacío.
       </p>
       <div class="area">
         <lienzo-workflow
