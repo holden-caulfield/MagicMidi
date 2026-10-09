@@ -5,6 +5,7 @@ import { type IconNode, List, Plug, Workflow } from "lucide";
 import { Componente } from "@/componentes/componente";
 import { dibujarIcono } from "@/componentes/icono";
 import "@/conexion/barra-de-estado";
+import "@/conexion/boton-de-panico";
 import "@/conexion/panel-conexion";
 import "@/log/panel-log";
 import "@/workflow/editor/panel-workflow";
@@ -35,9 +36,13 @@ const PANELES: Panel[] = [
 ];
 
 const estilosDeLaBarraDeTabs = css`
+  /* Tres columnas, para que el selector siga centrado a lo ancho con el botón
+     de pánico a la derecha. */
   .barra-tabs {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    column-gap: 8px;
+    align-items: center;
     padding: 4px 10px;
     /* El borde de arriba la separa de la barra de título de la ventana, que
        en macOS tiene el mismo color. */
@@ -49,8 +54,13 @@ const estilosDeLaBarraDeTabs = css`
   /* Una tira de tabs pegados, separados por una línea fina. El activo toma el
      fondo de la ventana, como si fuera parte del panel que muestra. */
   .selector {
+    grid-column: 2;
     display: flex;
     border: 1px solid var(--borde-suave);
+  }
+
+  boton-de-panico {
+    justify-self: end;
   }
 
   .selector button {
@@ -161,6 +171,7 @@ export class VentanaPrincipal extends Componente {
             `,
           )}
         </div>
+        <boton-de-panico></boton-de-panico>
       </div>
     `;
   }

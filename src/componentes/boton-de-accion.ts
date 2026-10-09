@@ -7,6 +7,12 @@ import { Componente } from "./componente";
 import { estilosDeControl } from "./estilos";
 import { dibujarIcono } from "./icono";
 
+/** Un atajo de teclado: cómo se anuncia (`aria-keyshortcuts`) y cómo se muestra. */
+export interface Atajo {
+  teclas: string;
+  texto: string;
+}
+
 /**
  * Un botón de texto, con un ícono opcional. El texto va como contenido; si el
  * botón tiene solo ícono, `etiqueta` es su nombre accesible. Se escucha con
@@ -39,6 +45,19 @@ export class BotonDeAccion extends Componente {
         padding: 0;
       }
 
+      /* Van antes que las de activo y la de apretado: con la misma
+         especificidad, esos estados siguen siendo ámbar porque vienen
+         después. */
+      button.urgente {
+        background-color: var(--fondo-error);
+        color: var(--letra-error);
+      }
+
+      button.urgente:hover:not(:disabled) {
+        background-color: var(--letra-error);
+        color: var(--fondo-error);
+      }
+
       button.activo,
       button.activo:hover:not(:disabled) {
         background-color: var(--ambar);
@@ -65,6 +84,10 @@ export class BotonDeAccion extends Componente {
   @property() etiqueta?: string;
   @property({ type: Boolean }) activo = false;
   @property({ type: Boolean }) deshabilitado = false;
+  /** En el rojo de los errores mientras está habilitado, para una acción de emergencia. */
+  @property({ type: Boolean }) urgente = false;
+  /** Lo anuncia y lo muestra al pasar el puntero; escucharlo es de quien lo usa. */
+  @property({ attribute: false }) atajo?: Atajo;
 
   constructor() {
     super();
@@ -83,13 +106,18 @@ export class BotonDeAccion extends Componente {
 
   render() {
     const soloIcono = this.etiqueta !== undefined;
+    // Deshabilitado se ve como cualquier botón deshabilitado, sin rojo.
+    const urgente = this.urgente && !this.deshabilitado;
+    const globo = this.etiqueta ?? (this.atajo && `Atajo: ${this.atajo.texto}`);
     return html`
       <button
         type="button"
-        class="control ${soloIcono ? "solo-icono" : ""} ${this.activo ? "activo" : ""}"
+        class="control ${soloIcono ? "solo-icono" : ""} ${urgente ? "urgente" : ""}
+          ${this.activo ? "activo" : ""}"
         ?disabled=${this.deshabilitado}
         aria-label=${ifDefined(this.etiqueta)}
-        title=${ifDefined(this.etiqueta)}
+        aria-keyshortcuts=${ifDefined(this.atajo?.teclas)}
+        title=${ifDefined(globo)}
       >
         ${this.icono ? dibujarIcono(this.icono, 13) : nothing}
         <slot></slot>

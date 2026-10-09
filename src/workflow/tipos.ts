@@ -36,12 +36,13 @@ export interface TipoDeNodo {
   validar?(parametros: Record<string, unknown>): ErrorDeConfiguracion[];
   /**
    * Recibe una copia del mensaje (se puede modificar sin afectar a otras
-   * ramas) y devuelve el mensaje que pasa a las cajas siguientes, o nada para
-   * descartarlo. En una caja sin salida, lo que devuelve es lo que sale por el
-   * puerto MIDI. Nunca envía nada por su cuenta.
+   * ramas) y devuelve el mensaje que pasa a las cajas siguientes, una lista
+   * de mensajes que pasan de a uno, en orden, o nada para descartarlo (una
+   * lista vacía es lo mismo). En una caja sin salida, lo que devuelve es lo
+   * que sale por el puerto MIDI. Nunca envía nada por su cuenta.
    */
   procesar(
     mensaje: MensajeMidi,
     parametros: Record<string, unknown>,
-  ): MensajeMidi | null | void;
+  ): MensajeMidi | MensajeMidi[] | null | void;
 }

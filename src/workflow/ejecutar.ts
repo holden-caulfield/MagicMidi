@@ -69,7 +69,8 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
     });
   }
 
-  if (resultado != null && !esMensajeValido(resultado)) {
+  const mensajes = resultado == null ? [] : Array.isArray(resultado) ? resultado : [resultado];
+  if (!mensajes.every(esMensajeValido)) {
     throw new Error(`La caja "${tipo.nombre}" produjo un mensaje MIDI inválido`, {
       cause: resultado,
     });
@@ -77,12 +78,17 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
   // Llegar a una caja sin salida cuenta aunque no devuelva nada, como
   // Descartar: lo que devuelve es lo que sale por el puerto.
   if (!tieneSalida(tipo)) {
-    if (resultado != null) {
-      salidas.push(resultado);
-    }
+    salidas.push(...mensajes);
     return true;
   }
-  return resultado != null && entregar(nodoId, resultado, salidas);
+  let llegoAUnFin = false;
+  // Sin `.some()`, por lo mismo que en `entregar`.
+  for (const siguiente of mensajes) {
+    if (entregar(nodoId, siguiente, salidas)) {
+      llegoAUnFin = true;
+    }
+  }
+  return llegoAUnFin;
 }
 
 /**

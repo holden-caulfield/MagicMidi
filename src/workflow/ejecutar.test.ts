@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { actualizar, type Flujo } from "@/estado/estado";
 import { MensajeMidi, type TipoDeMensaje } from "@/midi/mensaje";
+import { mensajesDePanico } from "@/midi/panico";
 import { TIPOS_DE_NODO } from "./nodos/catalogo";
 import { procesarMensaje } from "./ejecutar";
 
@@ -311,6 +312,132 @@ test("después de un error, el mensaje siguiente se procesa normalmente", () => 
 
   expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([]);
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 64, 100)], error: null });
+});
+
+// Para probar una caja que devuelve varios mensajes se reemplaza el `procesar`
+// de un Convertir: devuelve el mensaje y una copia una octava más arriba.
+function conSuOctava(mensaje: MensajeMidi): MensajeMidi[] {
+  const [status, nota, velocidad] = mensaje.bytes;
+  return [mensaje, m(status, nota + 12, velocidad)];
+}
+
+function octavas(id: string): Flujo["nodos"][number] {
+  return { id, tipo: "convertir", parametros: { destino: "cambio-de-control" } };
+}
+
+test("una caja sin salida que devuelve varios mensajes los emite todos, en orden", () => {
+  vi.spyOn(TIPOS_DE_NODO.emitir, "procesar").mockReturnValue([
+    m(0xb0, 0x7b, 0x00),
+    m(0xb1, 0x7b, 0x00),
+  ]);
+  actualizar({
+    flujo: flujo(
+      [{ id: "emitir", tipo: "emitir", parametros: {} }],
+      [{ desde: "trigger", hacia: "emitir" }],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0xb0, 0x7b, 0x00), m(0xb1, 0x7b, 0x00)],
+    error: null,
+  });
+});
+
+test("una caja sin salida que devuelve una lista vacía no deja salir nada", () => {
+  vi.spyOn(TIPOS_DE_NODO.emitir, "procesar").mockReturnValue([]);
+  actualizar({
+    flujo: flujo(
+      [{ id: "emitir", tipo: "emitir", parametros: {} }],
+      [{ desde: "trigger", hacia: "emitir" }],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [], error: null });
+});
+
+test("varios mensajes siguen de largo por separado, en orden", () => {
+  vi.spyOn(TIPOS_DE_NODO.convertir, "procesar").mockImplementation(conSuOctava);
+  actualizar({
+    flujo: flujo(
+      [
+        octavas("octavas"),
+        subirNota("arriba", 1),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "octavas" },
+        { desde: "octavas", hacia: "arriba" },
+        { desde: "arriba", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 61, 100), m(0x90, 73, 100)]);
+});
+
+test("todo lo que produce el primer mensaje de una lista sale antes que lo del segundo", () => {
+  vi.spyOn(TIPOS_DE_NODO.convertir, "procesar").mockImplementation(conSuOctava);
+  actualizar({
+    flujo: flujo(
+      [
+        octavas("octavas"),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+        subirNota("arriba", 1),
+        { id: "emitir-arriba", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "octavas" },
+        { desde: "octavas", hacia: "emitir" },
+        { desde: "octavas", hacia: "arriba" },
+        { desde: "arriba", hacia: "emitir-arriba" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([
+    m(0x90, 60, 100),
+    m(0x90, 61, 100),
+    m(0x90, 72, 100),
+    m(0x90, 73, 100),
+  ]);
+});
+
+test("una caja con salida que devuelve una lista vacía corta su rama y el original sale", () => {
+  vi.spyOn(TIPOS_DE_NODO.convertir, "procesar").mockReturnValue([]);
+  actualizar({
+    flujo: flujo(
+      [octavas("vacia"), { id: "emitir", tipo: "emitir", parametros: {} }],
+      [
+        { desde: "trigger", hacia: "vacia" },
+        { desde: "vacia", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 60, 100)], error: null });
+});
+
+test("un mensaje inválido dentro de una lista es un error y no sale nada", () => {
+  vi.spyOn(TIPOS_DE_NODO.convertir, "procesar").mockReturnValue([m(0x90, 60, 100), m()]);
+  actualizar({
+    flujo: flujo(
+      [
+        octavas("invalida"),
+        { id: "emitir-invalida", tipo: "emitir", parametros: {} },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "invalida" },
+        { desde: "invalida", hacia: "emitir-invalida" },
+        { desde: "trigger", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [],
+    error: 'La caja "Convertir" produjo un mensaje MIDI inválido',
+  });
 });
 
 test("un acorde que incluye la nota original devuelve las tres notas", () => {
@@ -760,4 +887,94 @@ test("un pedal arranca el secuenciador", () => {
 
   expect(procesarMensaje(m(0xb0, 0x50, 0x7f)).salidas).toEqual([m(0xfa)]);
   expect(procesarMensaje(m(0xb0, 0x50, 0x00)).salidas).toEqual([m(0xb0, 0x50, 0x00)]);
+});
+
+test("cualquier mensaje dispara el pánico y el original no sale", () => {
+  actualizar({
+    flujo: flujo(
+      [{ id: "panico", tipo: "panico", parametros: {} }],
+      [{ desde: "trigger", hacia: "panico" }],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 0x3c, 0x64))).toEqual({
+    salidas: mensajesDePanico(),
+    error: null,
+  });
+});
+
+test("lo que emiten otras ramas sale junto con el pánico", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "emitir", tipo: "emitir", parametros: {} },
+        { id: "panico", tipo: "panico", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "emitir" },
+        { desde: "trigger", hacia: "panico" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 0x14, 0x7f)).salidas).toEqual([
+    m(0xb0, 0x14, 0x7f),
+    ...mensajesDePanico(),
+  ]);
+});
+
+// El botón 20 de un controlador manda CC 20 con 127 al apretarlo y con 0 al
+// soltarlo.
+const SOLO_EL_BOTON = { ...soloTipos("cambio-de-control"), datos1: { desde: 20, hasta: 20 } };
+
+test("un botón que llega entero al pánico lo dispara al apretar y al soltar", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "boton", tipo: "filtrar", parametros: SOLO_EL_BOTON },
+        { id: "panico", tipo: "panico", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "boton" },
+        { desde: "boton", hacia: "panico" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 0x14, 0x7f)).salidas).toEqual(mensajesDePanico());
+  expect(procesarMensaje(m(0xb0, 0x14, 0x00)).salidas).toEqual(mensajesDePanico());
+});
+
+function botonDePanico(): Flujo {
+  return flujo(
+    [
+      { id: "boton", tipo: "filtrar", parametros: SOLO_EL_BOTON },
+      { id: "descartar", tipo: "descartar", parametros: {} },
+      {
+        id: "apretado",
+        tipo: "filtrar",
+        parametros: { ...FILTRAR_NUEVO, datos2: { desde: 64, hasta: 127 } },
+      },
+      { id: "panico", tipo: "panico", parametros: {} },
+    ],
+    [
+      { desde: "trigger", hacia: "boton" },
+      { desde: "boton", hacia: "descartar" },
+      { desde: "boton", hacia: "apretado" },
+      { desde: "apretado", hacia: "panico" },
+    ],
+  );
+}
+
+test("un botón filtrado por valor dispara el pánico una vez y no llega al sinte", () => {
+  actualizar({ flujo: botonDePanico() });
+
+  expect(procesarMensaje(m(0xb0, 0x14, 0x7f)).salidas).toEqual(mensajesDePanico());
+  expect(procesarMensaje(m(0xb0, 0x14, 0x00)).salidas).toEqual([]);
+});
+
+test("con el botón de pánico armado, el resto de los mensajes sigue de largo", () => {
+  actualizar({ flujo: botonDePanico() });
+
+  expect(procesarMensaje(m(0x90, 0x3c, 0x64)).salidas).toEqual([m(0x90, 0x3c, 0x64)]);
 });

@@ -163,6 +163,12 @@ Lo que devuelve decide qué pasa después:
 - **Nada** (`return;` o `return null;`): esa rama del flujo termina ahí. En una
   caja sin salida, no agrega nada a lo que sale por el puerto: Descartar hace
   exactamente eso.
+- **Una lista de mensajes** (`return [primero, segundo];`): cada uno sigue por
+  separado, en el orden de la lista, como si hubieran llegado de a uno, y todo
+  lo que sale del primero sale antes que lo del segundo. En una caja sin
+  salida, salen todos por el puerto, en orden: Pánico, por ejemplo, devuelve
+  los 64 mensajes que apagan todo. Una lista vacía es lo mismo que no devolver
+  nada.
 
 Si necesitás devolver un mensaje distinto, en vez de modificar el que
 recibiste, creá uno nuevo con sus bytes: `new MensajeMidi([0xb0, 7, 100])`.
@@ -206,10 +212,11 @@ cuando la uses en un flujo:
   Por eso una caja que no devuelve nada no "borra" el mensaje: solo corta su
   rama. Si llega a una caja que no está conectada a nada, también sale tal
   cual.
-- **Si llega a al menos una caja sin salida** (Emitir, Descartar o una tuya),
-  el original ya no sale por su cuenta: sale solo lo que devuelvan esas cajas.
-  Para sacar los Nota Off, por ejemplo, no hace falta escribir una caja: se
-  conecta un **Filtrar** con solo "Nota Off" elegido a un **Descartar**.
+- **Si llega a al menos una caja sin salida** (Emitir, Descartar, Pánico o una
+  tuya), el original ya no sale por su cuenta: sale solo lo que devuelvan esas
+  cajas. Para sacar los Nota Off, por ejemplo, no hace falta escribir una
+  caja: se conecta un **Filtrar** con solo "Nota Off" elegido a un
+  **Descartar**.
 - **Si un mensaje llega a una caja por dos caminos**, la caja lo procesa dos
   veces. Por ejemplo, Filtrar combina sus criterios con "y" (Nota On *y* en el
   canal 1); para un "o" (Nota On, *o* cualquier cosa del canal 10) se ponen
@@ -218,10 +225,11 @@ cuando la uses en un flujo:
   no se pisen: en el segundo, elegí el canal 10 y todos los tipos menos Nota
   On.
 - **Si una caja tira un error, o devuelve algo que no es un mensaje válido**
-  (algún byte que no sea un entero entre 0 y 255, o ningún byte), no sale
-  nada de ese mensaje, ni por las otras ramas. En el log aparece en rojo, y al
-  pasar el puntero por el ícono se ve qué caja falló y por qué. Los mensajes
-  que llegan después se siguen procesando normalmente.
+  (algún byte que no sea un entero entre 0 y 255, o ningún byte), o una lista
+  en la que alguno no lo es, no sale nada de ese mensaje, ni por las otras
+  ramas. En el log aparece en rojo, y al pasar el puntero por el ícono se ve
+  qué caja falló y por qué. Los mensajes que llegan después se siguen
+  procesando normalmente.
 
 ## Ejemplo completo: Nota Off real
 
@@ -391,7 +399,9 @@ qué devuelve.
 - **`expect(resultado).toEqual(new MensajeMidi([0x90, 72, 100]))`** es la
   revisión: si `resultado` no es un mensaje con esos bytes, el test falla y te
   muestra los dos, el que esperabas y el que salió. Para "no devuelve nada" se
-  usa `.toBeUndefined()`.
+  usa `.toBeUndefined()`. Si tu caja devuelve una lista, se compara con la
+  lista entera: `expect(resultado).toEqual([new MensajeMidi([0x90, 60, 100]),
+  new MensajeMidi([0x90, 72, 100])])`.
 
 Un `test` por comportamiento, aunque se repita un poco: es más fácil de leer y,
 cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
