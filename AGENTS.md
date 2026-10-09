@@ -504,11 +504,13 @@ Después de `/opsx:apply`, el cambio sigue estos pasos:
    Si trae cambios a este archivo (ver "Devolver el conocimiento a este
    archivo"), van en ese mismo commit, una vez aprobados. No se abre un PR
    aparte solo para archivar.
-4. Enseguida, sin esperar otro aviso, se mergea el PR con un commit de merge
-   y se limpian las ramas (ver "Flujo de git"): pedir el archivado es dar el
-   PR por aprobado. Solo con el CI del PR en verde; el commit de archivado no
-   toca código, así que no hace falta esperar su corrida. Si un check falla o
-   todavía corre, se avisa y se espera.
+4. Con el archivado subido, se mira el CI del PR, que el ruleset de `main`
+   exige también sobre el commit de archivado. Si ya pasó, se mergea el PR
+   con un commit de merge y se limpian las ramas (ver "Flujo de git"), sin
+   esperar otro aviso: pedir el archivado es dar el PR por aprobado. Si
+   todavía corre, se avisa y se vuelve a mirar cuando la persona usuaria
+   escribe, porque el agente no se queda esperando el CI. Si un check falla,
+   se avisa y se espera.
 
 En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
 mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,

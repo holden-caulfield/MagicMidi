@@ -15,11 +15,13 @@ Archivá el cambio de OpenSpec: $ARGUMENTS
    `openspec/changes/archive/` y actualiza las specs principales.
 4. Commiteá el archivado, con los cambios aprobados a AGENTS.md si los hay,
    como último commit de la rama del PR, y subilo.
-5. Si el CI del PR está en verde, mergeá el PR con un commit de merge
+5. Mirá una vez el CI del PR, que el ruleset de `main` exige también sobre
+   el commit de archivado. Si ya pasó, mergeá el PR con un commit de merge
    (`gh pr merge <número> --merge --delete-branch`), volvé a `main`,
-   actualizá con `git pull` y borrá la rama local y la remota si quedaron. No
-   hace falta esperar la corrida del commit de archivado, que no toca código.
-   Si un check falla o todavía corre, avisá y esperá: no mergees.
+   actualizá con `git pull` y borrá la rama local y la remota si quedaron.
+   Si todavía corre, avisá y no te quedes esperando: cuando la persona
+   usuaria vuelva a escribir, miralo de nuevo y mergeá si pasó. Si un check
+   falla, avisá y esperá.
 
 Antes de archivar, aplicá la regla de AGENTS.md: si el cambio implicó decisiones
 de arquitectura, convenciones nuevas, cambios de toolchain o del flujo de
