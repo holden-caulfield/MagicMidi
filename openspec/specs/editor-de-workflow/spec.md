@@ -99,20 +99,20 @@ no SHALL poder agregarse otro: la barra de herramientas no lo ofrece.
 
 ### Requirement: La barra de herramientas agrega cajas al lienzo
 
-La barra de herramientas SHALL ofrecer, en esta versión, exactamente siete
+La barra de herramientas SHALL ofrecer, en esta versión, exactamente ocho
 cajas, en este orden: **Filtrar**, **Convertir**, **Fijar**, **Desplazar**,
-**Mapear**, **Emitir** y **Descartar**. Una caja SHALL poder agregarse arrastrándola desde
-la barra hasta un punto del lienzo, y queda ubicada donde se soltó. SHALL poder
-agregarse también activando su control en la barra, con el mouse o con el
-teclado, y en ese caso queda en un lugar visible del lienzo. Se SHALL poder
-agregar cualquier cantidad de cajas de cada tipo. Cada caja nueva arranca con
-la configuración inicial de su tipo.
+**Mapear**, **Emitir**, **Descartar** y **Pánico**. Una caja SHALL poder
+agregarse arrastrándola desde la barra hasta un punto del lienzo, y queda
+ubicada donde se soltó. SHALL poder agregarse también activando su control en
+la barra, con el mouse o con el teclado, y en ese caso queda en un lugar
+visible del lienzo. Se SHALL poder agregar cualquier cantidad de cajas de cada
+tipo. Cada caja nueva arranca con la configuración inicial de su tipo.
 
 #### Scenario: Cajas disponibles
 
 - **WHEN** la persona usuaria mira la barra de herramientas
 - **THEN** ve "Filtrar", "Convertir", "Fijar", "Desplazar", "Mapear",
-  "Emitir" y "Descartar", en ese orden
+  "Emitir", "Descartar" y "Pánico", en ese orden
 
 #### Scenario: Arrastrar al lienzo
 
@@ -134,8 +134,8 @@ la configuración inicial de su tipo.
 
 #### Scenario: Las cajas de fin se ven igual
 
-- **WHEN** la persona usuaria agrega una caja "Descartar"
-- **THEN** la caja tiene conector de entrada, ningún conector de salida, y el
+- **WHEN** la persona usuaria agrega una caja "Descartar" y una "Pánico"
+- **THEN** las dos tienen conector de entrada, ningún conector de salida, y el
   mismo color que "Emitir"
 
 #### Scenario: Fijar y Mapear quedan en el medio del flujo

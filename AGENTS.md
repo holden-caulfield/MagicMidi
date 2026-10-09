@@ -121,7 +121,11 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   sí atraviesan el Shadow DOM), la letra que heredan todos y el `body`. Los
   colores que cambian en modo oscuro son variables ahí, así los componentes no
   repiten el `@media`. El único color de acento es el ámbar (`--ambar`): lo
-  encendido, el foco, la selección, los cables y los conectores. Las cajas del lienzo y los controles de la barra que las agregan
+  encendido, el foco, la selección, los cables y los conectores. El rojo
+  (`--letra-error`, `--fondo-error`) es el de los errores, las emergencias y
+  las alertas, como el botón de pánico: dice qué es algo y no en qué estado
+  está, así que un control rojo encendido, apretado o con foco se ve en ámbar
+  como cualquier otro. Las cajas del lienzo y los controles de la barra que las agregan
   tienen colores fijos, claros en los dos modos. Todos los componentes usan
   Shadow DOM y extienden `Componente` (`componentes/componente.ts`), nunca
   `LitElement`: es la que suma `compartidos` (`box-sizing` y `[hidden]`),
@@ -169,7 +173,9 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   que llama a `render` (una vez) y a `listen`: cada evento llama a una acción
   de su módulo, y ningún componente escucha al backend, porque el flujo tiene
   que procesar mensajes aunque no haya una vista montada. Ningún módulo llama
-  a `document.querySelector`.
+  a `document.querySelector`. Las teclas no pasan por acá: un atajo lo escucha
+  el componente dueño de su acción, en `window` y en fase de captura (para que
+  ningún campo lo frene antes), y lo anuncia con `aria-keyshortcuts`.
 - **Paneles y tabs**: la lista `PANELES` de `ventana-principal.ts` es la única
   fuente; de ahí salen la barra, las `<section>` de los paneles y los
   atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
@@ -179,8 +185,10 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   ícono) y el módulo con su componente. La barra de tabs va arriba y primera
   en la raíz, antes de los paneles, para que el recorrido por teclado siga el
   orden visual. No hay encabezado: el nombre de la aplicación lo muestra el
-  sistema en la barra de la ventana, y lo único que aplica a todos los tabs,
-  el estado de la conexión, va en la barra de estado, al pie. Ocultar un panel es `?hidden`,
+  sistema en la barra de la ventana, y lo que aplica a todos los tabs va en
+  las barras, a la vista desde cualquiera: el estado de la conexión, en la
+  barra de estado, al pie, y las acciones, como el pánico, a la derecha de la
+  barra de tabs, sin correr los tabs del centro. Ocultar un panel es `?hidden`,
   **nunca** renderizado condicional (`${activo ? panel() : nothing}`):
   desmontarlo le borraría al log los mensajes acumulados, que tiene que
   seguir juntando mientras su tab no está a la vista.
@@ -231,7 +239,10 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
   puro y devuelve `{ salidas, error }`; `recibirMensaje` envía las salidas
   con `enviarMensaje` y le pasa todo al log. Ningún tipo de
-  nodo importa `salida.ts`.
+  nodo importa `salida.ts`. Todo lo que va al puerto de salida pasa por
+  `enviarMensaje`, también lo que no sale del flujo, como el pánico: encadena
+  cada envío al anterior, y un `invoke` directo podría adelantarse a lo que ya
+  estaba en la cola.
 - Un error en una caja se lanza como `Error` (con el nombre de la caja y
   `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
   el único que lo atrapa: el recorrido no revisa marcas de error.
@@ -484,18 +495,20 @@ npx openspec validate <nombre>             # validar
 npx openspec archive <nombre>              # archivar y actualizar las specs
 ```
 
-Después de `/opsx:apply`, el cambio sigue estos pasos, cada uno recién cuando
-la persona usuaria avisa:
+Después de `/opsx:apply`, el cambio sigue estos pasos:
 
-1. Se sube la rama y se abre el PR, con la propuesta, la implementación y las
-   pruebas, pero sin archivar.
+1. Cuando la persona usuaria avisa, se sube la rama y se abre el PR, con la
+   propuesta, la implementación y las pruebas, pero sin archivar.
 2. La persona usuaria revisa el código en el PR.
 3. Cuando avisa, se archiva el cambio en la misma rama, como último commit.
    Si trae cambios a este archivo (ver "Devolver el conocimiento a este
-   archivo"), van en ese mismo commit. No se abre un PR aparte solo para
-   archivar.
-4. La persona usuaria mergea el PR.
-5. Cuando avisa, se limpian las ramas (ver "Flujo de git").
+   archivo"), van en ese mismo commit, una vez aprobados. No se abre un PR
+   aparte solo para archivar.
+4. Enseguida, sin esperar otro aviso, se mergea el PR con un commit de merge
+   y se limpian las ramas (ver "Flujo de git"): pedir el archivado es dar el
+   PR por aprobado. Solo con el CI del PR en verde; el commit de archivado no
+   toca código, así que no hace falta esperar su corrida. Si un check falla o
+   todavía corre, se avisa y se espera.
 
 En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
 mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,

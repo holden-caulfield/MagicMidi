@@ -14,8 +14,8 @@ protocolo MIDI.
   en el tab Workflow, conectando cajas en un editor visual. Cada caja realiza
   algún tipo de transformación en los mensajes (ver "Cajas disponibles en esta
   version").
-- Si un mensaje no llega a ninguna caja de fin (Emitir o Descartar), sale tal
-  cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
+- Si un mensaje no llega a ninguna caja de fin (Emitir, Descartar o Pánico),
+  sale tal cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
   caja falla, no sale nada de ese mensaje.
 - Un mensaje que llega a una caja por dos caminos se procesa dos veces. Por
   eso, para dejar pasar una cosa *o* la otra con dos Filtrar en paralelo, lo
@@ -32,6 +32,15 @@ protocolo MIDI.
   (*Active Sensing*, `0xFE`) no pasan por el flujo ni aparecen en el log: se
   reenvían directo a la salida, para no sumarles demora ni saturar la
   pantalla.
+- Tiene un **botón de pánico**, arriba a la derecha y a la vista desde
+  cualquier tab, para apagar las notas que quedaron colgadas. Mientras hay
+  conexión se ve en rojo, y también se dispara con Cmd+. en macOS (Ctrl+. en
+  Windows y Linux). Manda, en cada uno de los 16 canales, que se suelte el
+  pedal de sustain (CC 64), que se corte todo el sonido (CC 120, *All Sound
+  Off*), que los controladores vuelvan a su valor inicial (CC 121, *Reset All
+  Controllers*) y que se apaguen las notas (CC 123, *All Notes Off*). Lo que
+  manda el botón no aparece en el log, porque no sale de ningún mensaje que
+  entró.
 
 ## Cajas disponibles en esta version
 
@@ -51,7 +60,12 @@ protocolo MIDI.
 - **Mapear**: lleva un rango de valores de un byte de datos a otro, por ejemplo para
   invertir un pedal o comprimir la velocidad.
 - **Emitir**: manda el mensaje a la salida.
-- **Descartar**: hace que no salga. 
+- **Descartar**: hace que no salga.
+- **Pánico**: manda lo mismo que el botón de pánico, para dispararlo desde
+  un controlador. Por ejemplo, para usar el botón que manda el CC 20: un
+  Filtrar (Cambio de Control, datos 1 de 20 a 20, datos 2 de 64 a 127) y
+  después la caja Pánico. Sin el filtro por datos 2, el pánico salta dos
+  veces: al apretar el botón y al soltarlo.
 
 ## Hacia dónde va
 

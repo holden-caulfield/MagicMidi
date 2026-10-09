@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 
 import { actualizar, type Estado, estado, type Puerto } from "@/estado/estado";
+import { mensajesDePanico } from "@/midi/panico";
+import { enviarMensaje } from "@/workflow/salida";
 
 function puertoVigente(elegido: string, puertos: Puerto[]): string {
   return puertos.some((puerto) => puerto.id === elegido) ? elegido : "";
@@ -73,6 +75,14 @@ export async function desconectar() {
   } finally {
     actualizar({ conectado: false });
   }
+}
+
+/**
+ * Apaga todo lo que suena en el equipo conectado a la salida. Va en la misma
+ * cola que lo que emite el flujo, así sale después de lo que ya se pidió.
+ */
+export function mandarPanico() {
+  mensajesDePanico().forEach(enviarMensaje);
 }
 
 export type EstadoDeLaConexion = "conectado" | "desconectado" | "error";

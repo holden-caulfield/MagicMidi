@@ -7,6 +7,7 @@ import emitir from "./emitir";
 import filtrar from "./filtrar";
 import fijar from "./fijar";
 import mapear from "./mapear";
+import panico from "./panico";
 import type { TipoDeNodo } from "../tipos";
 
 // Para sumar un tipo de nodo: importarlo arriba y agregarlo acá. El orden de
@@ -19,6 +20,7 @@ const tipos = {
   mapear,
   emitir,
   descartar,
+  panico,
 } satisfies Record<string, TipoDeNodo>;
 
 export type IdDeTipo = keyof typeof tipos;
