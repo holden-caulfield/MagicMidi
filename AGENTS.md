@@ -484,18 +484,20 @@ npx openspec validate <nombre>             # validar
 npx openspec archive <nombre>              # archivar y actualizar las specs
 ```
 
-Después de `/opsx:apply`, el cambio sigue estos pasos, cada uno recién cuando
-la persona usuaria avisa:
+Después de `/opsx:apply`, el cambio sigue estos pasos:
 
-1. Se sube la rama y se abre el PR, con la propuesta, la implementación y las
-   pruebas, pero sin archivar.
+1. Cuando la persona usuaria avisa, se sube la rama y se abre el PR, con la
+   propuesta, la implementación y las pruebas, pero sin archivar.
 2. La persona usuaria revisa el código en el PR.
 3. Cuando avisa, se archiva el cambio en la misma rama, como último commit.
    Si trae cambios a este archivo (ver "Devolver el conocimiento a este
-   archivo"), van en ese mismo commit. No se abre un PR aparte solo para
-   archivar.
-4. La persona usuaria mergea el PR.
-5. Cuando avisa, se limpian las ramas (ver "Flujo de git").
+   archivo"), van en ese mismo commit, una vez aprobados. No se abre un PR
+   aparte solo para archivar.
+4. Enseguida, sin esperar otro aviso, se mergea el PR con un commit de merge
+   y se limpian las ramas (ver "Flujo de git"): pedir el archivado es dar el
+   PR por aprobado. Solo con el CI del PR en verde; el commit de archivado no
+   toca código, así que no hace falta esperar su corrida. Si un check falla o
+   todavía corre, se avisa y se espera.
 
 En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
 mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,
