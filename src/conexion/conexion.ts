@@ -1,8 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 
 import { actualizar, type Estado, estado, type Puerto } from "@/estado/estado";
+import type { MensajeMidi } from "@/midi/mensaje";
 import { mensajesDePanico } from "@/midi/panico";
-import { enviarMensaje } from "@/workflow/salida";
 
 function puertoVigente(elegido: string, puertos: Puerto[]): string {
   return puertos.some((puerto) => puerto.id === elegido) ? elegido : "";
@@ -75,6 +75,17 @@ export async function desconectar() {
   } finally {
     actualizar({ conectado: false });
   }
+}
+
+// `invoke` es asincrónico y nada garantiza que dos pedidos simultáneos lleguen
+// al backend en orden, así que cada envío espera al anterior.
+let ultimoEnvio: Promise<void> = Promise.resolve();
+
+/** Lo manda al puerto de salida, después de todo lo que ya se pidió enviar. */
+export function enviarMensaje(mensaje: MensajeMidi) {
+  ultimoEnvio = ultimoEnvio
+    .then(() => invoke<void>("enviar_mensaje", { datos: mensaje.bytes }))
+    .catch((error) => console.error("No se pudo enviar el mensaje MIDI:", error));
 }
 
 /**
