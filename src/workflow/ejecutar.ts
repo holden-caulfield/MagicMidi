@@ -1,9 +1,9 @@
+import { enviarMensaje } from "@/conexion/conexion";
 import { estado } from "@/estado/estado";
 import { escribir } from "@/formato";
 import { agregarAlLog } from "@/log/log";
 import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
 import { tieneSalida, TIPOS_DE_NODO } from "./nodos/catalogo";
-import { enviarMensaje } from "./salida";
 import { erroresDeConfiguracion } from "./validacion";
 
 export interface ResultadoDelFlujo {
