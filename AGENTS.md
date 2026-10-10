@@ -18,11 +18,14 @@ chat.
 
 ## Flujo de git
 
-Todo cambio se hace en una rama local nueva, nunca directamente sobre
-`main`. Al terminar la tarea, se sube esa rama y se abre un PR contra
-`main`; una vez mergeado, hay que volver a `main`, actualizar con
-`git pull` y borrar la rama local (y la remota, si no se borró sola al
-mergear).
+Antes de arrancar cualquier tarea, se vuelve a `main` y se actualiza con
+`git pull`, para partir de lo último: un PR puede mergearse solo después de
+terminada la tarea anterior (ver "OpenSpec > Flujo"). Si hay cambios sin
+commitear, o la rama actual tiene trabajo sin mergear, se consulta antes de
+cambiar de rama. Todo cambio se hace en una rama local nueva, nunca
+directamente sobre `main`. Al terminar la tarea, se sube esa rama y se abre
+un PR contra `main`; una vez mergeado, se vuelve a `main` y se borra la rama
+local (la remota la borra GitHub al mergear).
 Si un check del CI falla, se avisa y se espera: no se activan correcciones
 automáticas del CI, porque la persona usuaria prefiere revisar los errores.
 
@@ -504,13 +507,13 @@ Después de `/opsx:apply`, el cambio sigue estos pasos:
    Si trae cambios a este archivo (ver "Devolver el conocimiento a este
    archivo"), van en ese mismo commit, una vez aprobados. No se abre un PR
    aparte solo para archivar.
-4. Con el archivado subido, se mira el CI del PR, que el ruleset de `main`
-   exige también sobre el commit de archivado. Si ya pasó, se mergea el PR
-   con un commit de merge y se limpian las ramas (ver "Flujo de git"), sin
-   esperar otro aviso: pedir el archivado es dar el PR por aprobado. Si
-   todavía corre, se avisa y se vuelve a mirar cuando la persona usuaria
-   escribe, porque el agente no se queda esperando el CI. Si un check falla,
-   se avisa y se espera.
+4. Con el archivado subido, se activa el auto-merge del PR, con un commit de
+   merge, y se vuelve a `main` borrando la rama local: pedir el archivado es
+   dar el PR por aprobado. GitHub lo mergea cuando pasa el CI del commit de
+   archivado, que exige el ruleset de `main`, y borra la rama remota. El
+   auto-merge se activa solo en este paso, nunca antes, porque el código lo
+   revisa la persona usuaria en el PR. Si un check falla, el PR queda abierto
+   sin mergear.
 
 En Claude Code, `.claude/commands/opsx/` son atajos escritos a mano para ese
 mismo flujo (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`,
