@@ -179,6 +179,12 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   a `document.querySelector`. Las teclas no pasan por acá: un atajo lo escucha
   el componente dueño de su acción, en `window` y en fase de captura (para que
   ningún campo lo frene antes), y lo anuncia con `aria-keyshortcuts`.
+- **Comandos del backend**: cada uno lo llama un solo módulo, el dueño de lo
+  que hace (sin componentes, como toda la lógica). El puerto de salida es de
+  la conexión: todo lo que va ahí, salga del flujo o no (como el pánico), pasa
+  por `enviarMensaje` de `conexion/conexion.ts`, que encadena cada envío al
+  anterior; un `invoke` directo podría adelantarse a lo que ya estaba en la
+  cola. El flujo usa la conexión para enviar, y la conexión no conoce el flujo.
 - **Paneles y tabs**: la lista `PANELES` de `ventana-principal.ts` es la única
   fuente; de ahí salen la barra, las `<section>` de los paneles y los
   atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
@@ -241,11 +247,8 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
 - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
   Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
   puro y devuelve `{ salidas, error }`; `recibirMensaje` envía las salidas
-  con `enviarMensaje` y le pasa todo al log. Ningún tipo de
-  nodo importa `salida.ts`. Todo lo que va al puerto de salida pasa por
-  `enviarMensaje`, también lo que no sale del flujo, como el pánico: encadena
-  cada envío al anterior, y un `invoke` directo podría adelantarse a lo que ya
-  estaba en la cola.
+  con `enviarMensaje` (ver "Comandos del backend") y le pasa todo al log.
+  Ningún tipo de nodo importa `conexion/`.
 - Un error en una caja se lanza como `Error` (con el nombre de la caja y
   `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
   el único que lo atrapa: el recorrido no revisa marcas de error.
