@@ -2,7 +2,7 @@ import { css, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { guard } from "lit/directives/guard.js";
 import { repeat } from "lit/directives/repeat.js";
-import { Ban, CornerDownRight, Equal, type IconNode, Trash2, TriangleAlert } from "lucide";
+import { Ban, CornerDownRight, Equal, type IconNode, Link2, Trash2, TriangleAlert } from "lucide";
 
 import "@/componentes/boton-de-accion";
 import { Componente } from "@/componentes/componente";
@@ -35,6 +35,8 @@ function marcaDelResultado({ resultado }: EntradaDelLog) {
       return marca(Equal, "Salió sin cambios");
     case "descartado":
       return marca(Ban, "Descartado");
+    case "apareado":
+      return marca(Link2, "Apareado con su Nota On");
     case "transformado":
       return html`<span class="columna-marca"></span>`;
   }
@@ -51,11 +53,12 @@ function descripcion(mensaje: MensajeMidi) {
   return [0, 1, 2, 3].map((i) => html`<span class="parte">${partes[i] ?? ""}</span>`);
 }
 
-function filaDeSalida(mensaje: MensajeMidi) {
+function filaDeSalida(mensaje: MensajeMidi, apareada: boolean) {
+  const nombre = apareada ? "Salida apareada" : "Salida";
   return html`
-    <div class="fila-mensaje fila-salida">
+    <div class="fila-mensaje fila-salida ${apareada ? "apareada" : ""}">
       <span class="columna-hora">
-        ${dibujarIcono(CornerDownRight, 14)}<span class="texto-oculto">Salida</span>
+        ${dibujarIcono(CornerDownRight, 14)}<span class="texto-oculto">${nombre}</span>
       </span>
       <span class="columna-bytes">${formatearBytes(mensaje)}</span>
       ${descripcion(mensaje)}
@@ -74,7 +77,9 @@ function grupo(entrada: EntradaDelLog) {
         ${descripcion(mensaje)}
         ${marcaDelResultado(entrada)}
       </div>
-      ${resultado.tipo === "transformado" ? resultado.salidas.map(filaDeSalida) : null}
+      ${resultado.tipo === "transformado" || resultado.tipo === "apareado"
+        ? resultado.salidas.map((salida) => filaDeSalida(salida, resultado.tipo === "apareado"))
+        : null}
     </div>
   `;
 }
@@ -146,7 +151,8 @@ export class PanelLog extends Componente {
       grid-column: span 4;
     }
 
-    .fila-entrada.transformado {
+    .fila-entrada.transformado,
+    .fila-entrada.apareado {
       background-color: var(--fondo-entrada-que-no-salio);
     }
 
@@ -167,6 +173,10 @@ export class PanelLog extends Componente {
     .fila-salida {
       color: var(--letra-salida);
       background-color: var(--fondo-salida);
+    }
+
+    .fila-salida.apareada {
+      background-color: var(--fondo-apareo);
     }
 
     .fila-salida .columna-hora,

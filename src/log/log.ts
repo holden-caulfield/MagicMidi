@@ -4,7 +4,9 @@ export type Resultado =
   | { tipo: "error"; texto: string }
   | { tipo: "descartado" }
   | { tipo: "sin-cambios" }
-  | { tipo: "transformado"; salidas: MensajeMidi[] };
+  | { tipo: "transformado"; salidas: MensajeMidi[] }
+  /** Un Nota Off que apagó lo que prendió su Nota On, que pueden ser ninguna nota. */
+  | { tipo: "apareado"; salidas: MensajeMidi[] };
 
 /** Un mensaje que entró, con lo que pasó con él. No cambia una vez creada. */
 export interface EntradaDelLog {
@@ -31,23 +33,29 @@ function sonIguales(a: MensajeMidi, b: MensajeMidi): boolean {
  * Decide cómo se muestra lo que salió a partir de un mensaje de entrada. Solo
  * cuando la única salida es idéntica a la entrada se la marca en la misma
  * fila; si salió más de un mensaje, van todos como sub-filas, aunque alguno
- * sea igual a la entrada.
+ * sea igual a la entrada. El apareo se marca solo cuando cambió lo que sale.
  */
 export function clasificarSalidas(
   entrada: MensajeMidi,
   salidas: MensajeMidi[],
   error: string | null = null,
+  apareado = false,
 ): Resultado {
   // Va primero: con un error las salidas vienen vacías, y sin esto se vería
   // como descartado.
   if (error !== null) {
     return { tipo: "error", texto: error };
   }
-  if (salidas.length === 0) {
-    return { tipo: "descartado" };
-  }
   if (salidas.length === 1 && sonIguales(salidas[0], entrada)) {
     return { tipo: "sin-cambios" };
+  }
+  // Antes que "descartado": un Nota Off cuyo Nota On no prendió ninguna nota
+  // no lo descartó el flujo.
+  if (apareado) {
+    return { tipo: "apareado", salidas };
+  }
+  if (salidas.length === 0) {
+    return { tipo: "descartado" };
   }
   return { tipo: "transformado", salidas };
 }
@@ -86,15 +94,21 @@ function avisar() {
 
 /**
  * Agrega arriba de todo el mensaje que entró junto con lo que salió de él, o
- * con el error si una caja falló al procesarlo.
+ * con el error si una caja falló al procesarlo. `apareado` dice si lo que
+ * salió es el apareo de un Nota Off.
  */
-export function agregarAlLog(evento: EventoMidi, salidas: MensajeMidi[], error: string | null) {
+export function agregarAlLog(
+  evento: EventoMidi,
+  salidas: MensajeMidi[],
+  error: string | null,
+  apareado = false,
+) {
   const mensaje = new MensajeMidi(evento.datos);
   const entrada: EntradaDelLog = {
     id: proximoId++,
     marcaTemporalMs: evento.marca_temporal_ms,
     mensaje,
-    resultado: clasificarSalidas(mensaje, salidas, error),
+    resultado: clasificarSalidas(mensaje, salidas, error, apareado),
   };
   entradas = [entrada, ...entradas].slice(0, MAXIMO_DE_ENTRADAS);
   avisar();

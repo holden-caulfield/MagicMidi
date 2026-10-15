@@ -4,6 +4,7 @@ import { escribir } from "@/formato";
 import { agregarAlLog } from "@/log/log";
 import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
 import { tieneSalida, TIPOS_DE_NODO } from "./nodos/catalogo";
+import { anotarNotasPrendidas, soltarNota } from "./notas-prendidas";
 import { erroresDeConfiguracion } from "./validacion";
 
 export interface ResultadoDelFlujo {
@@ -11,6 +12,11 @@ export interface ResultadoDelFlujo {
   salidas: MensajeMidi[];
   /** El texto del error, si una caja falló; `null` si no. */
   error: string | null;
+  /**
+   * Si el mensaje es un Nota Off que, en lugar de salir tal cual, apagó lo que
+   * prendió su Nota On: entonces `salidas` son los Nota Off del apareo.
+   */
+  apareado: boolean;
 }
 
 function esMensajeValido(resultado: unknown): resultado is MensajeMidi {
@@ -91,27 +97,44 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
   return llegoAUnFin;
 }
 
-/**
- * Pasa el mensaje por el flujo y devuelve lo que hay que enviar al puerto de
- * salida. Si ningún camino llega a una caja de fin, el mensaje sale tal cual;
- * si una caja falla, no sale nada. No envía nada: de eso se encarga quien lo
- * llama.
- */
-export function procesarMensaje(mensaje: MensajeMidi): ResultadoDelFlujo {
+function recorrerElFlujo(mensaje: MensajeMidi): ResultadoDelFlujo {
+  // Cada Nota Off cierra lo que anotó su Nota On aunque no se aparee: la tecla
+  // se soltó igual.
+  const apagan = mensaje.tipo === "nota-off" ? soltarNota(mensaje) : null;
   const salidas: MensajeMidi[] = [];
   try {
-    const llegoAUnFin = entregar("trigger", mensaje, salidas);
-    return { salidas: llegoAUnFin ? salidas : [mensaje], error: null };
+    if (entregar("trigger", mensaje, salidas)) {
+      return { salidas, error: null, apareado: false };
+    }
   } catch (error) {
     console.error(error);
-    return { salidas: [], error: detalleDelError(error) };
+    return { salidas: [], error: detalleDelError(error), apareado: false };
   }
+  if (apagan) {
+    return { salidas: apagan, error: null, apareado: true };
+  }
+  return { salidas: [mensaje], error: null, apareado: false };
+}
+
+/**
+ * Pasa el mensaje por el flujo y devuelve lo que hay que enviar al puerto de
+ * salida. Si ningún camino llega a una caja de fin, el mensaje sale tal cual,
+ * salvo un Nota Off, que apaga lo que prendió su Nota On, si quedó anotado; si
+ * una caja falla, no sale nada. Anota lo que prende cada Nota On, pero no
+ * envía nada: de eso se encarga quien lo llama.
+ */
+export function procesarMensaje(mensaje: MensajeMidi): ResultadoDelFlujo {
+  const resultado = recorrerElFlujo(mensaje);
+  if (mensaje.tipo === "nota-on") {
+    anotarNotasPrendidas(mensaje, resultado.salidas);
+  }
+  return resultado;
 }
 
 /** Pasa por el flujo un mensaje que llegó del backend, envía lo que sale y lo agrega al log. */
 export function recibirMensaje(evento: EventoMidi) {
   // Primero se procesa y después se dibuja, así el envío no espera al DOM.
-  const { salidas, error } = procesarMensaje(new MensajeMidi(evento.datos));
+  const { salidas, error, apareado } = procesarMensaje(new MensajeMidi(evento.datos));
   salidas.forEach(enviarMensaje);
-  agregarAlLog(evento, salidas, error);
+  agregarAlLog(evento, salidas, error, apareado);
 }

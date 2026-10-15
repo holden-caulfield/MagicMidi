@@ -5,6 +5,7 @@ import { MensajeMidi, type TipoDeMensaje } from "@/midi/mensaje";
 import { mensajesDePanico } from "@/midi/panico";
 import { TIPOS_DE_NODO } from "./nodos/catalogo";
 import { procesarMensaje } from "./ejecutar";
+import { olvidarNotasPrendidas } from "./notas-prendidas";
 
 // `procesarMensaje` no envía nada: devuelve lo que tiene que salir por el
 // puerto, así que no hace falta ningún backend falso.
@@ -47,6 +48,7 @@ function m(...bytes: number[]): MensajeMidi {
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
+  olvidarNotasPrendidas();
 });
 
 afterEach(() => {
@@ -61,13 +63,21 @@ test("el flujo por defecto emite el mensaje tal cual", () => {
     ),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 60, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x90, 60, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("con solo el trigger, el mensaje sale tal cual", () => {
   actualizar({ flujo: flujo([], []) });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 60, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x90, 60, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("sin una caja de fin al final, el mensaje sale tal cual", () => {
@@ -75,7 +85,11 @@ test("sin una caja de fin al final, el mensaje sale tal cual", () => {
     flujo: flujo([subirNota("suelta", 12)], [{ desde: "trigger", hacia: "suelta" }]),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 60, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x90, 60, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("llegar a una caja de fin cancela el original", () => {
@@ -100,7 +114,11 @@ test("llegar a Descartar cancela el original sin emitir nada", () => {
     ),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("Emitir y Descartar en ramas distintas: sale una sola vez", () => {
@@ -169,7 +187,11 @@ test("una caja que descarta el mensaje corta solo su rama y el original sale", (
     ),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 60, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x90, 60, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("una caja que falla hace que no salga nada, tampoco por las otras ramas", () => {
@@ -194,6 +216,7 @@ test("una caja que falla hace que no salga nada, tampoco por las otras ramas", (
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Desplazar" falló: falla a propósito',
+    apareado: false,
   });
   expect(console.error).toHaveBeenCalled();
 });
@@ -278,6 +301,7 @@ test("un mensaje inválido es un error y no sale nada", () => {
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Desplazar" produjo un mensaje MIDI inválido',
+    apareado: false,
   });
 });
 
@@ -293,6 +317,7 @@ test("lo inválido que devuelve una caja sin salida es un error", () => {
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Emitir" produjo un mensaje MIDI inválido',
+    apareado: false,
   });
 });
 
@@ -311,7 +336,11 @@ test("después de un error, el mensaje siguiente se procesa normalmente", () => 
   });
 
   expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([]);
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 64, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x90, 64, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 // Para probar una caja que devuelve varios mensajes se reemplaza el `procesar`
@@ -340,6 +369,7 @@ test("una caja sin salida que devuelve varios mensajes los emite todos, en orden
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [m(0xb0, 0x7b, 0x00), m(0xb1, 0x7b, 0x00)],
     error: null,
+    apareado: false,
   });
 });
 
@@ -352,7 +382,11 @@ test("una caja sin salida que devuelve una lista vacía no deja salir nada", () 
     ),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("varios mensajes siguen de largo por separado, en orden", () => {
@@ -414,7 +448,11 @@ test("una caja con salida que devuelve una lista vacía corta su rama y el origi
     ),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x90, 60, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x90, 60, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("un mensaje inválido dentro de una lista es un error y no sale nada", () => {
@@ -437,6 +475,7 @@ test("un mensaje inválido dentro de una lista es un error y no sale nada", () =
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Convertir" produjo un mensaje MIDI inválido',
+    apareado: false,
   });
 });
 
@@ -609,6 +648,7 @@ test("una caja mal configurada falla sin llegar a procesar el mensaje", () => {
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Desplazar" está mal configurada: Desplazamiento: Tiene que ser un número entero',
+    apareado: false,
   });
   expect(procesar).not.toHaveBeenCalled();
 });
@@ -630,6 +670,7 @@ test("Fijar con el canal fuera de rango hace que no salga nada", () => {
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Fijar" está mal configurada: Valor: Con Canal, tiene que ir de 1 a 16',
+    apareado: false,
   });
 });
 
@@ -657,6 +698,7 @@ test("el error de Fijar en el log escribe los números en decimal", () => {
   expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
     salidas: [],
     error: 'La caja "Fijar" está mal configurada: Valor: Con Canal, tiene que ir de 1 a 16',
+    apareado: false,
   });
 });
 
@@ -688,7 +730,11 @@ test("al corregir la caja, el mensaje siguiente sale bien", () => {
     ),
   });
 
-  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({ salidas: [m(0x99, 60, 100)], error: null });
+  expect(procesarMensaje(m(0x90, 60, 100))).toEqual({
+    salidas: [m(0x99, 60, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("una caja mal configurada a la que no llega el mensaje no afecta", () => {
@@ -711,7 +757,11 @@ test("una caja mal configurada a la que no llega el mensaje no afecta", () => {
     ),
   });
 
-  expect(procesarMensaje(m(0xb0, 7, 100))).toEqual({ salidas: [m(0xb0, 7, 100)], error: null });
+  expect(procesarMensaje(m(0xb0, 7, 100))).toEqual({
+    salidas: [m(0xb0, 7, 100)],
+    error: null,
+    apareado: false,
+  });
 });
 
 test("velocidad fija solo en las notas, con Filtrar y Fijar", () => {
@@ -816,8 +866,9 @@ test("un pad cambia de programa una sola vez", () => {
   });
 
   expect(procesarMensaje(m(0x99, 0x24, 0x64)).salidas).toEqual([m(0xc9, 0x24)]);
-  // Al soltar el pad, el Nota Off no pasa el Filtrar y sale tal como llegó.
-  expect(procesarMensaje(m(0x89, 0x24, 0x40)).salidas).toEqual([m(0x89, 0x24, 0x40)]);
+  // Al soltar el pad, el Nota Off no pasa el Filtrar, y no sale porque su Nota
+  // On no prendió ninguna nota.
+  expect(procesarMensaje(m(0x89, 0x24, 0x40)).salidas).toEqual([]);
 });
 
 test("cualquier nota elige siempre el mismo programa", () => {
@@ -900,6 +951,7 @@ test("cualquier mensaje dispara el pánico y el original no sale", () => {
   expect(procesarMensaje(m(0x90, 0x3c, 0x64))).toEqual({
     salidas: mensajesDePanico(),
     error: null,
+    apareado: false,
   });
 });
 
@@ -977,4 +1029,349 @@ test("con el botón de pánico armado, el resto de los mensajes sigue de largo",
   actualizar({ flujo: botonDePanico() });
 
   expect(procesarMensaje(m(0x90, 0x3c, 0x64)).salidas).toEqual([m(0x90, 0x3c, 0x64)]);
+});
+
+// Apareo de Nota Off: un Nota Off que no llega a ninguna caja de fin apaga lo
+// que prendió su Nota On, aunque el flujo haya cambiado en el medio.
+
+const NOTA_ON = m(0x90, 60, 100);
+const NOTA_OFF = m(0x80, 60, 64);
+
+// Filtrar (solo Nota On) → Desplazar (datos 1, `cuanto`) → Emitir: el Nota Off
+// no pasa el Filtrar, así que no llega a ninguna caja de fin.
+function transponerLosNotaOn(cuanto: number): Flujo {
+  return flujo(
+    [
+      { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+      subirNota("desplazar", cuanto),
+      { id: "emitir", tipo: "emitir", parametros: {} },
+    ],
+    [
+      { desde: "trigger", hacia: "notas" },
+      { desde: "notas", hacia: "desplazar" },
+      { desde: "desplazar", hacia: "emitir" },
+    ],
+  );
+}
+
+test("un Nota Off sin caja de fin apaga la nota que prendió su Nota On", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 72, 100)]);
+  expect(procesarMensaje(NOTA_OFF)).toEqual({
+    salidas: [m(0x80, 72, 64)],
+    error: null,
+    apareado: true,
+  });
+});
+
+test("cambiar la caja con la tecla apretada no deja la nota colgada", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+  procesarMensaje(NOTA_ON);
+
+  actualizar({ flujo: transponerLosNotaOn(7) });
+
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 72, 64)]);
+});
+
+test("un acorde se apaga entero, en el orden en que salió", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        subirNota("tonica", 0),
+        subirNota("tercera", 4),
+        subirNota("quinta", 7),
+        { id: "emitir-tonica", tipo: "emitir", parametros: {} },
+        { id: "emitir-tercera", tipo: "emitir", parametros: {} },
+        { id: "emitir-quinta", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "tonica" },
+        { desde: "notas", hacia: "tercera" },
+        { desde: "notas", hacia: "quinta" },
+        { desde: "tonica", hacia: "emitir-tonica" },
+        { desde: "tercera", hacia: "emitir-tercera" },
+        { desde: "quinta", hacia: "emitir-quinta" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([
+    m(0x90, 60, 100),
+    m(0x90, 64, 100),
+    m(0x90, 67, 100),
+  ]);
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([
+    m(0x80, 60, 64),
+    m(0x80, 64, 64),
+    m(0x80, 67, 64),
+  ]);
+});
+
+test("el Nota Off se apaga en el canal por el que salió su Nota On", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "fijar", tipo: "fijar", parametros: { byte: 0, valor: 2 } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x91, 60, 100)]);
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x81, 60, 64)]);
+});
+
+test("un Nota On con velocidad 0 conserva su forma al aparearse", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+  procesarMensaje(NOTA_ON);
+
+  expect(procesarMensaje(m(0x90, 60, 0)).salidas).toEqual([m(0x90, 72, 0)]);
+});
+
+test("un Nota Off que llega a un Emitir sale como lo devuelve el flujo", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        subirNota("desplazar", 12),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+        { id: "sueltas", tipo: "filtrar", parametros: soloTipos("nota-off") },
+        { id: "emitir-sueltas", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "desplazar" },
+        { desde: "desplazar", hacia: "emitir" },
+        { desde: "trigger", hacia: "sueltas" },
+        { desde: "sueltas", hacia: "emitir-sueltas" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 72, 100)]);
+  expect(procesarMensaje(NOTA_OFF)).toEqual({
+    salidas: [m(0x80, 60, 64)],
+    error: null,
+    apareado: false,
+  });
+});
+
+test("alcanza con que otra rama lleve el Nota Off a un Emitir para que no se aparee", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "emitir-original", tipo: "emitir", parametros: {} },
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        subirNota("octava", 12),
+        { id: "emitir-octava", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "emitir-original" },
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "octava" },
+        { desde: "octava", hacia: "emitir-octava" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 60, 100), m(0x90, 72, 100)]);
+  // La octava queda sonando: es el caso que explica nodos/LEEME.md.
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 60, 64)]);
+});
+
+test("un Nota Off que llega a Descartar no sale", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "sueltas", tipo: "filtrar", parametros: soloTipos("nota-off") },
+        { id: "descartar", tipo: "descartar", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "sueltas" },
+        { desde: "sueltas", hacia: "descartar" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 60, 100)]);
+  expect(procesarMensaje(NOTA_OFF)).toEqual({ salidas: [], error: null, apareado: false });
+});
+
+test("un Nota On que salió tal cual también se anota", () => {
+  actualizar({ flujo: flujo([], []) });
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 60, 100)]);
+
+  actualizar({ flujo: transponerLosNotaOn(12) });
+
+  expect(procesarMensaje(NOTA_OFF)).toEqual({
+    salidas: [m(0x80, 60, 64)],
+    error: null,
+    apareado: true,
+  });
+});
+
+test("la misma nota dos veces se apaga de la más vieja a la más nueva", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 72, 100)]);
+  actualizar({ flujo: transponerLosNotaOn(7) });
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([m(0x90, 67, 100)]);
+
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 72, 64)]);
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 67, 64)]);
+});
+
+test("un Nota Off que llega a un Emitir también cierra lo que anotó su Nota On", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on", "nota-off") },
+        subirNota("desplazar", 12),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "desplazar" },
+        { desde: "desplazar", hacia: "emitir" },
+      ],
+    ),
+  });
+  procesarMensaje(NOTA_ON);
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 72, 64)]);
+
+  actualizar({ flujo: transponerLosNotaOn(7) });
+  procesarMensaje(NOTA_ON);
+
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 67, 64)]);
+});
+
+test("las notas que salen de un Cambio de Control no se aparean", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "controles", tipo: "filtrar", parametros: soloTipos("cambio-de-control") },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "nota-on" } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "controles" },
+        { desde: "controles", hacia: "convertir" },
+        { desde: "convertir", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 64, 127)).salidas).toEqual([m(0x90, 64, 127)]);
+  expect(procesarMensaje(m(0xb0, 64, 0)).salidas).toEqual([m(0x90, 64, 0)]);
+});
+
+test("el Nota Off de un pad convertido en Cambio de Control no sale", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-control" } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "convertir" },
+        { desde: "convertir", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 36, 127)).salidas).toEqual([m(0xb0, 36, 127)]);
+  expect(procesarMensaje(m(0x80, 36, 64))).toEqual({ salidas: [], error: null, apareado: true });
+});
+
+test("si el Nota On se descartó, su Nota Off tampoco sale", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "descartar", tipo: "descartar", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "descartar" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_ON).salidas).toEqual([]);
+  expect(procesarMensaje(NOTA_OFF)).toEqual({ salidas: [], error: null, apareado: true });
+});
+
+test("un Nota Off sin su Nota On sale tal cual", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+
+  expect(procesarMensaje(NOTA_OFF)).toEqual({
+    salidas: [m(0x80, 60, 64)],
+    error: null,
+    apareado: false,
+  });
+});
+
+test("la caja Pánico no olvida lo anotado", () => {
+  const conPanico = transponerLosNotaOn(12);
+  conPanico.nodos.push(
+    { id: "controles", tipo: "filtrar", parametros: soloTipos("cambio-de-control") },
+    { id: "panico", tipo: "panico", parametros: {} },
+  );
+  conPanico.conexiones.push(
+    { desde: "trigger", hacia: "controles" },
+    { desde: "controles", hacia: "panico" },
+  );
+  actualizar({ flujo: conPanico });
+
+  procesarMensaje(NOTA_ON);
+  expect(procesarMensaje(m(0xb0, 20, 127)).salidas).toEqual(mensajesDePanico());
+
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 72, 64)]);
+});
+
+test("borrar todas las cajas no olvida lo anotado", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+  procesarMensaje(NOTA_ON);
+
+  actualizar({ flujo: flujo([], []) });
+
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 72, 64)]);
+});
+
+test("un Nota Off con el que falla una caja no sale, pero cierra su anotación", () => {
+  actualizar({ flujo: transponerLosNotaOn(12) });
+  procesarMensaje(NOTA_ON);
+  const falla = vi.spyOn(TIPOS_DE_NODO.desplazar, "procesar").mockImplementation(() => {
+    throw new Error("falla a propósito");
+  });
+  actualizar({
+    flujo: flujo(
+      [subirNota("rota", 12), { id: "emitir", tipo: "emitir", parametros: {} }],
+      [
+        { desde: "trigger", hacia: "rota" },
+        { desde: "rota", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(NOTA_OFF)).toEqual({
+    salidas: [],
+    error: 'La caja "Desplazar" falló: falla a propósito',
+    apareado: false,
+  });
+
+  falla.mockRestore();
+  actualizar({ flujo: transponerLosNotaOn(12) });
+  // Ya no queda nada anotado: el siguiente sale tal cual.
+  expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 60, 64)]);
 });
