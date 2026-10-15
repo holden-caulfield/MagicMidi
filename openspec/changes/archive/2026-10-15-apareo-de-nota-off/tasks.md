@@ -106,11 +106,11 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 6. Al cerrar el cambio
 
-- [ ] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
+- [x] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
       cambios del roadmap: marcar "Evitar notas colgadas al editar en vivo"
       como hecha, y actualizar las recetas que hoy filtran Nota On y Nota Off
       juntos (acorde, espejo de teclado) para que filtren solo los Nota On
-- [ ] 6.2 Al archivar, proponer el diff de AGENTS.md ("Devolver el
+- [x] 6.2 Al archivar, proponer el diff de AGENTS.md ("Devolver el
       conocimiento a este archivo"): la excepción del Nota Off en la regla del
       ejecutor, que `procesarMensaje` anota y aparea, que sin conexión la
       ejecución vuelve a cero, y la regla común del log y lo anotado (lo que

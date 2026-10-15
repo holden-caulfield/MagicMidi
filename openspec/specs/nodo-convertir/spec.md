@@ -283,7 +283,9 @@ Nota Off.
 Convertir no SHALL tener un parámetro para elegir el tipo de origen: para
 convertir solo algunos tipos, o solo algunos mensajes, se pone antes un
 Filtrar. Lo que el Filtrar no deja pasar no llega a ninguna caja de fin y sale
-tal cual (ver la spec `ejecucion-de-workflow`).
+tal cual (ver la spec `ejecucion-de-workflow`), salvo un Nota Off, que apaga
+lo que prendió su Nota On (ver la spec `apareo-de-nota-off`): si su Nota On se
+convirtió en otra cosa, no prendió ninguna nota y el Nota Off no sale.
 
 #### Scenario: Aftertouch a CC sin tocar las notas
 
@@ -297,7 +299,8 @@ tal cual (ver la spec `ejecucion-de-workflow`).
 - **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Convertir" (a "Cambio de
   Programa") → "Emitir"
 - **WHEN** el pad manda `99 24 64` al apretarlo y `89 24 40` al soltarlo
-- **THEN** sale `C9 24` una sola vez, y `89 24 40` sale tal como llegó
+- **THEN** sale `C9 24` una sola vez, y `89 24 40` no sale, porque su Nota On
+  no prendió ninguna nota
 
 #### Scenario: Siempre el mismo programa
 

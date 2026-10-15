@@ -17,8 +17,8 @@ MIDI (`F8`) y del Sensor Activo (`FE`), que no SHALL mostrarse nunca como
 entrada. Cada grupo SHALL mostrar el mensaje de entrada y lo que el flujo
 emitió a partir de él, según los requisitos "Las salidas van en sub-filas",
 "Un mensaje que pasa sin cambios se marca en la fila de entrada", "Lo que no
-sale se marca como descartado" y "Un mensaje cuyo procesamiento falló se
-marca como error". Lo que la aplicación reenvía directo a la salida sin pasar
+sale se marca como descartado", "Un mensaje cuyo procesamiento falló se
+marca como error" y "Un Nota Off apareado se marca como tal". Lo que la aplicación reenvía directo a la salida sin pasar
 por el flujo (el reloj y el Sensor Activo) no SHALL aparecer en el log.
 Tampoco SHALL aparecer lo que manda el pánico desde el botón o el atajo de
 teclado (ver la spec `panico`), porque no sale de ningún mensaje que entró. Lo
@@ -354,7 +354,10 @@ Cuando el flujo emitió a partir de un mensaje de entrada un único mensaje, con
 exactamente los mismos bytes que la entrada, ese mensaje no SHALL tener
 sub-fila: la fila de entrada SHALL llevar una marca de "salió sin cambios". La
 marca SHALL tener un texto que la explique, visible al pasar el puntero y
-disponible para lectores de pantalla.
+disponible para lectores de pantalla. Vale también para un Nota Off
+apareado: si lo único que salió por el apareo tiene los mismos bytes que la
+entrada, el grupo lleva esta marca y no la de apareado (ver "Un Nota Off
+apareado se marca como tal").
 
 #### Scenario: Flujo por defecto
 
@@ -379,7 +382,9 @@ visible al pasar el puntero y disponible para lectores de pantalla, y SHALL
 distinguirse a simple vista de la de "salió sin cambios". Un mensaje que salió
 porque se reenvió por defecto (ver la spec `ejecucion-de-workflow`) no está
 descartado: se muestra como cualquier mensaje que salió sin cambios. Uno que
-no salió porque una caja falló tampoco: lleva la marca de error.
+no salió porque una caja falló tampoco: lleva la marca de error. Y tampoco un
+Nota Off que no salió porque su Nota On no prendió ninguna nota: lleva la
+marca de apareado (ver la spec `apareo-de-nota-off`).
 
 #### Scenario: Descartar todo
 
@@ -409,15 +414,17 @@ Los colores del log SHALL seguir tres reglas:
 
 - **Letra del color de salida**: toda fila que representa un mensaje que salió
   por el puerto de salida SHALL tener la letra del color de salida. Las
-  sub-filas SHALL tener además un fondo suave del mismo color. La fila de
-  entrada marcada como "salió sin cambios" SHALL tener la letra del color de
-  salida, pero conservar el fondo normal de la lista, para no llamar la
-  atención en el caso más común.
+  sub-filas SHALL tener además un fondo suave del mismo color; las de un Nota
+  Off apareado, un fondo de un tono apenas distinto, que las diferencia de
+  las del flujo sin dejar de leerse como salida. La fila de entrada marcada
+  como "salió sin cambios" SHALL tener la letra del color de salida, pero
+  conservar el fondo normal de la lista, para no llamar la atención en el
+  caso más común.
 - **Fondo gris**: la fila de entrada de un mensaje que no salió tal cual,
-  porque se transformó o porque se descartó, SHALL tener un fondo gris y la
-  letra que no es del color de salida. La de un mensaje descartado SHALL
-  tener además la letra atenuada, y no SHALL usar un color que se lea como
-  error.
+  porque se transformó, porque se apareó o porque se descartó, SHALL tener
+  un fondo gris y la letra que no es del color de salida. La de un mensaje
+  descartado SHALL tener además la letra atenuada, y no SHALL usar un color
+  que se lea como error.
 - **Rojo**: la fila de entrada de un mensaje cuyo procesamiento falló SHALL
   tener fondo rojo suave y letra roja, para que se note aunque pasen muchos
   mensajes. Ninguna otra fila SHALL usar rojo.
@@ -453,6 +460,15 @@ colores, por sus marcas y sus sub-filas.
 - **WHEN** llega `90 3C 64`
 - **THEN** la fila de entrada tiene fondo gris y la letra normal, y la
   sub-fila `90 40 64` tiene la letra del color de salida sobre su fondo suave
+
+#### Scenario: Apareado
+
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Desplazar" (datos 1,
+  +12) → "Emitir", y ya llegó `90 3C 64`
+- **WHEN** llega `80 3C 40`
+- **THEN** la fila de entrada tiene fondo gris, la letra normal y la marca de
+  apareado, y la sub-fila `80 48 40` tiene la letra del color de salida sobre
+  un fondo que se distingue del de la sub-fila del escenario "Transformado"
 
 #### Scenario: Descartado
 
@@ -553,3 +569,62 @@ salida SHALL seguir la misma regla.
 - **WHEN** llega `B0 07 64`
 - **THEN** la descripción es "Cambio de Control · canal 1 · controlador 7 ·
   valor 100", sin ningún nombre de nota
+
+### Requirement: Un Nota Off apareado se marca como tal
+
+Cuando un Nota Off se apareó con su Nota On (ver la spec
+`apareo-de-nota-off`) y el apareo cambió lo que sale, la fila de entrada
+SHALL llevar una marca de "apareado", con un ícono propio, y cada Nota Off que
+salió por el apareo SHALL tener su sub-fila, en el orden en que salieron, con
+el mismo formato que las sub-filas del flujo y los colores de "Los colores
+separan lo que salió de lo que solo entró". Si lo único que salió por el
+apareo tiene los mismos bytes que la entrada, el apareo no cambió nada, y el
+grupo SHALL mostrarse como "salió sin cambios", sin la marca de apareado ni
+sub-filas. Si no salió nada, porque su Nota On no prendió ninguna nota, el
+grupo no SHALL tener sub-filas, y la marca de apareado lo distingue de un
+descarte.
+
+La marca SHALL tener un texto que diga que el Nota Off se apareó con su Nota
+On, visible al pasar el puntero y disponible para lectores de pantalla, y
+SHALL distinguirse a simple vista de las de "salió sin cambios", "descartado"
+y error. Un Nota Off que no se apareó, porque llegó a una caja de fin o porque
+no había nada anotado, SHALL mostrarse como cualquier otro mensaje: así el log
+muestra cuándo el apareo cambió lo que salió de un Nota Off.
+
+#### Scenario: Un Nota Off apareado
+
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Desplazar" (datos 1,
+  +12) → "Emitir"
+- **WHEN** llega `90 3C 64` y después `80 3C 40`
+- **THEN** el grupo de `80 3C 40` lleva la marca de apareado y tiene una
+  sub-fila, `80 48 40`
+
+#### Scenario: Los mismos bytes que la entrada
+
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Emitir"
+- **WHEN** llega `90 3C 64` y después `80 3C 40`
+- **THEN** los grupos de `90 3C 64` y de `80 3C 40` llevan la marca de "salió
+  sin cambios", sin la de apareado y sin sub-filas
+
+#### Scenario: Sin notas que apagar
+
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Convertir" (a "Cambio de
+  Control") → "Emitir"
+- **WHEN** llega `90 24 7F` y después `80 24 40`
+- **THEN** el grupo de `80 24 40` lleva la marca de apareado, no la de
+  "descartado", y no tiene sub-filas
+
+#### Scenario: Un Nota Off que sale por el flujo
+
+- **GIVEN** el lienzo está como al abrir la aplicación (trigger → Emitir)
+- **WHEN** llega `90 3C 64` y después `80 3C 40`
+- **THEN** el grupo de `80 3C 40` lleva la marca de "salió sin cambios", sin
+  la de apareado
+
+#### Scenario: Un Nota Off sin nada anotado
+
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Desplazar" (datos 1,
+  +12) → "Emitir"
+- **WHEN** llega `80 3C 40`, sin que haya llegado antes `90 3C 64`
+- **THEN** el grupo de `80 3C 40` lleva la marca de "salió sin cambios", sin
+  la de apareado
