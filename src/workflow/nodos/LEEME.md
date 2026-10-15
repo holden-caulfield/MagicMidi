@@ -212,6 +212,29 @@ cuando la uses en un flujo:
   Por eso una caja que no devuelve nada no "borra" el mensaje: solo corta su
   rama. Si llega a una caja que no está conectada a nada, también sale tal
   cual.
+- **El Nota Off es la excepción.** Si un Nota Off (o un Nota On con velocidad
+  0) no llega a ninguna caja sin salida, no sale tal como llegó: apaga las
+  notas que prendió su Nota On. La aplicación anota, por cada Nota On que
+  entra, qué notas salieron a partir de él, y al soltar la tecla manda un Nota
+  Off a cada una, con la velocidad de soltar. Por eso, para transponer,
+  alcanza con `Filtrar (Nota On) → Desplazar (+12) → Emitir`: aunque cambies
+  el Desplazar con la tecla apretada, se apaga la nota que estaba sonando. Si
+  el Nota On no prendió ninguna nota (porque lo descartaste o lo convertiste
+  en otra cosa), el Nota Off no sale. Esto se llama *apareo*, y tiene algunas
+  cosas para tener en cuenta:
+  - Alcanza con que el Nota Off llegue por un camino a una caja sin salida
+    para que no se aparee: entonces sale lo que devuelvan las cajas, como
+    cualquier mensaje. Ojo con duplicar a la octava así: `Trigger → Emitir` y
+    `Trigger → Filtrar (Nota On) → Desplazar (+12) → Emitir`. El Nota Off
+    llega al primer Emitir, no se aparea, y la octava queda sonando. Bien
+    armado, la original sale del mismo Filtrar: `Filtrar (Nota On) → Emitir`
+    y `Filtrar (Nota On) → Desplazar (+12) → Emitir`.
+  - Si querés que el Nota Off salga tal como llegó, sin apareo, conectá un
+    **Filtrar** con solo "Nota Off" a un **Emitir**.
+  - En el log, cuando el apareo cambió lo que sale, el Nota Off lleva el
+    ícono de un eslabón, y lo que salió por el apareo va debajo, con un fondo
+    un poco más azul que el de lo que sale por el flujo. Si salió igual que
+    entró, se ve como cualquier mensaje que sale sin cambios.
 - **Si llega a al menos una caja sin salida** (Emitir, Descartar, Pánico o una
   tuya), el original ya no sale por su cuenta: sale solo lo que devuelvan esas
   cajas. Para sacar los Nota Off, por ejemplo, no hace falta escribir una

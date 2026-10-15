@@ -161,6 +161,10 @@ flujo por el trigger. Si al procesarlo no llega a ninguna **caja de fin** (una
 caja sin salida, como Emitir o Descartar), el mensaje SHALL salir por el
 puerto de salida tal como llegó, como único mensaje de salida.
 
+La excepción es el Nota Off (también un Nota On con velocidad 0): si no llega
+a ninguna caja de fin, en lugar de salir tal cual SHALL apagar lo que prendió
+su Nota On, según la spec `apareo-de-nota-off`.
+
 Si llega a al menos una caja de fin, el mensaje original no SHALL salir por el
 hecho de haber entrado: SHALL salir únicamente lo que devuelvan las cajas de
 fin a las que llegó (que puede ser nada). Un camino que termina antes de
@@ -218,6 +222,13 @@ mensaje").
 - **GIVEN** trigger → "Filtrar" (solo Nota Off) → "Descartar"
 - **WHEN** llegan `90 3C 64` y después `80 3C 40`
 - **THEN** sale `90 3C 64`, y `80 3C 40` no sale
+
+#### Scenario: Un Nota Off sin caja de fin apaga lo que prendió su Nota On
+
+- **GIVEN** trigger → "Filtrar" (solo Nota On) → "Desplazar" (datos 1, +12) →
+  "Emitir"
+- **WHEN** llegan `90 3C 64` y después `80 3C 40`
+- **THEN** sale `90 48 64` y después `80 48 40`, y no `80 3C 40`
 
 ### Requirement: Un error en una caja cancela todo lo que produce ese mensaje
 

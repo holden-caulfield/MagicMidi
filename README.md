@@ -17,6 +17,10 @@ protocolo MIDI.
 - Si un mensaje no llega a ninguna caja de fin (Emitir, Descartar o Pánico),
   sale tal cual por la salida elegida: el flujo solo cambia lo que se le pide. Si una
   caja falla, no sale nada de ese mensaje.
+- La excepción es el Nota Off: si no llega a ninguna caja de fin, apaga las
+  notas que prendió su Nota On, aunque el flujo haya cambiado en el medio. Así,
+  para transponer o armar acordes alcanza con pasar los Nota On por el flujo, y
+  cambiar una caja con una tecla apretada no deja la nota colgada.
 - Un mensaje que llega a una caja por dos caminos se procesa dos veces. Por
   eso, para dejar pasar una cosa *o* la otra con dos Filtrar en paralelo, lo
   que cumple los dos sale dos veces: conviene armarlos para que no se pisen.

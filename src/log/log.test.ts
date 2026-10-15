@@ -77,6 +77,42 @@ test("si una caja falló, es un error con su texto", () => {
   });
 });
 
+test("un Nota Off apareado muestra lo que salió por el apareo", () => {
+  expect(clasificarSalidas(m(0x80, 60, 64), [m(0x80, 72, 64)], null, true)).toEqual({
+    tipo: "apareado",
+    salidas: [m(0x80, 72, 64)],
+  });
+});
+
+test("un apareo con los mismos bytes que la entrada se muestra sin cambios", () => {
+  expect(clasificarSalidas(m(0x80, 60, 64), [m(0x80, 60, 64)], null, true)).toEqual({
+    tipo: "sin-cambios",
+  });
+});
+
+test("un apareo que apaga la misma nota y otra se muestra con las dos", () => {
+  expect(
+    clasificarSalidas(m(0x80, 60, 64), [m(0x80, 60, 64), m(0x80, 72, 64)], null, true),
+  ).toEqual({
+    tipo: "apareado",
+    salidas: [m(0x80, 60, 64), m(0x80, 72, 64)],
+  });
+});
+
+test("un apareo sin notas que apagar no se muestra descartado", () => {
+  expect(clasificarSalidas(m(0x80, 60, 64), [], null, true)).toEqual({
+    tipo: "apareado",
+    salidas: [],
+  });
+});
+
+test("el error gana sobre el apareo", () => {
+  expect(clasificarSalidas(m(0x80, 60, 64), [], "ups", true)).toEqual({
+    tipo: "error",
+    texto: "ups",
+  });
+});
+
 function evento(marca: number, ...datos: number[]): EventoMidi {
   return { puerto: "entrada", marca_temporal_ms: marca, datos };
 }

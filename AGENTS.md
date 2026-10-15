@@ -106,6 +106,10 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   posible: se sube cuando aparece otro uso. Ningún componente lee el estado
   del DOM. El dibujado es asíncrono: después de `actualizar()`, el DOM
   todavía no cambió, y hay que esperar `elemento.updateComplete` para mirarlo.
+  Lo que cambia con cada mensaje MIDI no va al store, aunque lo usen áreas
+  distintas, porque `actualizar()` haría volver a dibujar todos los
+  componentes con cada mensaje: es estado del módulo que lo usa, con sus
+  propias funciones, y avisa solo si alguien lo dibuja, como el log.
 - **Componentes**: los de área (`panel-conexion`, `panel-workflow`,
   `panel-de-configuracion`…) leen el store y llaman a las acciones, y pueden
   recibir por propiedades lo que vive en el contenedor de su área. Los hoja
@@ -171,9 +175,10 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   (`componentes/icono.ts`), que es una función y no un componente: el
   `<svg>` queda en la raíz de quien lo dibuja, que lo estiliza directamente.
 - **`main.ts` es el arranque**: monta `<ventana-principal>`, la raíz
-  (`src/ventana/`), y engancha los eventos del backend, así ese archivo
-  muestra todo lo que arranca y todo lo que entra del backend. Es el único
-  que llama a `render` (una vez) y a `listen`: cada evento llama a una acción
+  (`src/ventana/`), y engancha los eventos del backend y los avisos del store
+  que no dibujan nada, así ese archivo muestra todo lo que arranca y todo lo
+  que entra del backend. Es el único que llama a `render` (una vez) y a
+  `listen`: cada evento llama a una acción
   de su módulo, y ningún componente escucha al backend, porque el flujo tiene
   que procesar mensajes aunque no haya una vista montada. Ningún módulo llama
   a `document.querySelector`. Las teclas no pasan por acá: un atajo lo escucha
@@ -225,15 +230,16 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   vuelve del backend.
 - **Log**: tiene su propio registro (`log/log.ts`: las últimas 500 entradas,
   la más nueva primero, cada una con un `id` y sin cambios después de
-  creada), separado del store: si estuviera ahí, cada mensaje MIDI haría
-  volver a dibujar todos los componentes. `<panel-log>` lo dibuja con
-  `repeat` por `id` y `guard`, así un mensaje nuevo crea solo su fila, y
+  creada), fuera del store (ver "Estado de la interfaz"). `<panel-log>` lo
+  dibuja con `repeat` por `id` y `guard`, así un mensaje nuevo crea solo su
+  fila, y
   espera al próximo cuadro para dibujar (redefine `scheduleUpdate`), así una
   ráfaga se dibuja una sola vez. Con la ventana minimizada no se dibuja: los
   mensajes se acumulan en el registro y se dibujan al volver. El log no
   recibe `mensaje-midi`: lo recibe `recibirMensaje` (`ejecutar.ts`), que pasa
   el mensaje por el flujo, envía lo emitido y le da a `agregarAlLog` la
-  entrada, lo que se emitió y el texto del error, si una caja falló.
+  entrada, lo que se emitió, el texto del error, si una caja falló, y si
+  salió por el apareo.
 
 ### Workflow
 
@@ -243,12 +249,23 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   el trigger y sale tal cual, salvo que llegue a al menos una caja sin
   salida (Emitir, Descartar): entonces sale solo lo que devuelvan esas
   cajas. Si una caja falla, no sale nada de ese mensaje. Ninguna caja
-  declara nada para esto: lo decide el recorrido.
+  declara nada para esto: lo decide el recorrido. La excepción es el Nota
+  Off que no llega a ninguna caja sin salida: apaga lo que prendió su Nota
+  On (el apareo, `notas-prendidas.ts`), así cambiar una caja con una tecla
+  apretada no deja notas colgadas. También lo decide el ejecutor: ninguna
+  caja sabe que existe.
 - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
-  Emitir) es lo que sale por el puerto. El recorrido (`procesarMensaje`) es
-  puro y devuelve `{ salidas, error }`; `recibirMensaje` envía las salidas
+  Emitir) es lo que sale por el puerto. `procesarMensaje` no envía nada ni
+  toca el log, así se prueba sin backend; lo único que cambia es lo anotado
+  del apareo, que saca antes de recorrer y anota después, para que se vea
+  que sacar no depende del recorrido. `recibirMensaje` envía las salidas
   con `enviarMensaje` (ver "Comandos del backend") y le pasa todo al log.
   Ningún tipo de nodo importa `conexion/`.
+- Sin conexión, la ejecución vuelve a cero: `main.ts` engancha a los avisos
+  del store el olvido de lo anotado, así nada pasa de una conexión a la
+  siguiente y la conexión sigue sin conocer el flujo. El pánico no olvida:
+  una tecla apretada durante el pánico, al soltarse, tiene que apagar lo que
+  prendió y no salir tal cual, porque podría apagar otra nota.
 - Un error en una caja se lanza como `Error` (con el nombre de la caja y
   `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
   el único que lo atrapa: el recorrido no revisa marcas de error.

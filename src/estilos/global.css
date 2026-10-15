@@ -53,6 +53,7 @@
 
   --letra-salida: #3c3489;
   --fondo-salida: #eeedfe;
+  --fondo-apareo: #e6eefd;
   --letra-sin-cambios: #534ab7;
   --fondo-entrada-que-no-salio: rgba(127, 127, 127, 0.13);
   --letra-descartado: #888780;
@@ -87,6 +88,7 @@
 
     --letra-salida: #cecbf6;
     --fondo-salida: #26215c;
+    --fondo-apareo: #1c2b57;
     --letra-sin-cambios: #afa9ec;
     --letra-descartado: #8f8f8f;
     --letra-error: #f7c1c1;
