@@ -29,7 +29,7 @@ que necesitan la caja Alternar (para el round-robin de notas) y la idea
 - **Qué se anota:** por cada Nota On que entra, los Nota On que salieron a
   partir de él (canal y nota de cada uno), bajo su canal y su nota. Pueden ser
   ninguno, uno o varios. Si se aprieta la misma nota dos veces antes de
-  soltarla, cada Nota Off cierra la anotación más vieja.
+  soltarla, cada Nota Off saca la anotación más vieja.
 - **Casos de borde:** sin nada anotado (el Nota On llegó antes de conectar),
   el Nota Off sale tal cual, como hoy. Si el Nota On no hizo salir ninguna
   nota (lo descartó el flujo, o salió convertido en otra cosa), el Nota Off

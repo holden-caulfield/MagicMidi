@@ -101,10 +101,10 @@ prendidas los Nota On con velocidad mayor que 0: lo que salió de otro tipo no
 se anota.
 
 Si se aprieta la misma nota dos veces antes de soltarla, SHALL quedar una
-anotación por cada vez, y cada Nota Off que entra SHALL cerrar la más vieja
-de su canal y su nota. Cada Nota Off SHALL cerrar su anotación aunque no se
-aparee (porque llegó a una caja de fin, o porque una caja falló): la tecla se
-soltó igual.
+anotación por cada vez, y cada Nota Off que entra SHALL sacar de lo anotado
+la más vieja de su canal y su nota. Cada Nota Off SHALL sacar su anotación
+aunque no se aparee (porque llegó a una caja de fin, o porque una caja
+falló): la tecla se soltó igual.
 
 Solo se anota lo que entra como Nota On, y solo se aparea lo que entra como
 Nota Off. Las notas que salen de otro tipo de mensaje (un Cambio de Control
@@ -129,7 +129,7 @@ decida el flujo.
 - **THEN** por los Nota On salen `90 48 64` y `90 43 64`, y por los Nota Off
   salen `80 48 40` y después `80 43 40`
 
-#### Scenario: Un Nota Off que llega a un Emitir también cierra su anotación
+#### Scenario: Un Nota Off que llega a un Emitir también saca su anotación
 
 - **GIVEN** trigger → "Filtrar" ("Nota On" y "Nota Off") → "Desplazar" (datos
   1, +12) → "Emitir"
@@ -148,7 +148,7 @@ decida el flujo.
 
 ### Requirement: Si el Nota On no prendió ninguna nota, su Nota Off no sale
 
-Si la anotación que cierra un Nota Off está vacía, porque su Nota On no hizo
+Si la anotación que saca un Nota Off está vacía, porque su Nota On no hizo
 salir ningún Nota On (el flujo lo descartó, lo convirtió en otra cosa, o una
 caja falló), y el Nota Off no llega a ninguna caja de fin, no SHALL salir
 nada.

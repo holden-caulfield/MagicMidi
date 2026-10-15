@@ -10,7 +10,7 @@ interface NotaPrendida {
 // cambia con cada nota, y en el store haría volver a dibujar toda la ventana.
 // Por cada canal y nota que entró hay una cola, porque la misma nota puede
 // entrar dos veces antes de soltarse (un secuenciador, dos controladores), y
-// cada Nota Off cierra la anotación más vieja.
+// cada Nota Off saca la anotación más vieja.
 const anotaciones = new Map<string, NotaPrendida[][]>();
 
 function clave(mensaje: MensajeMidi): string {
@@ -35,14 +35,14 @@ export function anotarNotasPrendidas(notaOn: MensajeMidi, salidas: MensajeMidi[]
 }
 
 /**
- * Cierra la anotación más vieja del canal y la nota de un Nota Off que entró,
- * y devuelve los Nota Off que apagan lo que prendió su Nota On, en orden. Cada
- * uno es una copia del que entró con el canal y la nota cambiados, así
- * conserva su forma (`8n`, o `9n` con velocidad 0) y su velocidad de soltar.
- * Devuelve `null` si no había nada anotado, y una lista vacía si su Nota On
- * no prendió ninguna nota.
+ * Saca de lo anotado la anotación más vieja del canal y la nota de un Nota
+ * Off que entró, y devuelve los Nota Off que apagarían las notas que prendió
+ * su Nota On, en orden: copias del que entró con el canal y la nota
+ * cambiados, así conservan su forma (`8n`, o `9n` con velocidad 0) y su
+ * velocidad de soltar. Devuelve `null` si no había nada anotado, y una lista
+ * vacía si su Nota On no prendió ninguna nota.
  */
-export function soltarNota(notaOff: MensajeMidi): MensajeMidi[] | null {
+export function sacarNotasPrendidas(notaOff: MensajeMidi): MensajeMidi[] | null {
   const cola = anotaciones.get(clave(notaOff));
   const prendidas = cola?.shift();
   if (!cola || !prendidas) {

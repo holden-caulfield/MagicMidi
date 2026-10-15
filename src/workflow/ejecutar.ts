@@ -4,7 +4,7 @@ import { escribir } from "@/formato";
 import { agregarAlLog } from "@/log/log";
 import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
 import { tieneSalida, TIPOS_DE_NODO } from "./nodos/catalogo";
-import { anotarNotasPrendidas, soltarNota } from "./notas-prendidas";
+import { anotarNotasPrendidas, sacarNotasPrendidas } from "./notas-prendidas";
 import { erroresDeConfiguracion } from "./validacion";
 
 export interface ResultadoDelFlujo {
@@ -97,10 +97,12 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
   return llegoAUnFin;
 }
 
-function recorrerElFlujo(mensaje: MensajeMidi): ResultadoDelFlujo {
-  // Cada Nota Off cierra lo que anotó su Nota On aunque no se aparee: la tecla
-  // se soltó igual.
-  const apagan = mensaje.tipo === "nota-off" ? soltarNota(mensaje) : null;
+/**
+ * `apareo` son los Nota Off que apagarían lo que prendió el Nota On de este
+ * Nota Off, o `null` si no hay: salen solo si ningún camino llega a una caja
+ * de fin.
+ */
+function recorrerElFlujo(mensaje: MensajeMidi, apareo: MensajeMidi[] | null): ResultadoDelFlujo {
   const salidas: MensajeMidi[] = [];
   try {
     if (entregar("trigger", mensaje, salidas)) {
@@ -110,8 +112,8 @@ function recorrerElFlujo(mensaje: MensajeMidi): ResultadoDelFlujo {
     console.error(error);
     return { salidas: [], error: detalleDelError(error), apareado: false };
   }
-  if (apagan) {
-    return { salidas: apagan, error: null, apareado: true };
+  if (apareo) {
+    return { salidas: apareo, error: null, apareado: true };
   }
   return { salidas: [mensaje], error: null, apareado: false };
 }
@@ -124,7 +126,11 @@ function recorrerElFlujo(mensaje: MensajeMidi): ResultadoDelFlujo {
  * envía nada: de eso se encarga quien lo llama.
  */
 export function procesarMensaje(mensaje: MensajeMidi): ResultadoDelFlujo {
-  const resultado = recorrerElFlujo(mensaje);
+  // Un Nota Off saca su anotación siempre, antes de recorrer el flujo: aunque
+  // termine saliendo por un Emitir, la tecla se soltó, y si la anotación
+  // quedara, el próximo Nota Off de esa tecla usaría esta en lugar de la suya.
+  const apareo = mensaje.tipo === "nota-off" ? sacarNotasPrendidas(mensaje) : null;
+  const resultado = recorrerElFlujo(mensaje, apareo);
   if (mensaje.tipo === "nota-on") {
     anotarNotasPrendidas(mensaje, resultado.salidas);
   }

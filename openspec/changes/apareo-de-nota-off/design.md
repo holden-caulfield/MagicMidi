@@ -62,20 +62,20 @@ Ver `proposal.md` (Why) para la motivación, y las specs `apareo-de-nota-off` y
   Nota On que entró, la lista de `{ canal, nota }` de las salidas que son Nota
   On (`tipo === "nota-on"`, que ya excluye la velocidad 0). La lista puede
   quedar vacía.
-- `soltarNota(notaOff)`: saca la anotación más vieja del canal y la nota del
-  Nota Off y devuelve los Nota Off que apagan sus notas, en orden; `null` si
-  no había ninguna anotación. Una anotación vacía devuelve una lista vacía,
-  que no es lo mismo que `null`: con la primera no sale nada, con la segunda
-  sale tal cual.
+- `sacarNotasPrendidas(notaOff)`: saca de lo anotado la anotación más vieja
+  del canal y la nota del Nota Off y devuelve los Nota Off que apagarían sus
+  notas, en orden; `null` si no había ninguna anotación. Una anotación vacía
+  devuelve una lista vacía, que no es lo mismo que `null`: con la primera no
+  sale nada, con la segunda sale tal cual.
 - `olvidarNotasPrendidas()`: vacía todo.
 
 Por dentro es un `Map` de clave canal y nota a una cola de listas. Cuando una
 cola queda vacía se borra su clave, así lo anotado no crece con las teclas que
 ya se soltaron.
 
-Cada Nota Off que devuelve `soltarNota` es una copia del que entró con el
-canal y la nota cambiados: `(status & 0xF0) | (canal - 1)`, la nota en el
-segundo byte, y el resto igual. Así conserva la velocidad de soltar y su forma
+Cada Nota Off que devuelve `sacarNotasPrendidas` es una copia del que entró
+con el canal y la nota cambiados: `(status & 0xF0) | (canal - 1)`, la nota en
+el segundo byte, y el resto igual. Así conserva la velocidad de soltar y su forma
 (`8n`, o `9n` con velocidad 0), y en un flujo que no toca las notas el apareo
 da los mismos bytes que salían antes.
 
@@ -145,7 +145,7 @@ Risks).
 
 ### La misma nota dos veces: una cola, no limpiar todo
 
-Cada Nota Off cierra la anotación más vieja de su clave, y no todas. Se
+Cada Nota Off saca la anotación más vieja de su clave, y no todas. Se
 compararon las dos:
 
 - **Notas superpuestas** (un secuenciador, un arpegiador o dos controladores
@@ -165,19 +165,25 @@ sola tecla; el de limpiar todo pasa cada vez que entran notas superpuestas.
 
 ### `procesarMensaje` anota y aparea
 
-Después de recorrer el flujo, con las salidas ya decididas:
+`procesarMensaje` lleva la cuenta, y `recorrerElFlujo` decide qué sale:
 
-- si el mensaje es un Nota On, anota sus salidas (vacías si hubo error);
-- si es un Nota Off, lo suelta siempre, se aparee o no, porque la tecla se
-  soltó y si no la cola crecería; si no llegó a ninguna caja de fin, no hubo
-  error y `soltarNota` no dio `null`, las salidas son las que devolvió
-  `soltarNota`.
+- antes de recorrer, si el mensaje es un Nota Off, `procesarMensaje` saca su
+  anotación siempre, se aparee o no, porque la tecla se soltó y si no la cola
+  crecería. Lo que devuelve `sacarNotasPrendidas` es el `apareo`;
+- `recorrerElFlujo(mensaje, apareo)` recorre el flujo, y si ningún camino
+  llegó a una caja de fin y no hubo error, sale el `apareo` si lo hay, o el
+  mensaje tal cual. Para esta función el `apareo` es un valor: no toca lo
+  anotado, y la decisión queda al lado de la regla de "sale tal cual";
+- después de recorrer, si el mensaje es un Nota On, `procesarMensaje` anota
+  sus salidas (vacías si hubo error).
 
-Devuelve `{ salidas, error, apareado }`, y `recibirMensaje` le pasa
+Así los dos cambios a lo anotado quedan juntos, uno antes y otro después del
+recorrido, y se ve que sacar la anotación no depende de lo que pase en el
+flujo. Devuelve `{ salidas, error, apareado }`, y `recibirMensaje` le pasa
 `apareado` al log. Los tests llaman a `olvidarNotasPrendidas()` en
 `beforeEach`, como los del log llaman a `limpiarLog()`.
 
-`procesarMensaje` deja de ser una función sin estado: anota y suelta. Sigue
+`procesarMensaje` deja de ser una función sin estado: anota y saca. Sigue
 sin enviar nada ni tocar el log, que es lo que importa para probarla.
 
 Alternativas descartadas:

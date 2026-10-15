@@ -1229,7 +1229,7 @@ test("la misma nota dos veces se apaga de la más vieja a la más nueva", () => 
   expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 67, 64)]);
 });
 
-test("un Nota Off que llega a un Emitir también cierra lo que anotó su Nota On", () => {
+test("un Nota Off que llega a un Emitir también saca su anotación", () => {
   actualizar({
     flujo: flujo(
       [
@@ -1348,7 +1348,7 @@ test("borrar todas las cajas no olvida lo anotado", () => {
   expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 72, 64)]);
 });
 
-test("un Nota Off con el que falla una caja no sale, pero cierra su anotación", () => {
+test("un Nota Off con el que falla una caja no sale, pero saca su anotación", () => {
   actualizar({ flujo: transponerLosNotaOn(12) });
   procesarMensaje(NOTA_ON);
   const falla = vi.spyOn(TIPOS_DE_NODO.desplazar, "procesar").mockImplementation(() => {

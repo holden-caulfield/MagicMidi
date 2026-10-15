@@ -11,10 +11,10 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       del módulo (un `Map` de canal y nota a una cola de listas) y tres
       funciones: `anotarNotasPrendidas(notaOn, salidas)` (solo las salidas que
       son Nota On, como `{ canal, nota }`, bajo el canal y la nota del que
-      entró), `soltarNota(notaOff)` (saca la anotación más vieja de su clave y
-      devuelve sus Nota Off, armados como copia del que entró con el canal y la
-      nota cambiados; `null` sin anotación; borra la clave cuando su cola
-      queda vacía) y `olvidarNotasPrendidas()` (design.md, "Lo anotado es
+      entró), `sacarNotasPrendidas(notaOff)` (saca la anotación más vieja de
+      su clave y devuelve sus Nota Off, armados como copia del que entró con
+      el canal y la nota cambiados; `null` sin anotación; borra la clave
+      cuando su cola queda vacía) y `olvidarNotasPrendidas()` (design.md, "Lo anotado es
       estado propio del módulo `workflow`"); verificar con `npx tsc --noEmit`
 - [x] 1.2 Crear `src/workflow/notas-prendidas.test.ts`, con bytes literales y
       `olvidarNotasPrendidas()` en `beforeEach`: un Nota On transpuesto se
@@ -29,9 +29,10 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 - [x] 2.1 En `workflow/ejecutar.ts`, que `procesarMensaje` devuelva
       `apareado`: anota cada Nota On con sus salidas (vacías si hubo error),
-      suelta cada Nota Off siempre, y si no llegó a ninguna caja de fin, no
-      hubo error y `soltarNota` no dio `null`, sale lo que devolvió
-      `soltarNota` (design.md, "`procesarMensaje` anota y aparea"); actualizar
+      saca la anotación de cada Nota Off siempre, antes de recorrer, y si no
+      llegó a ninguna caja de fin, no hubo error y `sacarNotasPrendidas` no dio
+      `null`, sale lo que devolvió (design.md, "`procesarMensaje` anota y
+      aparea"); actualizar
       su JSDoc y el de `ResultadoDelFlujo`, y que `recibirMensaje` le pase el
       `apareado` al log; verificar con `npx tsc --noEmit` y con que los tests
       existentes de `ejecutar.test.ts` pasan con `olvidarNotasPrendidas()` en
@@ -47,10 +48,10 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       acorde, cambiar el canal, Nota On con velocidad 0, el Nota Off tal cual
       armado a mano, otra rama que lleva el Nota Off a un Emitir, descartar
       los Nota Off, un Nota On que salió tal cual, la misma nota dos veces, un
-      Nota Off que llega a un Emitir también cierra su anotación, notas que
+      Nota Off que llega a un Emitir también saca su anotación, notas que
       salen de un CC, un pad como interruptor, un Nota On descartado, un Nota
       Off sin su Nota On, pánico desde una caja, borrar el flujo no olvida, y
-      que una caja que falla con el Nota Off no deja salir nada pero cierra la
+      que una caja que falla con el Nota Off no deja salir nada pero saca su
       anotación; el escenario nuevo de `ejecucion-de-workflow`; y que el test
       del pad que cambia de programa diga que su Nota Off no sale, como el
       escenario modificado de `nodo-convertir`; verificar con `npm test`
