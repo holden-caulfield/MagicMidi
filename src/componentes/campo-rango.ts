@@ -235,7 +235,8 @@ export class CampoRango extends Campo<Rango> {
 
   /**
    * Las flechas en el campo de un extremo lo mueven como su perilla (de a 1, o
-   * de a 10 con Mayúsculas), desde lo escrito aunque no se haya confirmado.
+   * con Mayúsculas el paso del modo), desde lo escrito aunque no se haya
+   * confirmado.
    */
   private teclaEnCampo(evento: KeyboardEvent, extremo: Extremo) {
     const sentido = evento.key === "ArrowUp" ? 1 : evento.key === "ArrowDown" ? -1 : 0;
@@ -245,7 +246,7 @@ export class CampoRango extends Campo<Rango> {
     evento.preventDefault();
     const numero = this.modo.leer((evento.target as HTMLInputElement).value);
     if (numero !== null) {
-      this.mover(extremo, numero + sentido * (evento.shiftKey ? 10 : 1));
+      this.mover(extremo, numero + sentido * this.modo.paso(evento.shiftKey));
     }
     // Como al salir del campo: si no cambió nada, vuelve a lo que tiene.
     this.requestUpdate();
@@ -269,7 +270,7 @@ export class CampoRango extends Campo<Rango> {
   }
 
   private teclaEnPerilla(evento: KeyboardEvent, extremo: Extremo) {
-    const paso = evento.shiftKey ? 10 : 1;
+    const paso = this.modo.paso(evento.shiftKey);
     const actual = this.valor[extremo];
     const nuevos: Record<string, number> = {
       ArrowRight: actual + paso,

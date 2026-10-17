@@ -188,8 +188,9 @@ export class CampoSecuencia extends Campo<number[]> {
   }
 
   /**
-   * Las flechas en el campo de un valor le suman 1, o 10 con Mayúsculas, a lo
-   * escrito aunque no se haya confirmado, sin pasar del mínimo ni del máximo.
+   * Las flechas en el campo de un valor le suman 1, o con Mayúsculas el paso
+   * del modo, a lo escrito aunque no se haya confirmado, sin pasar del mínimo
+   * ni del máximo.
    */
   private tecla(evento: KeyboardEvent, posicion: number) {
     const sentido = evento.key === "ArrowUp" ? 1 : evento.key === "ArrowDown" ? -1 : 0;
@@ -199,7 +200,7 @@ export class CampoSecuencia extends Campo<number[]> {
     evento.preventDefault();
     const numero = this.modo.leer((evento.target as HTMLInputElement).value);
     if (numero !== null) {
-      const paso = sentido * (evento.shiftKey ? 10 : 1);
+      const paso = sentido * this.modo.paso(evento.shiftKey);
       this.avisar(this.conValor(posicion, limitar(this, numero + paso)));
     }
     // Como al salir del campo: si no cambió nada, vuelve a lo que tiene.
