@@ -13,9 +13,13 @@ Archivá el cambio de OpenSpec: $ARGUMENTS
    proyecto y la guía de archivado de `openspec/config.yaml`.
 3. `npx openspec archive <nombre>`, que mueve el cambio a
    `openspec/changes/archive/` y actualiza las specs principales.
-4. Commiteá el archivado, con los cambios aprobados a AGENTS.md si los hay,
-   como último commit de la rama del PR, y subilo.
-5. Activá el auto-merge del PR, con un commit de merge
+4. Subí la versión de `src-tauri/Cargo.toml` según "Versiones y
+   distribución" de AGENTS.md, y actualizá `Cargo.lock` con
+   `cargo update --workspace` desde `src-tauri/`. Si la major ya no es 0 y el
+   cambio podría romper algo para quien usa la app, consultalo antes.
+5. Commiteá el archivado, con la versión y los cambios aprobados a AGENTS.md
+   si los hay, como último commit de la rama del PR, y subilo.
+6. Activá el auto-merge del PR, con un commit de merge
    (`gh pr merge <número> --auto --merge`): GitHub lo mergea cuando pasa el
    CI del commit de archivado y borra la rama remota. Después volvé a `main`
    y borrá la rama local (`git branch -D`, porque localmente todavía no está
