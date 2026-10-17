@@ -46,7 +46,7 @@ AGENTS.md, "Verificación antes de dar por terminada una tarea").
 
 ## 4. Al cerrar el cambio
 
-- [ ] 4.1 Al archivar, revisar si queda algo para devolver a AGENTS.md: se
+- [x] 4.1 Al archivar, revisar si queda algo para devolver a AGENTS.md: se
       espera que no, porque la regla de que los numéricos son dueños de su
       modo y de sus flechas (`ModoNumerico`) ya lo cubre. Si aparece algo,
       proponer el diff a la persona usuaria antes de tocar el archivo. El

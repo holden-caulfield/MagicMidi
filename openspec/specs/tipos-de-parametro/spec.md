@@ -354,9 +354,10 @@ La persona usuaria SHALL poder cambiar cada extremo:
 - arrastrando su perilla;
 - haciendo clic en la barra, que mueve la perilla más cercana a ese punto;
 - con el foco en una perilla, con las flechas (de a 1) o con Mayúsculas y las
-  flechas (de a 10);
+  flechas (con el paso del modo, ver "Las flechas del campo numérico");
 - con el foco en su campo numérico, con la flecha arriba y la flecha abajo
-  (de a 1) o con Mayúsculas (de a 10), igual que con el foco en su perilla;
+  (de a 1) o con Mayúsculas (con el paso del modo), igual que con el foco en
+  su perilla;
 - escribiendo en su campo numérico, que lee lo escrito en los modos que
   ofrece el parámetro y puede cambiar el modo de los dos extremos (ver "Lo
   escrito en un parámetro numérico elige el modo"; lo que no se puede leer no
@@ -415,6 +416,22 @@ ancho.
   de la izquierda de Datos 1
 - **WHEN** la persona usuaria aprieta la flecha arriba
 - **THEN** la caja queda con datos 1 de 61 a 72 y el foco sigue en el campo
+
+#### Scenario: Una octava con el teclado en el campo
+
+- **GIVEN** una caja "Filtrar" con datos 1 de 48 a 72, en modo nota, y el
+  foco en el campo de la izquierda de Datos 1
+- **WHEN** la persona usuaria aprieta Mayúsculas y la flecha arriba
+- **THEN** la caja queda con datos 1 de 60 a 72, y los campos muestran "C4" y
+  "C5"
+
+#### Scenario: La perilla en hexadecimal
+
+- **GIVEN** una caja "Mapear" con salida de 0 a 127, en modo hexadecimal, y el
+  foco en la perilla "hasta" de Salida
+- **WHEN** la persona usuaria aprieta Mayúsculas y la flecha izquierda
+- **THEN** la caja queda con salida de 0 a 111, y los campos muestran "00" y
+  "6F"
 
 #### Scenario: Escribir un extremo
 
@@ -668,11 +685,19 @@ mostrarse con su error, como siempre.
 
 El campo de un parámetro entero SHALL tener dos flechas propias, una para
 subir y otra para bajar, con la misma apariencia que el resto de los
-controles. Cada clic en una flecha SHALL sumarle o restarle 1 al valor, y con
-Mayúsculas, 10. El resultado no SHALL pasar del mínimo ni del máximo del
-parámetro, si los tiene, y la flecha que no puede avanzar más SHALL verse
-deshabilitada. Las flechas no SHALL recorrerse con Tab: con el teclado, se usa
-el campo.
+controles. Cada clic en una flecha SHALL sumarle o restarle 1 al valor, en
+cualquier modo. Con Mayúsculas, SHALL sumarle o restarle el paso del modo en
+que está el campo:
+
+- **decimal**: 10 (de 25 a 35);
+- **nota**: 12, una octava (de C3 a C4), así que la nota no cambia, y sigue
+  escrita con bemol o con sostenido como antes;
+- **hexadecimal**: 16, que cambia la segunda cifra desde la derecha y deja la
+  última como está (de 3C a 4C).
+
+El resultado no SHALL pasar del mínimo ni del máximo del parámetro, si los
+tiene, y la flecha que no puede avanzar más SHALL verse deshabilitada. Las
+flechas no SHALL recorrerse con Tab: con el teclado, se usa el campo.
 
 Con el foco en el campo, la flecha arriba y la flecha abajo del teclado SHALL
 hacer lo mismo que las flechas del campo, también con Mayúsculas. Si hay algo
@@ -696,9 +721,39 @@ un entero, sin pasar del mínimo ni del máximo del parámetro.
 
 #### Scenario: Con el teclado y de a diez
 
-- **GIVEN** una caja "Fijar" con valor 100 y el foco en su campo
+- **GIVEN** una caja "Fijar" con valor 100, en modo decimal, y el foco en su
+  campo
 - **WHEN** la persona usuaria aprieta Mayúsculas y la flecha abajo
 - **THEN** la caja pasa a tener 90 y el foco sigue en el campo
+
+#### Scenario: De a una octava en modo nota
+
+- **GIVEN** una caja "Fijar" con valor 48, en modo nota (el campo muestra
+  "C3")
+- **WHEN** la persona usuaria aprieta Mayúsculas y la flecha arriba en el
+  campo
+- **THEN** la caja pasa a tener 60, y el campo muestra "C4"
+
+#### Scenario: La octava conserva el bemol
+
+- **GIVEN** una caja "Fijar" en modo nota, con el valor escrito como "Db4"
+- **WHEN** la persona usuaria hace clic con Mayúsculas en la flecha de bajar
+- **THEN** la caja pasa a tener 49, y el campo muestra "Db3"
+
+#### Scenario: De a dieciséis en hexadecimal
+
+- **GIVEN** una caja "Fijar" con valor 60, en modo hexadecimal (el campo
+  muestra "3C")
+- **WHEN** la persona usuaria hace clic con Mayúsculas en la flecha de subir
+- **THEN** la caja pasa a tener 76, y el campo muestra "4C"
+
+#### Scenario: Tope en el máximo en hexadecimal
+
+- **GIVEN** una caja "Fijar" con valor 112, en modo hexadecimal (el campo
+  muestra "70")
+- **WHEN** la persona usuaria hace clic con Mayúsculas en la flecha de subir
+- **THEN** la caja pasa a tener 127, el campo muestra "7F", y la flecha de
+  subir se ve deshabilitada
 
 #### Scenario: Tope en el máximo
 
