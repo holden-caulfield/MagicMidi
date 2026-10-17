@@ -101,7 +101,9 @@ en dos canales:
   la última con número de versión.
 - **[dev](https://github.com/holden-caulfield/MagicMidi/releases/tag/dev)**:
   lo último que entró a `main`, que se reemplaza con cada cambio. Puede tener
-  cosas a medio camino.
+  cosas a medio camino. El título dice qué build es: `0.1.1-dev.5+b83b9c7` es
+  el quinto merge a `main` desde el release anterior, camino a la 0.1.1, en el
+  commit `b83b9c7`.
 
 En cada release hay un archivo por plataforma:
 

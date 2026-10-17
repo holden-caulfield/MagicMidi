@@ -29,15 +29,30 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       etiqueta: ${{ steps.etiqueta.outputs.etiqueta }}
+      identificador: ${{ steps.etiqueta.outputs.identificador }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Con el historial y los tags, para contar los merges desde el último
+          # release.
+          fetch-depth: 0
       - id: etiqueta
-        name: Elegir la etiqueta de los archivos
+        name: Elegir la etiqueta de los archivos y el identificador del build
         run: |
           version=$(cargo metadata --no-deps --format-version 1 --manifest-path src-tauri/Cargo.toml \
             | jq -r '.packages[0].version')
           if [ "$GITHUB_REF_TYPE" != tag ]; then
+            if ultimo=$(git describe --tags --match 'v*' --abbrev=0 2> /dev/null); then
+              desde="$ultimo..HEAD"
+            else
+              # Todavía no hubo releases: se cuenta desde el principio.
+              desde=HEAD
+            fi
+            merges=$(git rev-list --count --first-parent "$desde")
             echo "etiqueta=dev" >> "$GITHUB_OUTPUT"
+            # Por ejemplo 0.1.1-dev.5+b83b9c7: el quinto merge a main desde el
+            # release anterior, camino a 0.1.1.
+            echo "identificador=$version-dev.$merges+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_REF_NAME" = "v$version" ]; then
             echo "etiqueta=$version" >> "$GITHUB_OUTPUT"
           else
@@ -126,6 +141,8 @@ jobs:
           merge-multiple: true
       - name: Reemplazar el prerelease de desarrollo
         if: github.ref_type == 'branch'
+        env:
+          IDENTIFICADOR: ${{ needs.preparar.outputs.identificador }}
         run: |
           # Se borra y se vuelve a crear, en vez de editarlo, para que el tag
           # pase al commit nuevo y el release muestre la fecha de este build.
@@ -135,8 +152,8 @@ jobs:
           gh release create dev publicar/* \
             --prerelease \
             --target "$GITHUB_SHA" \
-            --title "Desarrollo" \
-            --notes "Lo último de \`main\`, del commit $GITHUB_SHA. No es una versión estable. Para instalarlo, ver el [README](https://github.com/$GH_REPO#descargar)."
+            --title "Desarrollo $IDENTIFICADOR" \
+            --notes "Lo último de \`main\`: el build $IDENTIFICADOR, del commit $GITHUB_SHA. No es una versión estable. Para instalarlo, ver el [README](https://github.com/$GH_REPO#descargar)."
       - name: Crear el borrador del release estable
         if: github.ref_type == 'tag'
         run: |
