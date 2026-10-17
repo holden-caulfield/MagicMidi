@@ -21,8 +21,8 @@ export function limitar(
  * probando los modos desde el actual: si se puede leer, avisa el número (y,
  * si se leyó en otro modo, el campo pasa a ese); si no, vuelve solo al valor
  * que tiene, sin avisar nada. Las flechas (las propias y las del teclado)
- * suman 1, o 10 con Mayúsculas, a lo escrito en ese momento, y se frenan en
- * el mínimo y el máximo.
+ * suman 1, o con Mayúsculas el paso del modo, a lo escrito en ese momento, y
+ * se frenan en el mínimo y el máximo.
  *
  * Es un campo de texto y no uno numérico: uno numérico decide por su cuenta
  * qué acepta (por ejemplo, qué separador de decimales, según el idioma del
@@ -143,7 +143,7 @@ export class CampoNumero extends Campo<number> {
         tabindex="-1"
         ?disabled=${!habilitada}
         @pointerdown=${(evento: PointerEvent) => evento.preventDefault()}
-        @click=${(evento: MouseEvent) => this.pasar(sentido * (evento.shiftKey ? 10 : 1))}
+        @click=${(evento: MouseEvent) => this.pasar(sentido * this.modo.paso(evento.shiftKey))}
       >
         ${dibujarIcono(icono, 10)}
       </button>
@@ -154,7 +154,7 @@ export class CampoNumero extends Campo<number> {
     const sentido = evento.key === "ArrowUp" ? 1 : evento.key === "ArrowDown" ? -1 : 0;
     if (sentido !== 0) {
       evento.preventDefault();
-      this.pasar(sentido * (evento.shiftKey ? 10 : 1));
+      this.pasar(sentido * this.modo.paso(evento.shiftKey));
     }
   }
 

@@ -193,3 +193,32 @@ test("los bemoles se conservan al leer en otro modo y volver", () => {
   modo.boton?.siguiente();
   expect(modo.formatear(61)).toBe("Db4");
 });
+
+test("sin Mayúsculas, las flechas suman 1 en cualquier modo", () => {
+  const { modo } = campoCon();
+
+  expect(modo.paso(false)).toBe(1);
+  modo.boton?.siguiente();
+  expect(modo.paso(false)).toBe(1);
+  modo.boton?.siguiente();
+  expect(modo.paso(false)).toBe(1);
+});
+
+test("con Mayúsculas, el paso es el del modo: 10, una octava o 16", () => {
+  const { modo } = campoCon();
+
+  expect(modo.paso(true)).toBe(10);
+  modo.boton?.siguiente();
+  expect(modo.paso(true)).toBe(12);
+  modo.boton?.siguiente();
+  expect(modo.paso(true)).toBe(16);
+});
+
+test("el paso sigue al modo en que se leyó lo escrito", () => {
+  const { modo } = campoCon();
+
+  modo.leer("C4");
+  expect(modo.paso(true)).toBe(12);
+  modo.leer("0x3C");
+  expect(modo.paso(true)).toBe(16);
+});

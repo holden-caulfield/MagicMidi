@@ -17,6 +17,8 @@ const MODOS: Record<
   {
     abreviatura: string;
     nombre: string;
+    /** Lo que suman las flechas con Mayúsculas. */
+    pasoGrande: number;
     escribir(numero: number, bemoles: boolean): string;
     leer(texto: string): number | null;
   }
@@ -24,18 +26,23 @@ const MODOS: Record<
   decimal: {
     abreviatura: "DEC",
     nombre: "decimal",
+    pasoGrande: 10,
     escribir: (numero) => String(numero),
     leer: (texto) => (/^-?\d+$/.test(texto) ? Number(texto) : null),
   },
   nota: {
     abreviatura: "♪",
     nombre: "nota",
+    // Una octava: la misma nota, más arriba o más abajo.
+    pasoGrande: 12,
     escribir: nombreDeNota,
     leer: numeroDeNota,
   },
   hexadecimal: {
     abreviatura: "HEX",
     nombre: "hexadecimal",
+    // Cambia la segunda cifra desde la derecha y deja la última como está.
+    pasoGrande: 16,
     escribir: (numero) => numero.toString(16).toUpperCase().padStart(2, "0"),
     leer: (texto) => (/^(0x)?[0-9a-f]+$/i.test(texto) ? parseInt(texto, 16) : null),
   },
@@ -104,6 +111,15 @@ export class ModoNumerico implements ReactiveController {
     const { abreviatura, nombre } = MODOS[this.modo];
     const siguiente = this.modos[(this.modos.indexOf(this.modo) + 1) % this.modos.length];
     return { abreviatura, nombre, siguiente: () => this.cambiar(siguiente, this.bemoles) };
+  }
+
+  /**
+   * Lo que suma una flecha: 1, o con Mayúsculas el paso del modo actual (10,
+   * una octava o 16). Es el del modo aunque el número se muestre en decimal
+   * por ser negativo.
+   */
+  paso(conMayusculas: boolean): number {
+    return conMayusculas ? MODOS[this.modo].pasoGrande : 1;
   }
 
   /** El número en el modo actual. Un negativo no tiene nota ni hexadecimal, y va en decimal. */

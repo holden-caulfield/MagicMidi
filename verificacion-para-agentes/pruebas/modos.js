@@ -84,6 +84,21 @@ await tecla(entrada('Valor'), 'ArrowDown'); r.flechas.push(valor('Valor').campo)
 await escribirEn(entrada('Valor'), 'F#4'); r.flechas.push(valor('Valor').campo);
 await flecha(campoDe('Valor'), 'subir'); r.flechas.push(valor('Valor').campo);
 
+// Con Mayúsculas, el paso del modo: una octava en nota, que conserva el bemol,
+// y 16 en hexadecimal, que también se frena en el máximo. El C#4 vuelve a los
+// sostenidos, como estaba.
+const medirValor = () => ({ ...valor('Valor'), caja: nodo('f1').parametros.valor });
+r.pasoDelModo = {};
+await escribirEn(entrada('Valor'), 'C3');
+await tecla(entrada('Valor'), 'ArrowUp', true); r.pasoDelModo.octava = medirValor();
+await escribirEn(entrada('Valor'), 'Db4');
+await flecha(campoDe('Valor'), 'bajar', true); r.pasoDelModo.octavaConBemol = medirValor();
+await escribirEn(entrada('Valor'), 'C#4');
+await escribirEn(entrada('Valor'), '0x3C');
+await flecha(campoDe('Valor'), 'subir', true); r.pasoDelModo.dieciseis = medirValor();
+await escribirEn(entrada('Valor'), '70');
+await flecha(campoDe('Valor'), 'subir', true); r.pasoDelModo.tope = medirValor();
+
 // Tope en el máximo, en decimal.
 while (valor('Valor').modo !== 'DEC') await rotar('Valor');
 await escribirEn(entrada('Valor'), '120');
@@ -133,6 +148,17 @@ r.rango.mismosCampos = extremos('Datos 1')[0] === desde && extremos('Datos 1')[1
 await seleccionar('f2');
 await seleccionar('fl');
 r.rango.alVolver = rango('Datos 1');
+
+// Con Mayúsculas, el rango también usa el paso del modo: una octava en el
+// campo de un extremo, y 16 en la perilla.
+while (rango('Datos 1').modo !== '♪') await rotar('Datos 1');
+await escribirEn(extremos('Datos 1')[1], 'C5');
+await escribirEn(extremos('Datos 1')[0], 'C3');
+await tecla(extremos('Datos 1')[0], 'ArrowUp', true);
+r.rango.octava = { ...rango('Datos 1'), caja: nodo('fl').parametros.datos1 };
+while (rango('Datos 2').modo !== 'HEX') await rotar('Datos 2');
+await tecla(campoDe('Datos 2').shadowRoot.querySelector('.perilla.hasta'), 'ArrowLeft', true);
+r.rango.perillaEnHexadecimal = { ...rango('Datos 2'), caja: nodo('fl').parametros.datos2 };
 
 // Un solo modo: sin botón, y solo ese formato.
 await seleccionar('d1');
