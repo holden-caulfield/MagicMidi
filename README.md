@@ -99,7 +99,7 @@ en dos canales:
 
 - **[Versión estable](https://github.com/holden-caulfield/MagicMidi/releases/latest)**:
   la última con número de versión.
-- **[Desarrollo](https://github.com/holden-caulfield/MagicMidi/releases/tag/desarrollo)**:
+- **[dev](https://github.com/holden-caulfield/MagicMidi/releases/tag/dev)**:
   lo último que entró a `main`, que se reemplaza con cada cambio. Puede tener
   cosas a medio camino.
 

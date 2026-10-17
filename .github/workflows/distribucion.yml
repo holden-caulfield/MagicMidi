@@ -1,7 +1,7 @@
 name: Distribución
 
 # Arma los binarios para macOS, Windows y Linux:
-# - cada push a main reemplaza el prerelease "desarrollo" con lo último;
+# - cada push a main reemplaza el prerelease "dev" con lo último;
 # - un tag vX.Y.Z deja un release borrador con esa versión, para escribirle
 #   las notas y publicarlo a mano;
 # - un PR que toca este archivo o la configuración del bundle compila sin
@@ -37,7 +37,7 @@ jobs:
           version=$(cargo metadata --no-deps --format-version 1 --manifest-path src-tauri/Cargo.toml \
             | jq -r '.packages[0].version')
           if [ "$GITHUB_REF_TYPE" != tag ]; then
-            echo "etiqueta=desarrollo" >> "$GITHUB_OUTPUT"
+            echo "etiqueta=dev" >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_REF_NAME" = "v$version" ]; then
             echo "etiqueta=$version" >> "$GITHUB_OUTPUT"
           else
@@ -129,10 +129,10 @@ jobs:
         run: |
           # Se borra y se vuelve a crear, en vez de editarlo, para que el tag
           # pase al commit nuevo y el release muestre la fecha de este build.
-          if gh release view desarrollo > /dev/null 2>&1; then
-            gh release delete desarrollo --cleanup-tag --yes
+          if gh release view dev > /dev/null 2>&1; then
+            gh release delete dev --cleanup-tag --yes
           fi
-          gh release create desarrollo publicar/* \
+          gh release create dev publicar/* \
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "Desarrollo" \
