@@ -186,25 +186,30 @@ cualquier app o controlador virtual que hable con esos puertos:
 
 ## Sacar una versión estable
 
-El canal de desarrollo no necesita nada: cada merge a `main` lo reemplaza. Una
-versión estable se saca a mano:
+El canal `dev` no necesita nada: cada merge a `main` lo reemplaza. La versión
+de `src-tauri/Cargo.toml` es siempre la del próximo release: la patch sube
+después de cada release, y la minor o la major, al archivar un cambio de
+OpenSpec (las reglas están en "Versiones y distribución" de
+[AGENTS.md](AGENTS.md)). Con Claude Code, `/sacar-version` sigue estos pasos y
+además escribe las notas. A mano:
 
-1. En un PR, cambiar `version` en `src-tauri/Cargo.toml`, que es el único
-   lugar donde está, y correr `cargo check` desde `src-tauri/` para que se
-   actualice `Cargo.lock`. Mergearlo.
-2. Desde `main` actualizado, crear y subir el tag con esa versión:
+1. Desde `main` actualizado y con el CI en verde, crear y subir el tag con la
+   versión de `Cargo.toml`:
 
    ```bash
    git tag v0.2.0
    git push origin v0.2.0
    ```
 
-3. El workflow [Distribución](.github/workflows/distribucion.yml) compila y
-   deja un release **borrador** con los binarios y la lista de PRs mergeados
-   desde la versión anterior. Si el tag no coincide con la versión de
-   `Cargo.toml`, falla antes de compilar, y hay que borrar el tag
-   (`git push --delete origin v0.2.0 && git tag -d v0.2.0`) antes de volver
-   a crearlo.
+2. Esperar a que termine la corrida del workflow
+   [Distribución](.github/workflows/distribucion.yml), que deja un release
+   **borrador** con los binarios y la lista de PRs mergeados desde la versión
+   anterior. Si falla (por ejemplo, porque el tag no coincide con la versión
+   de `Cargo.toml`), borrar el tag
+   (`git push --delete origin v0.2.0 && git tag -d v0.2.0`) y volver a
+   crearlo después del arreglo.
+3. En un PR, subir la patch en `Cargo.toml` (de 0.2.0 a 0.2.1) y actualizar
+   `Cargo.lock` con `cargo update --workspace` desde `src-tauri/`.
 4. Escribir las notas en el borrador y publicarlo: desde ahí es la versión
    estable.
 

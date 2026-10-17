@@ -376,8 +376,31 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   `tauri.conf.json` no la declaran, y Tauri la toma de ahí. Con un solo lugar
   no hay dos que se desincronicen, y el workflow de distribución frena un tag
   `vX.Y.Z` que no coincide con ella.
-- Un tag `vX.Y.Z` arma un release estable: lo crea la persona usuaria, nunca
-  un agente por iniciativa propia, igual que un merge a `main`.
+- Esa versión es siempre la del próximo release: la patch sube justo después
+  de cada release estable, y la minor o la major, al archivar un cambio de
+  OpenSpec, en el mismo commit del archivado. Como después de un release la
+  patch nunca es 0, al archivar alcanza con mirar la versión actual, sin
+  buscar el último tag:
+  - Si el cambio trae delta specs, sube la minor y la patch vuelve a 0, salvo
+    que la patch ya sea 0: entonces la minor ya subió desde el último release.
+  - Si además rompe algo para quien usa la app (un flujo armado deja de
+    funcionar o hace otra cosa), sube la major y lo demás vuelve a 0, salvo
+    que ya sea X.0.0. Un contrato interno no cuenta, aunque la propuesta lo
+    marque **BREAKING**. Mientras la major sea 0, un cambio así sube solo la
+    minor: pasar a 1.0 lo decide la persona usuaria.
+  - Lo que se hace sin OpenSpec no sube la minor ni la major.
+- Si al poner una rama al día con `main` la versión choca, se vuelve a aplicar
+  la regla sobre la versión de `main`, en vez de quedarse con alguna de las
+  dos: así dos cambios en el mismo ciclo no la suben dos veces.
+- Un tag `vX.Y.Z` arma un release estable: se crea solo cuando la persona
+  usuaria lo pide, por ejemplo con `/sacar-version`, nunca por iniciativa
+  propia, igual que un merge a `main`. Pedirlo aprueba también el PR que sube
+  la patch, que por eso va con auto-merge, como el archivado aprueba el PR de
+  un cambio.
+- Los pasos para sacar una versión están en el README ("Sacar una versión
+  estable"), que sirven también sin Claude Code. `/sacar-version`
+  (`.claude/commands/`) los sigue y suma solo lo propio de un agente: si
+  cambia el procedimiento, se cambia el README.
 
 ## Verificación antes de dar por terminada una tarea
 
@@ -542,8 +565,9 @@ Después de `/opsx:apply`, el cambio sigue estos pasos:
 2. La persona usuaria revisa el código en el PR.
 3. Cuando avisa, se archiva el cambio en la misma rama, como último commit.
    Si trae cambios a este archivo (ver "Devolver el conocimiento a este
-   archivo"), van en ese mismo commit, una vez aprobados. No se abre un PR
-   aparte solo para archivar.
+   archivo"), van en ese mismo commit, una vez aprobados, igual que la versión
+   (ver "Versiones y distribución"). No se abre un PR aparte solo para
+   archivar.
 4. Con el archivado subido, se activa el auto-merge del PR, con un commit de
    merge, y se vuelve a `main` borrando la rama local: pedir el archivado es
    dar el PR por aprobado. GitHub lo mergea cuando pasa el CI del commit de
