@@ -128,12 +128,12 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 6. Al cerrar el cambio
 
-- [ ] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
+- [x] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
       cambios del roadmap: marcar "Pedal momentáneo → latch" y "Round-robin
       de canales" como hechas, y borrar el artifact del diseño acordado de
       Alternar y el apareo, que pide borrarse cuando los dos cambios estén
       implementados
-- [ ] 6.2 Al archivar, proponer el diff de AGENTS.md ("Devolver el
+- [x] 6.2 Al archivar, proponer el diff de AGENTS.md ("Devolver el
       conocimiento a este archivo"): la memoria de las cajas (es del
       ejecutor, cada caja recibe la suya en `procesar`, un tipo no guarda
       nada fuera de la función, y se olvida sin conexión junto con lo
