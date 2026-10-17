@@ -92,6 +92,38 @@ Es por ello que un objetivo del proyecto es que modificar el código para agrega
 de nodo (i.e. una caja) nueva sea relativamente sencillo sin necesidad de comprender la
 arquitectura completa de la aplicación.
 
+## Descargar
+
+Los binarios están en los [releases del repositorio](https://github.com/holden-caulfield/MagicMidi/releases),
+en dos canales:
+
+- **[Versión estable](https://github.com/holden-caulfield/MagicMidi/releases/latest)**:
+  la última con número de versión.
+- **[Desarrollo](https://github.com/holden-caulfield/MagicMidi/releases/tag/desarrollo)**:
+  lo último que entró a `main`, que se reemplaza con cada cambio. Puede tener
+  cosas a medio camino.
+
+En cada release hay un archivo por plataforma:
+
+| Plataforma | Archivo |
+|---|---|
+| macOS (Apple Silicon e Intel) | `.dmg` |
+| Windows | `.exe` (instalador) |
+| Linux | `.AppImage` o `.deb` |
+
+Los binarios no están firmados con un certificado pago, así que el sistema
+avisa la primera vez que se abren:
+
+- **macOS**: abrí el `.dmg` y arrastrá MagicMidi a Aplicaciones. Al abrirla,
+  macOS avisa que no puede verificarla: cerrá el aviso, andá a *Configuración
+  del Sistema* → *Privacidad y seguridad* y, más abajo, tocá *Abrir igual*
+  (*Open Anyway*).
+- **Windows**: SmartScreen muestra "Windows protegió su PC": tocá *Más
+  información* → *Ejecutar de todas formas*.
+- **Linux**: el `.AppImage` se ejecuta directo después de darle permiso
+  (`chmod +x MagicMidi-*.AppImage`), y el `.deb` se instala con
+  `sudo apt install ./MagicMidi-*.deb`.
+
 ## Arquitectura
 
 La app está hecha con [Tauri](https://tauri.app) y sigue su modelo estándar: un backend en Rust con acceso al
@@ -150,9 +182,34 @@ cualquier app o controlador virtual que hable con esos puertos:
   Abrí loopMIDI, creá un puerto con el botón `+` (por ejemplo `loopMIDI Port`)
   y ese puerto va a aparecer tanto como entrada como salida en la app.
 
+## Sacar una versión estable
+
+El canal de desarrollo no necesita nada: cada merge a `main` lo reemplaza. Una
+versión estable se saca a mano:
+
+1. En un PR, cambiar `version` en `src-tauri/Cargo.toml`, que es el único
+   lugar donde está, y correr `cargo check` desde `src-tauri/` para que se
+   actualice `Cargo.lock`. Mergearlo.
+2. Desde `main` actualizado, crear y subir el tag con esa versión:
+
+   ```bash
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+
+3. El workflow [Distribución](.github/workflows/distribucion.yml) compila y
+   deja un release **borrador** con los binarios y la lista de PRs mergeados
+   desde la versión anterior. Si el tag no coincide con la versión de
+   `Cargo.toml`, falla antes de compilar, y hay que borrar el tag
+   (`git push --delete origin v0.2.0 && git tag -d v0.2.0`) antes de volver
+   a crearlo.
+4. Escribir las notas en el borrador y publicarlo: desde ahí es la versión
+   estable.
+
 ## Estructura del repositorio
 
 ```
+├── .github/workflows/      # CI y armado de los binarios
 ├── index.html              # Punto de entrada del frontend
 ├── src/                    # Frontend (TypeScript, CSS)
 │   ├── main.ts
