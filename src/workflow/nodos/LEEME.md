@@ -116,6 +116,9 @@ Un tipo de nodo es un objeto con estos campos:
   por ejemplo, en Mapear, los dos extremos del rango de entrada no pueden ser
   iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
 - **`procesar(mensaje, parametros)`**: la función donde la caja hace su trabajo.
+  Si la caja tiene que recordar algo de un mensaje al siguiente, recibe
+  además su memoria: `procesar(mensaje, parametros, memoria)` (ver
+  [Recordar algo entre mensajes](#recordar-algo-entre-mensajes-la-memoria)).
 
 Terminá el objeto con `satisfies TipoDeNodo`: así el editor de código te avisa
 si falta algún campo o si alguno tiene la forma equivocada.
@@ -203,6 +206,56 @@ un pedal manda dos mensajes, uno al apretarlo y otro al soltarlo, y sin un
 Filtrar antes se convierten los dos (con un Convertir a Inicio, el secuenciador
 arrancaría dos veces).
 
+## Recordar algo entre mensajes: la memoria
+
+Casi todas las cajas responden a cada mensaje por separado: con el mismo
+mensaje y la misma configuración, devuelven siempre lo mismo. Algunas
+necesitan recordar algo de un mensaje al siguiente: Alternar, por ejemplo,
+recuerda en qué valor de su lista va. Para eso, `procesar` recibe un tercer
+argumento, **`memoria`**: un lugar donde guardar valores, cada uno con un
+nombre que elegís vos.
+
+- **`memoria.set("cuenta", 3)`** guarda el 3 con el nombre `"cuenta"`.
+- **`memoria.get("cuenta")`** lo lee, cuando llega otro mensaje. Si todavía
+  no se guardó nada con ese nombre, da `undefined`: con `?? 0` usás un valor
+  por defecto, y con `Number(...)` lo usás como número, como con los
+  parámetros.
+
+Por ejemplo, una caja que cuenta los mensajes que le llegan y pone la cuenta
+en el tercer byte:
+
+```ts
+procesar(mensaje, parametros, memoria) {
+  // La primera vez no hay nada guardado, y la cuenta arranca de 0.
+  const cuenta = Number(memoria.get("cuenta") ?? 0) + 1;
+  memoria.set("cuenta", cuenta);
+  // El resto de dividir por 128, para que no pase de 127.
+  mensaje.bytes[2] = cuenta % 128;
+  return mensaje;
+},
+```
+
+Lo que tenés que saber:
+
+- **Es de cada caja.** Dos cajas del mismo tipo tienen cada una la suya, y
+  ninguna ve la de otra.
+- **Arranca vacía, y se olvida cuando no hay conexión.** Al desconectar, o si
+  la conexión se pierde, todas las cajas vuelven a empezar. Editar el flujo no
+  la borra: ni cambiar la configuración de la caja, ni conectarla, ni agregar
+  o borrar otras cajas. El pánico tampoco. Si lo que guardás depende de la
+  configuración (como una posición en una lista que se puede acortar), revisá
+  al leerlo que todavía sirva.
+- **No guardes nada fuera de `procesar`.** Una variable arriba del archivo
+  (`let cuenta = 0`) la compartirían todas las cajas de ese tipo, y no se
+  olvidaría al desconectar.
+- **Una caja mal configurada no la cambia**: la aplicación no llama a su
+  `procesar`.
+- **Si tu caja no necesita recordar nada**, no declares `memoria`:
+  `procesar(mensaje, parametros)` sigue andando, como en todas las demás.
+
+Un ejemplo completo es `alternar.ts`, que guarda una posición por cada ciclo.
+Cómo se prueba está en [Cómo escribir el test](#cómo-escribir-el-test).
+
 ## Qué sale por el puerto
 
 Tu caja no tiene que ocuparse de esto, pero ayuda a entender qué va a pasar
@@ -246,7 +299,7 @@ cuando la uses en un flujo:
   dos Filtrar en paralelo, conectados a la misma caja. Un Nota On del canal 10
   pasa los dos y sale dos veces. Para que no pase, armá los filtros para que
   no se pisen: en el segundo, elegí el canal 10 y todos los tipos menos Nota
-  On.
+  On. Una caja que recuerda, como Alternar, también avanza dos veces.
 - **Si una caja tira un error, o devuelve algo que no es un mensaje válido**
   (algún byte que no sea un entero entre 0 y 255, o ningún byte), o una lista
   en la que alguno no lo es, no sale nada de ese mensaje, ni por las otras
@@ -434,6 +487,23 @@ cuando falla uno, el nombre ya te dice qué se rompió. Para elegir los casos:
   opción marcada y desmarcada. Es donde más fácil se equivoca uno.
 - **Los mensajes que no son para tu caja**: si tu caja trabaja con notas, qué
   hace con un Cambio de Control, o con un mensaje de un solo byte.
+
+**Si tu caja usa la memoria**, pasale a `procesar` una memoria nueva,
+`new Map()`, como tercer argumento: es una caja que todavía no recibió nada.
+Para probar lo que recuerda, llamala varias veces con la misma memoria, y
+creá una nueva en cada `test`, así ninguno depende de lo que dejó otro:
+
+```ts
+test("cuenta los mensajes que le llegan", () => {
+  const memoria = new Map();
+
+  const primero = contar.procesar(new MensajeMidi([0xb0, 7, 0]), {}, memoria);
+  const segundo = contar.procesar(new MensajeMidi([0xb0, 7, 0]), {}, memoria);
+
+  expect(primero).toEqual(new MensajeMidi([0xb0, 7, 1]));
+  expect(segundo).toEqual(new MensajeMidi([0xb0, 7, 2]));
+});
+```
 
 Además de tu test, hay uno que revisa **todas** las cajas del catálogo
 (`src/workflow/nodos/catalogo.test.ts`). Si falla con el nombre de tu caja,

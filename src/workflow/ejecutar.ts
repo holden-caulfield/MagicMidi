@@ -3,6 +3,7 @@ import { estado } from "@/estado/estado";
 import { escribir } from "@/formato";
 import { agregarAlLog } from "@/log/log";
 import { type EventoMidi, MensajeMidi } from "@/midi/mensaje";
+import { memoriaDeLaCaja } from "./memoria-de-las-cajas";
 import { tieneSalida, TIPOS_DE_NODO } from "./nodos/catalogo";
 import { anotarNotasPrendidas, sacarNotasPrendidas } from "./notas-prendidas";
 import { erroresDeConfiguracion } from "./validacion";
@@ -68,7 +69,7 @@ function procesarEn(nodoId: string, mensaje: MensajeMidi, salidas: MensajeMidi[]
 
   let resultado;
   try {
-    resultado = tipo.procesar(mensaje, nodo.parametros);
+    resultado = tipo.procesar(mensaje, nodo.parametros, memoriaDeLaCaja(nodo.id));
   } catch (error) {
     throw new Error(`La caja "${tipo.nombre}" falló: ${detalleDelError(error)}`, {
       cause: error,
@@ -122,8 +123,9 @@ function recorrerElFlujo(mensaje: MensajeMidi, apareo: MensajeMidi[] | null): Re
  * Pasa el mensaje por el flujo y devuelve lo que hay que enviar al puerto de
  * salida. Si ningún camino llega a una caja de fin, el mensaje sale tal cual,
  * salvo un Nota Off, que apaga lo que prendió su Nota On, si quedó anotado; si
- * una caja falla, no sale nada. Anota lo que prende cada Nota On, pero no
- * envía nada: de eso se encarga quien lo llama.
+ * una caja falla, no sale nada. Anota lo que prende cada Nota On, y cada caja
+ * guarda en su memoria lo que necesita recordar, pero no envía nada: de eso se
+ * encarga quien lo llama.
  */
 export function procesarMensaje(mensaje: MensajeMidi): ResultadoDelFlujo {
   // Un Nota Off saca su anotación siempre, antes de recorrer el flujo: aunque

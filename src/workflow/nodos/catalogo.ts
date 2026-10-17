@@ -1,5 +1,6 @@
 import { Zap } from "lucide";
 
+import alternar from "./alternar";
 import convertir from "./convertir";
 import descartar from "./descartar";
 import desplazar from "./desplazar";
@@ -16,6 +17,7 @@ const tipos = {
   filtrar,
   convertir,
   fijar,
+  alternar,
   desplazar,
   mapear,
   emitir,

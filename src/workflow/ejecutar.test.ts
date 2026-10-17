@@ -5,6 +5,7 @@ import { MensajeMidi, type TipoDeMensaje } from "@/midi/mensaje";
 import { mensajesDePanico } from "@/midi/panico";
 import { TIPOS_DE_NODO } from "./nodos/catalogo";
 import { procesarMensaje } from "./ejecutar";
+import { olvidarLaMemoriaDeLasCajas } from "./memoria-de-las-cajas";
 import { olvidarNotasPrendidas } from "./notas-prendidas";
 
 // `procesarMensaje` no envía nada: devuelve lo que tiene que salir por el
@@ -49,6 +50,7 @@ function m(...bytes: number[]): MensajeMidi {
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   olvidarNotasPrendidas();
+  olvidarLaMemoriaDeLasCajas();
 });
 
 afterEach(() => {
@@ -1374,4 +1376,273 @@ test("un Nota Off con el que falla una caja no sale, pero saca su anotación", (
   actualizar({ flujo: transponerLosNotaOn(12) });
   // Ya no queda nada anotado: el siguiente sale tal cual.
   expect(procesarMensaje(NOTA_OFF).salidas).toEqual([m(0x80, 60, 64)]);
+});
+
+// Alternar y la memoria de las cajas. Una caja Alternar recuerda por dónde va
+// en su lista entre un mensaje y el siguiente.
+
+// Alternar el tercer byte entre 127 y 0, con un solo ciclo, salvo que se
+// pasen otros parámetros.
+function alternarDatos2(
+  id: string,
+  parametros: Record<string, unknown> = { byte: 2, valores: [127, 0], cicloPor: [] },
+): Flujo["nodos"][number] {
+  return { id, tipo: "alternar", parametros };
+}
+
+// Trigger → Alternar → Emitir.
+function soloAlternar(caja: Flujo["nodos"][number]): Flujo {
+  return flujo(
+    [caja, { id: "emitir", tipo: "emitir", parametros: {} }],
+    [
+      { desde: "trigger", hacia: caja.id },
+      { desde: caja.id, hacia: "emitir" },
+    ],
+  );
+}
+
+const PEDAL_ABAJO = m(0xb0, 64, 127);
+
+test("el latch de pedal alterna con cada pisada y descarta las soltadas", () => {
+  const pedal = { ...soloTipos("cambio-de-control"), datos1: { desde: 64, hasta: 64 } };
+  const pisadas = { ...pedal, datos2: { desde: 64, hasta: 127 } };
+  const soltadas = { ...pedal, datos2: { desde: 0, hasta: 63 } };
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "pisadas", tipo: "filtrar", parametros: pisadas },
+        alternarDatos2("alternar"),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+        { id: "soltadas", tipo: "filtrar", parametros: soltadas },
+        { id: "descartar", tipo: "descartar", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "pisadas" },
+        { desde: "pisadas", hacia: "alternar" },
+        { desde: "alternar", hacia: "emitir" },
+        { desde: "trigger", hacia: "soltadas" },
+        { desde: "soltadas", hacia: "descartar" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0xb0, 64, 127)).salidas).toEqual([m(0xb0, 64, 127)]);
+  expect(procesarMensaje(m(0xb0, 64, 0)).salidas).toEqual([]);
+  expect(procesarMensaje(m(0xb0, 64, 127)).salidas).toEqual([m(0xb0, 64, 0)]);
+  expect(procesarMensaje(m(0xb0, 64, 0)).salidas).toEqual([]);
+});
+
+test("un pad como interruptor: cada Nota On alterna, y los Nota Off no salen", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "convertir", tipo: "convertir", parametros: { destino: "cambio-de-control" } },
+        alternarDatos2("alternar"),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "convertir" },
+        { desde: "convertir", hacia: "alternar" },
+        { desde: "alternar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 36, 100)).salidas).toEqual([m(0xb0, 36, 127)]);
+  expect(procesarMensaje(m(0x80, 36, 64)).salidas).toEqual([]);
+  expect(procesarMensaje(m(0x90, 36, 100)).salidas).toEqual([m(0xb0, 36, 0)]);
+  expect(procesarMensaje(m(0x80, 36, 64)).salidas).toEqual([]);
+});
+
+test("el ciclo avanza aunque falle una caja siguiente", () => {
+  const conFijar = (valor: number) =>
+    flujo(
+      [
+        alternarDatos2("alternar"),
+        { id: "fijar", tipo: "fijar", parametros: { byte: 0, valor } },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "alternar" },
+        { desde: "alternar", hacia: "fijar" },
+        { desde: "fijar", hacia: "emitir" },
+      ],
+    );
+  actualizar({ flujo: conFijar(100) });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([]);
+
+  actualizar({ flujo: conFijar(1) });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 0)]);
+});
+
+test("un mensaje que llega a Alternar por dos caminos avanza el ciclo dos veces", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "uno", tipo: "filtrar", parametros: FILTRAR_NUEVO },
+        { id: "otro", tipo: "filtrar", parametros: FILTRAR_NUEVO },
+        alternarDatos2("alternar"),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "uno" },
+        { desde: "trigger", hacia: "otro" },
+        { desde: "uno", hacia: "alternar" },
+        { desde: "otro", hacia: "alternar" },
+        { desde: "alternar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 127), m(0xb0, 64, 0)]);
+});
+
+test("el round-robin de canales apaga cada nota en el canal donde se prendió", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        alternarDatos2("alternar", { byte: 0, valores: [1, 2, 3], cicloPor: [] }),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "alternar" },
+        { desde: "alternar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 60, 100)]);
+  expect(procesarMensaje(m(0x90, 62, 100)).salidas).toEqual([m(0x91, 62, 100)]);
+  expect(procesarMensaje(m(0x80, 60, 64)).salidas).toEqual([m(0x80, 60, 64)]);
+  expect(procesarMensaje(m(0x80, 62, 64)).salidas).toEqual([m(0x81, 62, 64)]);
+});
+
+test("si el Nota Off también pasa por Alternar, toma otro canal y no apaga su nota", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on", "nota-off") },
+        alternarDatos2("alternar", { byte: 0, valores: [1, 2], cicloPor: [] }),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "alternar" },
+        { desde: "alternar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 60, 100)]);
+  expect(procesarMensaje(m(0x80, 60, 64)).salidas).toEqual([m(0x81, 60, 64)]);
+});
+
+test("cada caja Alternar recuerda lo suyo", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "controles", tipo: "filtrar", parametros: soloTipos("cambio-de-control") },
+        alternarDatos2("alternar-controles"),
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        alternarDatos2("alternar-notas"),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "controles" },
+        { desde: "controles", hacia: "alternar-controles" },
+        { desde: "alternar-controles", hacia: "emitir" },
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "alternar-notas" },
+        { desde: "alternar-notas", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 127)]);
+  expect(procesarMensaje(m(0x90, 60, 100)).salidas).toEqual([m(0x90, 60, 127)]);
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 0)]);
+});
+
+test("editar el flujo no borra la memoria de una caja", () => {
+  actualizar({ flujo: soloAlternar(alternarDatos2("alternar")) });
+  procesarMensaje(PEDAL_ABAJO);
+
+  actualizar({
+    flujo: flujo(
+      [
+        alternarDatos2("alternar"),
+        subirNota("desplazar", 12),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "alternar" },
+        { desde: "alternar", hacia: "desplazar" },
+        { desde: "desplazar", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 76, 0)]);
+});
+
+test("una caja Alternar nueva arranca con la memoria vacía", () => {
+  actualizar({ flujo: soloAlternar(alternarDatos2("alternar")) });
+  procesarMensaje(PEDAL_ABAJO);
+
+  // Borrar la caja y agregar otra igual: la nueva tiene otro `id`.
+  actualizar({ flujo: soloAlternar(alternarDatos2("alternar-nueva")) });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 127)]);
+});
+
+test("la caja Pánico no borra la memoria de las cajas", () => {
+  const pedal = { ...soloTipos("cambio-de-control"), datos1: { desde: 64, hasta: 64 } };
+  const boton = { ...soloTipos("cambio-de-control"), datos1: { desde: 20, hasta: 20 } };
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "pedal", tipo: "filtrar", parametros: pedal },
+        alternarDatos2("alternar"),
+        { id: "emitir", tipo: "emitir", parametros: {} },
+        { id: "boton", tipo: "filtrar", parametros: boton },
+        { id: "panico", tipo: "panico", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "pedal" },
+        { desde: "pedal", hacia: "alternar" },
+        { desde: "alternar", hacia: "emitir" },
+        { desde: "trigger", hacia: "boton" },
+        { desde: "boton", hacia: "panico" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 127)]);
+  expect(procesarMensaje(m(0xb0, 20, 127)).salidas).toEqual(mensajesDePanico());
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 0)]);
+});
+
+test("una caja Alternar mal configurada no avanza su ciclo", () => {
+  actualizar({ flujo: soloAlternar(alternarDatos2("alternar")) });
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb0, 64, 127)]);
+
+  // Con Canal, el 127 no es un canal: la caja tiene un error.
+  actualizar({
+    flujo: soloAlternar(alternarDatos2("alternar", { byte: 0, valores: [127, 0], cicloPor: [] })),
+  });
+  const conError = procesarMensaje(PEDAL_ABAJO);
+  expect(conError.salidas).toEqual([]);
+  expect(conError.error).toContain('La caja "Alternar" está mal configurada');
+
+  // Sigue en la segunda posición: el canal 2.
+  actualizar({
+    flujo: soloAlternar(alternarDatos2("alternar", { byte: 0, valores: [1, 2], cicloPor: [] })),
+  });
+  expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb1, 64, 127)]);
 });
