@@ -370,6 +370,15 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
 - Package manager de JS: `npm` (no hay `pnpm`/`yarn` en este proyecto;
   mantener consistencia y no mezclar lockfiles).
 
+## Versiones y distribución
+
+- La versión de la app vive solo en `src-tauri/Cargo.toml`: `package.json` y
+  `tauri.conf.json` no la declaran, y Tauri la toma de ahí. Con un solo lugar
+  no hay dos que se desincronicen, y el workflow de distribución frena un tag
+  `vX.Y.Z` que no coincide con ella.
+- Un tag `vX.Y.Z` arma un release estable: lo crea la persona usuaria, nunca
+  un agente por iniciativa propia, igual que un merge a `main`.
+
 ## Verificación antes de dar por terminada una tarea
 
 - `cargo check`, `cargo test`, `cargo fmt --check` y
