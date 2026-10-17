@@ -40,9 +40,17 @@ export interface TipoDeNodo {
    * de mensajes que pasan de a uno, en orden, o nada para descartarlo (una
    * lista vacía es lo mismo). En una caja sin salida, lo que devuelve es lo
    * que sale por el puerto MIDI. Nunca envía nada por su cuenta.
+   *
+   * `memoria` es de esta caja, y es la única forma de recordar algo de un
+   * mensaje al siguiente: lo que se guarda con `memoria.set(nombre, valor)`
+   * se lee con `memoria.get(nombre)` cuando llega otro mensaje. Arranca vacía
+   * y se olvida cuando no hay conexión. Lo que se guardara fuera de la
+   * función lo compartirían todas las cajas del tipo, y no se olvidaría. Un
+   * tipo que no recuerda nada no la declara.
    */
   procesar(
     mensaje: MensajeMidi,
     parametros: Record<string, unknown>,
+    memoria: Map<string, unknown>,
   ): MensajeMidi | MensajeMidi[] | null | void;
 }

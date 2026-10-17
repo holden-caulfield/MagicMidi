@@ -256,16 +256,24 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   caja sabe que existe.
 - Las cajas no envían mensajes: lo que devuelve una caja sin salida (como
   Emitir) es lo que sale por el puerto. `procesarMensaje` no envía nada ni
-  toca el log, así se prueba sin backend; lo único que cambia es lo anotado
-  del apareo, que saca antes de recorrer y anota después, para que se vea
-  que sacar no depende del recorrido. `recibirMensaje` envía las salidas
+  toca el log, así se prueba sin backend; lo único que cambia es la memoria
+  de la ejecución: lo anotado del apareo, que saca antes de recorrer y anota
+  después, para que se vea que sacar no depende del recorrido, y la memoria
+  de las cajas. `recibirMensaje` envía las salidas
   con `enviarMensaje` (ver "Comandos del backend") y le pasa todo al log.
   Ningún tipo de nodo importa `conexion/`.
+- Una caja que recuerda algo entre mensajes (como Alternar) lo guarda en la
+  memoria que recibe en `procesar`, una por caja, que guarda el ejecutor
+  (`memoria-de-las-cajas.ts`). Nunca en una variable del archivo de su tipo:
+  la compartirían todas las cajas de ese tipo y no se olvidaría al
+  desconectar.
 - Sin conexión, la ejecución vuelve a cero: `main.ts` engancha a los avisos
-  del store el olvido de lo anotado, así nada pasa de una conexión a la
-  siguiente y la conexión sigue sin conocer el flujo. El pánico no olvida:
-  una tecla apretada durante el pánico, al soltarse, tiene que apagar lo que
-  prendió y no salir tal cual, porque podría apagar otra nota.
+  del store el olvido de lo anotado y de la memoria de las cajas, así nada
+  pasa de una conexión a la siguiente y la conexión sigue sin conocer el
+  flujo. El pánico no olvida ninguna de las dos: una tecla apretada durante
+  el pánico, al soltarse, tiene que apagar lo que prendió y no salir tal
+  cual, porque podría apagar otra nota; y para que la caja Pánico olvidara,
+  el ejecutor tendría que reconocer un tipo de nodo.
 - Un error en una caja se lanza como `Error` (con el nombre de la caja y
   `cause`), y corta todo el recorrido de ese mensaje. `procesarMensaje` es
   el único que lo atrapa: el recorrido no revisa marcas de error.

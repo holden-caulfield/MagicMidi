@@ -59,6 +59,17 @@ protocolo MIDI.
   mensajes, se pone antes un Filtrar.
 - **Fijar**: pone siempre el mismo canal o el mismo valor en un byte de datos,
   por ejemplo una velocidad pareja.
+- **Alternar**: pone el canal o un byte de datos en el siguiente valor de una
+  lista, y después del último vuelve al primero. Recuerda por dónde va hasta
+  que se desconecta. Por ejemplo, para usar un pedal de sustain momentáneo
+  como interruptor: un Filtrar (Cambio de Control, datos 1 de 64 a 64, datos
+  2 de 64 a 127) y después Alternar (datos 2: 127, 0) y Emitir. El Filtrar
+  deja pasar solo las pisadas: si la soltada también llegara a Alternar, el
+  ciclo avanzaría dos veces por pisada. Las soltadas se sacan con otro
+  Filtrar (datos 2 de 0 a 63) y Descartar. Con "Un ciclo por", lleva un ciclo
+  aparte para cada canal o cada valor de un byte (por ejemplo, uno por cada
+  pedal de una pedalera). Para repartir las notas entre canales alcanza con
+  pasar los Nota On: cada Nota Off apaga su nota en el canal donde se prendió.
 - **Desplazar**: suma o resta un valor al canal o a un byte de datos, por ejemplo
   para transponer.
 - **Mapear**: lleva un rango de valores de un byte de datos a otro, por ejemplo para

@@ -63,7 +63,7 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (id, tipo) =>
         tipo.parametros.map((parametro) => [parametro.clave, parametro.inicial]),
       );
 
-      const resultado = tipo.procesar(new MensajeMidi([...mensaje]), iniciales);
+      const resultado = tipo.procesar(new MensajeMidi([...mensaje]), iniciales, new Map());
 
       for (const salida of [resultado ?? []].flat()) {
         expect(salida.bytes.length).toBeGreaterThan(0);
@@ -82,6 +82,7 @@ test("Emitir, Descartar y Pánico cierran el flujo; las demás cajas quedan en e
   expect(etapaDelTipo(TIPOS_DE_NODO.filtrar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.fijar)).toBe("intermedia");
+  expect(etapaDelTipo(TIPOS_DE_NODO.alternar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.mapear)).toBe("intermedia");
 });
 

@@ -56,9 +56,15 @@ arranque.
 #### Scenario: Los tipos de esta versión siguen el contrato
 
 - **WHEN** se revisa la carpeta de tipos de nodo
-- **THEN** "Filtrar", "Convertir", "Fijar", "Desplazar", "Mapear", "Emitir",
-  "Descartar" y "Pánico" están definidos cada uno en su propio archivo con la
-  misma forma, y ninguno recibe un trato especial fuera de él
+- **THEN** "Filtrar", "Convertir", "Fijar", "Alternar", "Desplazar",
+  "Mapear", "Emitir", "Descartar" y "Pánico" están definidos cada uno en su
+  propio archivo con la misma forma, y ninguno recibe un trato especial fuera
+  de él
+
+#### Scenario: Alternar va después de Fijar
+
+- **WHEN** la persona usuaria mira la barra de herramientas
+- **THEN** "Alternar" está justo después de "Fijar" y antes de "Desplazar"
 
 ### Requirement: Qué declara un tipo de nodo
 
@@ -169,13 +175,14 @@ tipo de parámetro.
 ### Requirement: La función de procesamiento
 
 La función de procesamiento SHALL recibir el mensaje MIDI que llega a la caja
-(ver "El mensaje dice su tipo y su canal") y los valores de los parámetros de
-esa caja. SHALL devolver el mensaje que la caja pasa a las siguientes, una
-lista de mensajes, o nada, si lo descarta. Si devuelve una lista, cada mensaje
-de la lista SHALL pasar a las cajas siguientes por separado, en el orden de la
-lista, como pasaría un mensaje solo. Una lista vacía SHALL valer lo mismo que
-no devolver nada. Que una caja con salida descarte un mensaje corta solo ese
-camino: no cancela el reenvío del original.
+(ver "El mensaje dice su tipo y su canal"), los valores de los parámetros de
+esa caja y la memoria de esa caja (ver la spec `ejecucion-de-workflow`, "Cada
+caja tiene su memoria"). SHALL devolver el mensaje que la caja pasa a las
+siguientes, una lista de mensajes, o nada, si lo descarta. Si devuelve una
+lista, cada mensaje de la lista SHALL pasar a las cajas siguientes por
+separado, en el orden de la lista, como pasaría un mensaje solo. Una lista
+vacía SHALL valer lo mismo que no devolver nada. Que una caja con salida
+descarte un mensaje corta solo ese camino: no cancela el reenvío del original.
 
 En un tipo sin salida, lo que devuelva SHALL ser lo que sale por el puerto de
 salida (por ejemplo, Emitir devuelve el mensaje que recibe), y si devuelve una
@@ -188,6 +195,14 @@ forma de que un mensaje no salga.
 La función no SHALL enviar mensajes por su cuenta: devuelve lo que corresponde
 y la aplicación se encarga del envío. La función SHALL poder modificar el
 mensaje que recibe sin afectar al mensaje que reciben otras ramas.
+
+En la memoria de su caja, la función SHALL poder guardar valores, cada uno con
+un nombre que elige el tipo, y leer los que guardó al procesar mensajes
+anteriores. Es la única forma de que un tipo recuerde algo entre un mensaje y
+el siguiente: el archivo del tipo no SHALL guardar nada por su cuenta fuera de
+la función, porque sería compartido por todas las cajas de ese tipo y no se
+olvidaría al desconectar. Un tipo que no necesita recordar nada SHALL poder
+ignorar la memoria, sin declarar nada.
 
 #### Scenario: Descartar un mensaje
 
@@ -244,6 +259,22 @@ mensaje que recibe sin afectar al mensaje que reciben otras ramas.
 - **WHEN** la caja recibe `90 3C 64`
 - **THEN** el "Emitir" no recibe nada, y `90 3C 64` sale tal como llegó
 
+#### Scenario: Un tipo que recuerda
+
+- **GIVEN** un tipo de nodo con salida cuya función guarda en la memoria de su
+  caja cuántos mensajes recibió y pone esa cuenta en el tercer byte, y
+  trigger → esa caja → "Emitir"
+- **WHEN** llega tres veces `B0 07 00`
+- **THEN** salen `B0 07 01`, `B0 07 02` y `B0 07 03`, sin que el archivo del
+  tipo guarde nada fuera de su función
+
+#### Scenario: Los tipos que no recuerdan nada no cambian
+
+- **WHEN** se revisan los archivos de "Filtrar", "Convertir", "Fijar",
+  "Desplazar", "Mapear", "Emitir", "Descartar" y "Pánico"
+- **THEN** su función no usa la memoria de su caja, ni declara nada sobre
+  ella
+
 ### Requirement: Los tipos de nodo no dependen del editor
 
 Este requisito no es negociable: ninguna decisión de diseño SHALL
@@ -272,9 +303,12 @@ crear, cómo registrarlo en el catálogo, qué declarar, cómo elegir un ícono,
 recibe y qué devuelve la función de procesamiento (incluyendo cómo leer los
 bytes, el tipo y el canal del mensaje), cómo declarar reglas de validación
 y probarlas, y que un mensaje sale tal cual salvo que llegue a una caja sin
-salida o que una caja falle. SHALL incluir un
-ejemplo completo de una caja que transforma mensajes, con su test, que no sea
-algo que ya se resuelve combinando las cajas existentes.
+salida o que una caja falle. SHALL explicar también cómo una caja recuerda
+algo entre un mensaje y el siguiente, con su memoria: que es de cada caja,
+que arranca vacía, que se olvida cuando no hay conexión, y cómo probar un
+tipo que la usa. SHALL incluir un ejemplo completo de una caja que transforma
+mensajes, con su test, que no sea algo que ya se resuelve combinando las cajas
+existentes.
 
 #### Scenario: Guía disponible
 
@@ -290,6 +324,14 @@ algo que ya se resuelve combinando las cajas existentes.
   y deja pasar sin cambios los demás mensajes; no es una caja "Velocidad
   fija", que ya se arma con "Filtrar" y "Fijar", ni una que descarta mensajes,
   que ya se arma con "Filtrar" y "Descartar"
+
+#### Scenario: La guía explica la memoria
+
+- **WHEN** una persona desarrolladora lee en la guía cómo recordar algo entre
+  mensajes
+- **THEN** encuentra un ejemplo corto que guarda y lee un valor en la memoria
+  de la caja, cómo pasarle una memoria vacía a la función en un test, y que
+  la memoria es de cada caja y se olvida cuando no hay conexión
 
 ### Requirement: El mensaje dice su tipo y su canal
 
