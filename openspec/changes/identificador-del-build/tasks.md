@@ -50,7 +50,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
       las secciones en la raíz de `<navegacion-por-tabs>`. Verificar
       corriendo esa prueba, con los enlaces por `id` intactos, y que la
       huella de la interfaz es la misma que antes de los movimientos
-- [ ] 2.4 En la ventana real (`npm run tauri dev`), verificar que los tabs y
+- [x] 2.4 En la ventana real (`npm run tauri dev`), verificar que los tabs y
       el botón de pánico se activan con Enter y con la barra espaciadora
 
 ## 3. El identificador en la barra de estado
@@ -71,7 +71,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
 - [x] 3.3 En `verificacion-para-agentes/pruebas/`, que `conexion.js` lea el
       estado de la conexión sin el identificador, y que `tabs.js` revise que
       el identificador está a la vista. Verificar corriendo esas pruebas
-- [ ] 3.4 En la ventana real (`npm run tauri dev`), verificar que el
+- [x] 3.4 En la ventana real (`npm run tauri dev`), verificar que el
       identificador se ve, se puede seleccionar y se copia entero
 
 ## 4. El workflow de distribución
