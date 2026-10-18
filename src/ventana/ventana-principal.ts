@@ -1,23 +1,17 @@
-import { css, html, type TemplateResult } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { type IconNode, List, Plug, Workflow } from "lucide";
+import { css, html } from "lit";
+import { customElement } from "lit/decorators.js";
+import { List, Plug, Workflow } from "lucide";
 
 import { Componente } from "@/componentes/componente";
-import { dibujarIcono } from "@/componentes/icono";
-import "@/conexion/barra-de-estado";
-import "@/conexion/boton-de-panico";
 import "@/conexion/panel-conexion";
 import "@/log/panel-log";
 import "@/workflow/editor/panel-workflow";
+import "./barra-de-estado";
+import "./boton-de-panico";
+import "./navegacion-por-tabs";
+import type { Panel } from "./navegacion-por-tabs";
 
-interface Panel {
-  id: string;
-  titulo: string;
-  icono: IconNode;
-  contenido: () => TemplateResult;
-}
-
-// La única fuente de los paneles: de acá salen la barra, las secciones y los
+// La única fuente de los paneles: de acá salen los tabs, las secciones y los
 // atributos ARIA que los enlazan.
 const PANELES: Panel[] = [
   {
@@ -35,166 +29,32 @@ const PANELES: Panel[] = [
   { id: "log", titulo: "Log", icono: List, contenido: () => html`<panel-log></panel-log>` },
 ];
 
-const estilosDeLaBarraDeTabs = css`
-  /* Tres columnas, para que el selector siga centrado a lo ancho con el botón
-     de pánico a la derecha. */
-  .barra-tabs {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    column-gap: 8px;
-    align-items: center;
-    padding: 4px 10px;
-    /* El borde de arriba la separa de la barra de título de la ventana, que
-       en macOS tiene el mismo color. */
-    border-top: 1px solid var(--borde-suave);
-    border-bottom: 1px solid var(--borde-suave);
-    background-color: var(--fondo-hundido);
-  }
-
-  /* Una tira de tabs pegados, separados por una línea fina. El activo toma el
-     fondo de la ventana, como si fuera parte del panel que muestra. */
-  .selector {
-    grid-column: 2;
-    display: flex;
-    border: 1px solid var(--borde-suave);
-  }
-
-  boton-de-panico {
-    justify-self: end;
-  }
-
-  .selector button {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin: 0;
-    padding: 1px 12px;
-    border: none;
-    border-radius: 0;
-    background-color: transparent;
-    color: var(--letra-secundaria);
-    font: inherit;
-    font-weight: 500;
-    cursor: pointer;
-    outline: none;
-  }
-
-  .selector button + button {
-    border-left: 1px solid var(--borde-suave);
-  }
-
-  .selector button:hover {
-    color: inherit;
-  }
-
-  .selector button[aria-selected="true"] {
-    background-color: var(--fondo-ventana);
-    color: inherit;
-  }
-
-  .selector button:focus-visible {
-    color: inherit;
-    outline: 1.5px solid var(--ambar);
-    outline-offset: -1.5px;
-  }
-`;
-
-const estilosDeLosPaneles = css`
-  .contenedor {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-  }
-
-  .panel {
-    flex: 1;
-    min-width: 0;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-`;
-
 /**
- * La raíz de la interfaz. Dibuja la barra de tabs y las secciones de los
- * paneles en la misma raíz porque se enlazan por `id` (`aria-controls`,
- * `aria-labelledby`), y eso no cruza de un shadow root a otro.
+ * La raíz de la interfaz: la estructura que está siempre presente, sea cual
+ * sea el panel. Dibuja los tabs con sus paneles, a los que les pasa los
+ * paneles de cada módulo y las acciones de la barra, y la barra de estado.
  */
 @customElement("ventana-principal")
 export class VentanaPrincipal extends Componente {
-  static styles = [
-    css`
-      /* La ventana no se desplaza nunca: cada panel acomoda su contenido al
-         lugar que tiene. Con 100dvh, WebKit se quedaba con una medida vieja
-         al entrar y salir de pantalla completa; position: fixed ata la raíz
-         a la ventana. */
-      :host {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-      }
-    `,
-    estilosDeLaBarraDeTabs,
-    estilosDeLosPaneles,
-  ];
+  static styles = css`
+    /* La ventana no se desplaza nunca: cada panel acomoda su contenido al
+       lugar que tiene. Con 100dvh, WebKit se quedaba con una medida vieja
+       al entrar y salir de pantalla completa; position: fixed ata la raíz
+       a la ventana. */
+    :host {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+    }
+  `;
 
-  @state() private panelActivo = "conexion";
-
-  // La barra de tabs va primera para que el recorrido con el teclado siga el
-  // orden visual.
   render() {
     return html`
-      ${this.barraDeTabs()}
-      ${this.paneles()}
+      <navegacion-por-tabs .paneles=${PANELES}>
+        <boton-de-panico slot="acciones"></boton-de-panico>
+      </navegacion-por-tabs>
       <barra-de-estado></barra-de-estado>
-    `;
-  }
-
-  private barraDeTabs() {
-    return html`
-      <div class="barra-tabs">
-        <div class="selector" role="tablist" aria-label="Secciones">
-          ${PANELES.map(
-            (panel) => html`
-              <button
-                id="tab-${panel.id}"
-                type="button"
-                role="tab"
-                aria-controls="panel-${panel.id}"
-                aria-selected=${panel.id === this.panelActivo}
-                @click=${() => (this.panelActivo = panel.id)}
-              >
-                ${dibujarIcono(panel.icono, 13)} ${panel.titulo}
-              </button>
-            `,
-          )}
-        </div>
-        <boton-de-panico></boton-de-panico>
-      </div>
-    `;
-  }
-
-  // Un panel oculto se oculta con `hidden`, nunca dejando de dibujarlo: el log
-  // tiene que seguir juntando mensajes aunque no esté a la vista.
-  private paneles() {
-    return html`
-      <main class="contenedor">
-        ${PANELES.map(
-          (panel) => html`
-            <section
-              id="panel-${panel.id}"
-              class="panel"
-              role="tabpanel"
-              aria-labelledby="tab-${panel.id}"
-              ?hidden=${this.panelActivo !== panel.id}
-            >
-              ${panel.contenido()}
-            </section>
-          `,
-        )}
-      </main>
     `;
   }
 }

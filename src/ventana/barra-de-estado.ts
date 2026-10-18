@@ -6,7 +6,11 @@ import { Componente } from "@/componentes/componente";
 import { dibujarIcono } from "@/componentes/icono";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { estado } from "@/estado/estado";
-import { type EstadoDeLaConexion, estadoDeLaConexion, puertoElegido } from "./conexion";
+import {
+  type EstadoDeLaConexion,
+  estadoDeLaConexion,
+  puertoElegido,
+} from "@/conexion/conexion";
 
 function contenidoDeLaBarra(estadoDeLaBarra: EstadoDeLaConexion) {
   switch (estadoDeLaBarra) {

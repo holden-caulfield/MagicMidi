@@ -28,14 +28,14 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
 
 ## 2. El módulo `ventana`
 
-- [ ] 2.1 Mover `boton-de-panico.ts` y `barra-de-estado.ts` de
+- [x] 2.1 Mover `boton-de-panico.ts` y `barra-de-estado.ts` de
       `src/conexion/` a `src/ventana/`, con su JSDoc al día y los imports
       (design.md, "El módulo `ventana` es la estructura de la ventana"); lo
       que hace cada uno (`mandarPanico`, el estado de la conexión) sigue en
       `conexion/`. Verificar con `npx tsc --noEmit`, y en el navegador que el
       botón de pánico se habilita y se ve en rojo con
       `actualizar({ conectado: true })`, y que la barra de estado no cambió
-- [ ] 2.2 Crear `src/ventana/navegacion-por-tabs.ts`, con la barra de tabs,
+- [x] 2.2 Crear `src/ventana/navegacion-por-tabs.ts`, con la barra de tabs,
       las secciones de los paneles y sus estilos: recibe los paneles por
       propiedad, con su contenido, es dueño del panel activo (`@state`), y
       tiene a la derecha de la barra un slot `acciones` (design.md, "Los
@@ -46,7 +46,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
       oculto sigue montado, el orden de tabulación es tabs, pánico y panel,
       y se exponen tres tabs con su nombre y cuál está seleccionado, y el
       botón "Pánico" aparte
-- [ ] 2.3 En `verificacion-para-agentes/pruebas/tabs.js`, buscar los tabs y
+- [x] 2.3 En `verificacion-para-agentes/pruebas/tabs.js`, buscar los tabs y
       las secciones en la raíz de `<navegacion-por-tabs>`. Verificar
       corriendo esa prueba, con los enlaces por `id` intactos, y que la
       huella de la interfaz es la misma que antes de los movimientos
