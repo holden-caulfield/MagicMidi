@@ -203,11 +203,16 @@ color de fondo, legibles en modo claro y en modo oscuro:
   puertos, una falla al pedir la lista de puertos o un puerto perdido). Fondo
   de error, el texto "Desconectado" y el mismo mensaje que muestra el panel.
 
-Si el texto no entra a lo ancho, SHALL cortarse con puntos suspensivos y
-mostrarse entero en un globo al pasar el puntero. Los cambios de estado SHALL
-anunciarse a las tecnologías de asistencia sin mover el foco. La barra de
-estado SHALL reflejar solo la conexión: no muestra errores de las cajas del
-flujo, que siguen marcándose en el log.
+A la derecha, en los tres estados, la barra SHALL mostrar el identificador
+del build (ver la capability `identificador-del-build`), con el color de
+texto del estado. El identificador SHALL verse siempre entero y poder
+seleccionarse para copiarlo, y no SHALL anunciarse con los cambios de estado.
+
+Si el texto de la conexión no entra a lo ancho, SHALL cortarse con puntos
+suspensivos y mostrarse entero en un globo al pasar el puntero. Los cambios
+de estado SHALL anunciarse a las tecnologías de asistencia sin mover el foco.
+Fuera del identificador, la barra de estado SHALL reflejar solo la conexión:
+no muestra errores de las cajas del flujo, que siguen marcándose en el log.
 
 #### Scenario: Estado inicial
 
@@ -260,8 +265,24 @@ flujo, que siguen marcándose en el log.
 - **GIVEN** la ventana es angosta y los nombres de los puertos conectados son
   largos
 - **WHEN** la persona usuaria mira la barra de estado
-- **THEN** la barra sigue teniendo una sola línea, el texto termina en puntos
-  suspensivos y se lee entero al pasarle el puntero
+- **THEN** la barra sigue teniendo una sola línea, el texto de la conexión
+  termina en puntos suspensivos y se lee entero al pasarle el puntero, y el
+  identificador del build se ve entero a la derecha
+
+#### Scenario: Identificador del build
+
+- **GIVEN** la aplicación se compiló del commit `b83b9c7`, el quinto merge
+  desde `v0.1.0`, con la versión 0.1.1
+- **WHEN** la persona usuaria mira la barra de estado, conectada o no
+- **THEN** a la derecha dice `0.1.1-dev.5+b83b9c7`, y puede seleccionarlo y
+  copiarlo
+
+#### Scenario: El identificador no se anuncia
+
+- **GIVEN** una tecnología de asistencia está leyendo la aplicación
+- **WHEN** la conexión se establece
+- **THEN** se anuncia el nuevo estado de la conexión, sin el identificador
+  del build
 
 ### Requirement: El panel activo ocupa el espacio entre la navegación y la barra de estado
 

@@ -1,6 +1,6 @@
 [package]
 name = "magicmidi"
-version = "0.1.1"
+version = "0.2.0"
 description = "Aplicación de escritorio para experimentar con mensajes MIDI"
 authors = ["JP Saraceno"]
 edition = "2021"
