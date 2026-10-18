@@ -93,8 +93,8 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
 
 ## 5. Documentación y verificación final
 
-- [ ] 5.1 README: en "Descargar", que el identificador de cada build se ve
+- [x] 5.1 README: en "Descargar", que el identificador de cada build se ve
       también en la barra de estado de la app; en "Estructura del
       repositorio", el módulo nuevo. Verificar releyendo las dos secciones
-- [ ] 5.2 Correr la verificación de AGENTS.md que corresponde al cambio:
+- [x] 5.2 Correr la verificación de AGENTS.md que corresponde al cambio:
       `npx tsc --noEmit`, `npm test` y `npm run build`
