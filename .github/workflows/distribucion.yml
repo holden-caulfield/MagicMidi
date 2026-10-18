@@ -33,31 +33,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          # Con el historial y los tags, para contar los merges desde el último
-          # release.
+          # Con el historial y los tags, que el identificador necesita para
+          # contar los merges desde el último release.
           fetch-depth: 0
       - id: etiqueta
         name: Elegir la etiqueta de los archivos y el identificador del build
         run: |
-          version=$(cargo metadata --no-deps --format-version 1 --manifest-path src-tauri/Cargo.toml \
-            | jq -r '.packages[0].version')
+          # El mismo módulo que usa la app (ver identificador-del-build.mjs).
+          identificador=$(node identificador-del-build.mjs)
+          echo "identificador=$identificador" >> "$GITHUB_OUTPUT"
           if [ "$GITHUB_REF_TYPE" != tag ]; then
-            if ultimo=$(git describe --tags --match 'v*' --abbrev=0 2> /dev/null); then
-              desde="$ultimo..HEAD"
-            else
-              # Todavía no hubo releases: se cuenta desde el principio.
-              desde=HEAD
-            fi
-            merges=$(git rev-list --count --first-parent "$desde")
             echo "etiqueta=dev" >> "$GITHUB_OUTPUT"
-            # Por ejemplo 0.1.1-dev.5+b83b9c7: el quinto merge a main desde el
-            # release anterior, camino a 0.1.1.
-            echo "identificador=$version-dev.$merges+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-          elif [ "$GITHUB_REF_NAME" = "v$version" ]; then
-            echo "etiqueta=$version" >> "$GITHUB_OUTPUT"
+          elif [[ "$identificador" == "${GITHUB_REF_NAME#v}+"* ]]; then
+            # Solo un commit con el tag de su propia versión da un
+            # identificador estable, que empieza con esa versión y un +.
+            echo "etiqueta=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           else
             # Si no, los binarios dirían una versión y el release otra.
-            echo "::error::El tag $GITHUB_REF_NAME no coincide con la versión de src-tauri/Cargo.toml ($version)"
+            echo "::error::El tag $GITHUB_REF_NAME no coincide con la versión del build ($identificador)"
             exit 1
           fi
 
@@ -83,6 +76,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v5
+        with:
+          # El build calcula el identificador que muestra la app: sin el
+          # historial y los tags, el conteo de merges sale mal sin dar error.
+          fetch-depth: 0
       # Lo que Tauri necesita para compilar en Linux, más ALSA para midir y lo
       # que usa el AppImage.
       - name: Instalar dependencias del sistema

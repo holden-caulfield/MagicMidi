@@ -105,6 +105,10 @@ en dos canales:
   el quinto merge a `main` desde el release anterior, camino a la 0.1.1, en el
   commit `b83b9c7`.
 
+La app muestra de qué build es a la derecha de la barra de estado:
+`0.1.0+a897f0c` en una versión estable, y en una de desarrollo el mismo
+identificador que el título de su release.
+
 En cada release hay un archivo por plataforma:
 
 | Plataforma | Archivo |
@@ -217,6 +221,7 @@ además escribe las notas. A mano:
 
 ```
 ├── .github/workflows/      # CI y armado de los binarios
+├── identificador-del-build.mjs  # Qué build es: lo usan la app y el CI
 ├── index.html              # Punto de entrada del frontend
 ├── src/                    # Frontend (TypeScript, CSS)
 │   ├── main.ts

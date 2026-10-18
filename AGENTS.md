@@ -122,7 +122,11 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   sumar sus estilos ni estar suscripto por ella. Una función que devuelve una
   plantilla es una ayuda interna de su archivo y no se exporta, salvo
   `dibujarIcono` (ver "Íconos"). Un módulo es dueño de un
-  comportamiento, no de una región de la pantalla.
+  comportamiento, no de una región de la pantalla. La excepción es
+  `ventana/`, dueño de la estructura que está siempre presente (los tabs con
+  sus paneles, las barras y, si llegan, los menús y atajos generales): dibuja
+  esas piezas, y lo que cada una hace sigue en su módulo, como `mandarPanico`
+  en `conexion/`.
 - **Estilos y Shadow DOM**: cada componente encapsula sus estilos en
   `static styles`. Lo único global es `estilos/global.css`: las variables (que
   sí atraviesan el Shadow DOM), la letra que heredan todos y el `body`. Los
@@ -191,18 +195,23 @@ automáticas del CI, porque la persona usuaria prefiere revisar los errores.
   anterior; un `invoke` directo podría adelantarse a lo que ya estaba en la
   cola. El flujo usa la conexión para enviar, y la conexión no conoce el flujo.
 - **Paneles y tabs**: la lista `PANELES` de `ventana-principal.ts` es la única
-  fuente; de ahí salen la barra, las `<section>` de los paneles y los
+  fuente; de ahí salen los tabs, las `<section>` de los paneles y los
   atributos ARIA que los enlazan (`id`, `aria-controls`, `aria-labelledby`,
-  `aria-selected`). La barra de tabs y las secciones de los paneles las
-  dibuja `ventana-principal`, y no componentes aparte, porque se enlazan por
-  `id`. Agregar un panel es agregar una entrada a esa lista (con su nombre y su
-  ícono) y el módulo con su componente. La barra de tabs va arriba y primera
-  en la raíz, antes de los paneles, para que el recorrido por teclado siga el
+  `aria-selected`). Los dibuja `<navegacion-por-tabs>`, que recibe la lista
+  con el contenido de cada panel: los tabs y las secciones van en un mismo
+  componente porque se enlazan por `id`, y un `id` no cruza de un shadow root
+  a otro. Agregar un panel es agregar una entrada a esa lista (con su nombre y
+  su ícono) y el módulo con su componente. La barra de tabs va arriba y
+  primera en su raíz, antes de los paneles, para que el recorrido por teclado
+  siga el
   orden visual. No hay encabezado: el nombre de la aplicación lo muestra el
   sistema en la barra de la ventana, y lo que aplica a todos los tabs va en
-  las barras, a la vista desde cualquiera: el estado de la conexión, en la
-  barra de estado, al pie, y las acciones, como el pánico, a la derecha de la
-  barra de tabs, sin correr los tabs del centro. Ocultar un panel es `?hidden`,
+  las barras, a la vista desde cualquiera: el estado de la conexión y el
+  identificador del build, en la barra de estado, al pie, y las acciones, como
+  el pánico, a la derecha de la barra de tabs, sin correr los tabs del
+  centro. Las acciones las decide `ventana-principal` y se las pasa a
+  `<navegacion-por-tabs>` en el slot `acciones`: la navegación no sabe qué
+  son. Ocultar un panel es `?hidden`,
   **nunca** renderizado condicional (`${activo ? panel() : nothing}`):
   desmontarlo le borraría al log los mensajes acumulados, que tiene que
   seguir juntando mientras su tab no está a la vista.
@@ -376,6 +385,12 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   `tauri.conf.json` no la declaran, y Tauri la toma de ahí. Con un solo lugar
   no hay dos que se desincronicen, y el workflow de distribución frena un tag
   `vX.Y.Z` que no coincide con ella.
+- El identificador del build (`0.1.1-dev.5+b83b9c7`) lo calcula solo
+  `identificador-del-build.mjs`, en la raíz: Vite lo deja fijo en la app y el
+  workflow de distribución lo usa en el título del release `dev`, así nunca
+  dicen cosas distintas. Sale del historial de git, así que todo checkout que
+  compila la app para publicarla va con `fetch-depth: 0`: con un clon corto,
+  el conteo de merges sale mal sin dar error.
 - Esa versión es siempre la del próximo release: la patch sube justo después
   de cada release estable, y la minor o la major, al archivar un cambio de
   OpenSpec, en el mismo commit del archivado. Como después de un release la

@@ -7,7 +7,7 @@ import type { Atajo } from "@/componentes/boton-de-accion";
 import { Componente } from "@/componentes/componente";
 import { ControladorDeEstado } from "@/estado/controlador";
 import { estado } from "@/estado/estado";
-import { mandarPanico } from "./conexion";
+import { mandarPanico } from "@/conexion/conexion";
 
 const EN_MAC = navigator.userAgent.includes("Mac");
 
