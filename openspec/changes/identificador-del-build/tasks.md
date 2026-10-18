@@ -76,7 +76,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
 
 ## 4. El workflow de distribución
 
-- [ ] 4.1 En `preparar`, tomar el identificador de
+- [x] 4.1 En `preparar`, tomar el identificador de
       `node identificador-del-build.mjs` y sacar `git describe`,
       `git rev-list` y `cargo metadata`; en un tag, exigir que el
       identificador empiece con la versión del tag seguida de `+` (design.md,
