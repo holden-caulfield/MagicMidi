@@ -85,7 +85,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
       identificador y la etiqueta `dev`), el tag de la versión sobre un clon
       donde el commit lo tiene (da la versión) y un tag de otra versión
       (falla con el mensaje)
-- [ ] 4.2 Checkout con `fetch-depth: 0` en los jobs de `compilar`. Verificar
+- [x] 4.2 Checkout con `fetch-depth: 0` en los jobs de `compilar`. Verificar
       en la corrida del PR, que se dispara porque cambia el workflow: el
       paso `preparar` da el identificador del commit del PR, los tres builds
       terminan, y la app del `.dmg` de esa corrida muestra el mismo
