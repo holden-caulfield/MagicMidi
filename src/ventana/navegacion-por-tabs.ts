@@ -126,12 +126,6 @@ export class NavegacionPorTabs extends Componente {
     return this.elegido ?? this.paneles[0]?.id;
   }
 
-  // La barra de tabs va primera para que el recorrido con el teclado siga el
-  // orden visual: los tabs, las acciones y el panel.
-  render() {
-    return html`${this.barraDeTabs()} ${this.secciones()}`;
-  }
-
   private barraDeTabs() {
     return html`
       <div class="barra-tabs">
@@ -176,5 +170,11 @@ export class NavegacionPorTabs extends Componente {
         )}
       </main>
     `;
+  }
+
+  // La barra de tabs va primera para que el recorrido con el teclado siga el
+  // orden visual: los tabs, las acciones y el panel.
+  render() {
+    return html`${this.barraDeTabs()} ${this.secciones()}`;
   }
 }
