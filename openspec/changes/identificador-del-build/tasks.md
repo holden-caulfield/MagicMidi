@@ -7,7 +7,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
 
 ## 1. El cálculo del identificador
 
-- [ ] 1.1 Crear `identificador-del-build.mjs` en la raíz (design.md, "Un
+- [x] 1.1 Crear `identificador-del-build.mjs` en la raíz (design.md, "Un
       módulo de Node en la raíz calcula el identificador"): una función pura
       que arma el texto a partir de la versión, los tags del commit, los
       merges y el hash (o sin datos de git), otra pura que lee la versión del
@@ -17,12 +17,12 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
       dar `0.1.1-dev.<n>+<commit>`, con `<n>` igual a
       `git rev-list --count --first-parent v0.1.0..HEAD` y `<commit>` igual a
       los 7 primeros caracteres de `git rev-parse HEAD`
-- [ ] 1.2 `identificador-del-build.test.mjs` al lado, para las dos funciones
+- [x] 1.2 `identificador-del-build.test.mjs` al lado, para las dos funciones
       puras: los escenarios de "Formato del identificador" (spec
       `identificador-del-build`), incluido el commit con el tag de otra
       versión, y la lectura de la versión de un `Cargo.toml` con
       dependencias que también dicen `version`. Verificar con `npm test`
-- [ ] 1.3 Probar el caso sin git: una copia del código sin `.git` (con
+- [x] 1.3 Probar el caso sin git: una copia del código sin `.git` (con
       `git archive`, en una carpeta temporal) y verificar que el módulo
       imprime `0.1.1-dev` sin fallar
 
