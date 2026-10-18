@@ -37,7 +37,10 @@ function contenidoDeLaBarra(estadoDeLaBarra: EstadoDeLaConexion) {
   }
 }
 
-/** El estado de la conexión, al pie de la ventana y a la vista desde cualquier tab. */
+/**
+ * La barra de estado de la ventana, al pie y a la vista desde cualquier tab:
+ * el estado de la conexión y, a la derecha, el identificador del build.
+ */
 @customElement("barra-de-estado")
 export class BarraDeEstado extends Componente {
   static styles = css`
@@ -78,6 +81,13 @@ export class BarraDeEstado extends Componente {
       text-overflow: ellipsis;
     }
 
+    /* Siempre entero: si no entra todo, se corta el texto de la conexión. */
+    .identificador {
+      flex-shrink: 0;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
     .texto-oculto {
       position: absolute;
       width: 1px;
@@ -97,9 +107,10 @@ export class BarraDeEstado extends Componente {
     const estadoDeLaBarra = estadoDeLaConexion(estado);
     const { icono, texto, contenido } = contenidoDeLaBarra(estadoDeLaBarra);
     return html`
-      <footer class="barra-de-estado ${estadoDeLaBarra}" role="status" title=${texto}>
+      <footer class="barra-de-estado ${estadoDeLaBarra}">
         ${dibujarIcono(icono, 13)}
-        <span class="texto-de-estado">${contenido}</span>
+        <span class="texto-de-estado" role="status" title=${texto}>${contenido}</span>
+        <span class="identificador">${__IDENTIFICADOR_DEL_BUILD__}</span>
       </footer>
     `;
   }

@@ -55,12 +55,12 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
 
 ## 3. El identificador en la barra de estado
 
-- [ ] 3.1 En `vite.config.ts`, calcular el identificador y dejarlo en una
+- [x] 3.1 En `vite.config.ts`, calcular el identificador y dejarlo en una
       constante global con `define`, declarada en un `.d.ts` de `src/`
       (design.md, "Vite lo deja fijo en el frontend"). Verificar con
       `npx tsc --noEmit` y con `npm run build`, buscando el identificador en
       `dist/`
-- [ ] 3.2 Dibujar el identificador a la derecha de la barra, sin achicarse,
+- [x] 3.2 Dibujar el identificador a la derecha de la barra, sin achicarse,
       con el color del estado y seleccionable, y pasar `role="status"` del
       `<footer>` al texto de la conexión (spec `navegacion-por-tabs`, "Barra
       de estado al pie"). Verificar en el navegador, llevando el store a
@@ -68,7 +68,7 @@ seleccionar texto, se prueba en la ventana real con `npm run tauri dev`.
       derecha en los tres; con la ventana angosta y nombres largos se corta
       solo el texto de la conexión; y el elemento con `role="status"` no lo
       contiene
-- [ ] 3.3 En `verificacion-para-agentes/pruebas/`, que `conexion.js` lea el
+- [x] 3.3 En `verificacion-para-agentes/pruebas/`, que `conexion.js` lea el
       estado de la conexión sin el identificador, y que `tabs.js` revise que
       el identificador está a la vista. Verificar corriendo esas pruebas
 - [ ] 3.4 En la ventana real (`npm run tauri dev`), verificar que el

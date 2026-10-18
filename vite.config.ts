@@ -1,10 +1,17 @@
 import { defineConfig } from "vite";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
+import { identificadorDelBuild } from "./identificador-del-build.mjs";
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
+  // El identificador del build queda fijo al compilar, y en `tauri dev` al
+  // arrancar el servidor: un commit nuevo no lo cambia hasta reiniciarlo.
+  define: {
+    __IDENTIFICADOR_DEL_BUILD__: JSON.stringify(identificadorDelBuild()),
+  },
+
   resolve: {
     tsconfigPaths: true,
   },

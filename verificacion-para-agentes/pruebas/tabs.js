@@ -1,6 +1,7 @@
 // Tabs (spec navegacion-por-tabs): un panel visible por vez, aria-selected,
-// los vínculos ARIA entre tabs y paneles, la barra de estado en todos los
-// tabs, el orden de tabulación y que las secciones ocultas no se vean.
+// los vínculos ARIA entre tabs y paneles, la barra de estado con el
+// identificador del build en todos los tabs, el orden de tabulación y que
+// las secciones ocultas no se vean.
 // Los tabs y las secciones están en la raíz de <navegacion-por-tabs>.
 const raiz = uno('navegacion-por-tabs').shadowRoot;
 const tabs = [...raiz.querySelectorAll('[role=tab]')];
@@ -13,6 +14,7 @@ for (const tab of tabs) {
     seleccionados: tabs.filter((t) => t.getAttribute('aria-selected') === 'true').map((t) => t.id),
     ocultasConHidden: secciones.filter((s) => !visible(s)).every((s) => s.hidden && getComputedStyle(s).display === 'none'),
     barraDeEstado: visible(uno('.barra-de-estado')),
+    identificadorDelBuild: visible(uno('.barra-de-estado .identificador')) && uno('.barra-de-estado .identificador').textContent,
     seccion: (() => { const s = secciones.find(visible).getBoundingClientRect(); return `${Math.round(s.width)}x${Math.round(s.height)}`; })(),
   };
 }
