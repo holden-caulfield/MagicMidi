@@ -87,7 +87,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       que necesitan el flujo: un controlador por otro solo en los Cambios de
       Control, el Nota Off que pasa por el mapa, y solo los Nota On con el
       apareo; verificar con `npm test`
-- [ ] 3.4 En el navegador, con una caja Mapear seleccionada: los escenarios de
+- [x] 3.4 En el navegador, con una caja Mapear seleccionada: los escenarios de
       "Los parámetros de Mapear son el byte y el mapa" y de "El control de
       mapa" que no dependen de la activación con teclado (la configuración
       inicial, escribir una salida, escribir en otro modo, algo que no es un
@@ -111,7 +111,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 - [x] 5.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`, y desde
       `src-tauri/` `cargo check`, `cargo test`, `cargo fmt --check` y
       `cargo clippy --all-targets -- -D warnings`; todo tiene que pasar
-- [ ] 5.2 Comparar la huella de la interfaz con la de `main`
+- [x] 5.2 Comparar la huella de la interfaz con la de `main`
       (`verificacion-para-agentes/huella/`) sin cajas Mapear: tiene que dar
       igual, salvo la barra de herramientas, que suma el botón de Mapear
       después de Interpolar y corre los que siguen, y el globo de la caja
