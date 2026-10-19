@@ -81,11 +81,11 @@ buscar como entrada de otro. Así se pueden intercambiar dos valores.
 
 #### Scenario: Pads al mapa de batería GM
 
-- **GIVEN** byte "2.º (datos 1)" y el mapa C2 → C1, C#2 → D1, D2 → F#1 y
-  D#2 → A#1
+- **GIVEN** byte "2.º (datos 1)" y el mapa C3 → C2, C#3 → D2, D3 → F#2 y
+  D#3 → A#2
 - **WHEN** recibe `99 30 64`, `99 31 50` y `99 32 7F` (Nota On en el canal
-  10, en C2, C#2 y D2)
-- **THEN** emite `99 24 64`, `99 26 50` y `99 2A 7F` (C1, D1 y F#1, con la
+  10, en C3, C#3 y D3)
+- **THEN** emite `99 24 64`, `99 26 50` y `99 2A 7F` (C2, D2 y F#2, con la
   misma velocidad)
 
 #### Scenario: Cambiar de canal
@@ -96,9 +96,9 @@ buscar como entrada de otro. Así se pueden intercambiar dos valores.
 
 #### Scenario: Intercambiar dos notas
 
-- **GIVEN** byte "2.º (datos 1)" y el mapa C1 → D1 y D1 → C1
-- **WHEN** recibe `99 24 64` y `99 26 64` (C1 y D1)
-- **THEN** emite `99 26 64` y `99 24 64` (D1 y C1)
+- **GIVEN** byte "2.º (datos 1)" y el mapa C2 → D2 y D2 → C2
+- **WHEN** recibe `99 24 64` y `99 26 64` (C2 y D2)
+- **THEN** emite `99 26 64` y `99 24 64` (D2 y C2)
 
 #### Scenario: Un controlador por otro, solo en los Cambios de Control
 
@@ -116,7 +116,7 @@ mensaje cambia.
 
 #### Scenario: Una nota que no está en el mapa
 
-- **GIVEN** byte "2.º (datos 1)" y el mapa C2 → C1
+- **GIVEN** byte "2.º (datos 1)" y el mapa C3 → C2
 - **WHEN** recibe `90 3C 64` (C4)
 - **THEN** emite `90 3C 64`
 
@@ -135,7 +135,7 @@ SHALL apagarla el apareo (ver la spec `apareo-de-nota-off`).
 
 #### Scenario: El Nota Off pasa por el mapa
 
-- **GIVEN** trigger → "Mapear" (byte "2.º (datos 1)", mapa C2 → C1) →
+- **GIVEN** trigger → "Mapear" (byte "2.º (datos 1)", mapa C3 → C2) →
   "Emitir"
 - **WHEN** llegan `99 30 64` y después `89 30 40`
 - **THEN** salen `99 24 64` y después `89 24 40`
@@ -143,7 +143,7 @@ SHALL apagarla el apareo (ver la spec `apareo-de-nota-off`).
 #### Scenario: Solo los Nota On, con el apareo
 
 - **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Mapear" (byte "2.º
-  (datos 1)", mapa C2 → C1) → "Emitir"
+  (datos 1)", mapa C3 → C2) → "Emitir"
 - **WHEN** llegan `99 30 64` y después `89 30 40`
 - **THEN** salen `99 24 64` y después `89 24 40`
 

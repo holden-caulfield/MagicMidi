@@ -44,7 +44,7 @@ mapa") para el comportamiento. Lo que condiciona el diseño:
 
 - Llenar el mapa tocando (la idea "Aprender tocando" del roadmap). Encaja bien
   con este campo, pero es otro cambio.
-- Rangos como entrada ("de C2 a D2 → C1"), o una salida para los valores que
+- Rangos como entrada ("de C3 a D3 → C2"), o una salida para los valores que
   no están en el mapa. Lo que no está pasa sin cambios, y lo que haga falta
   descartar se arma con Filtrar.
 - Ordenar el mapa solo, o reordenarlo a mano: el orden no cambia el resultado.
@@ -161,7 +161,7 @@ cuando no hay ninguno.
 
 - **Un solo `ModoNumerico`** para todas las entradas y salidas, con su botón
   en la fila de la etiqueta y `formatearValor` en ese modo, así el error
-  nombra el valor como se ve en el campo ("La entrada C2 está más de una
+  nombra el valor como se ve en el campo ("La entrada C3 está más de una
   vez"). Lo que conserva en la caja es el modo.
 - **`esGrupo = true`**: la etiqueta nombra al grupo, y cada campo y cada botón
   lleva su `aria-label` con la posición ("Entrada 2", "Salida 2", "Quitar el

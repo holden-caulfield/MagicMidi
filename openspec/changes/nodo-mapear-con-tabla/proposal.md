@@ -4,8 +4,8 @@
 
 Hoy no hay forma de cambiar un valor puntual por otro, uno por uno. El caso
 típico es llevar los pads de un controlador al mapa de batería GM: el pad que
-manda C2 tiene que sonar como bombo (C1), el que manda C#2 como redoblante
-(D1), el de D2 como hi-hat cerrado (F#1). Cada pad va a una nota distinta, sin
+manda C3 tiene que sonar como bombo (C2), el que manda C#3 como redoblante
+(D2), el de D3 como hi-hat cerrado (F#2). Cada pad va a una nota distinta, sin
 ninguna proporción entre ellas. Mapear reparte un rango de forma lineal y no
 lo puede expresar, y con Filtrar y Fijar haría falta una rama por pad. Es la
 idea "Remapear notas con una tabla" del roadmap, y necesita un tipo de

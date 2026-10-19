@@ -228,7 +228,7 @@ a mostrarse en el modo nuevo, y el valor de la caja no SHALL cambiar.
 - **GIVEN** una caja "Mapear" con el mapa 48 → 36, en modo hexadecimal (los
   campos muestran "30" y "24")
 - **WHEN** la persona usuaria activa el botón de modo de "Mapa"
-- **THEN** el mapa pasa a modo nota, y los campos muestran "C2" y "C1"
+- **THEN** el mapa pasa a modo nota, y los campos muestran "C3" y "C2"
 
 #### Scenario: El modo queda con la caja
 
@@ -372,11 +372,11 @@ del parámetro.
 
 #### Scenario: Con el teclado en un mapa
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1, en modo nota, y el foco en
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2, en modo nota, y el foco en
   el campo de la salida
 - **WHEN** la persona usuaria aprieta la flecha arriba, y después Mayúsculas
   y la flecha arriba
-- **THEN** la caja queda con el mapa C2 → C#2, el campo muestra "C#2" y el
+- **THEN** la caja queda con el mapa C3 → C#3, el campo muestra "C#3" y el
   foco sigue en él
 
 ## ADDED Requirements
@@ -448,9 +448,9 @@ misma salida.
 
 #### Scenario: La entrada repetida en modo nota
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1 y C2 → D1, en modo nota
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2 y C3 → D2, en modo nota
 - **WHEN** la persona usuaria la selecciona
-- **THEN** debajo de "Mapa" se lee "La entrada C2 está más de una vez", y la
+- **THEN** debajo de "Mapa" se lee "La entrada C3 está más de una vez", y la
   caja se ve con borde rojo
 
 ### Requirement: El control de mapa
@@ -499,14 +499,14 @@ hacia abajo, y se recorre desplazando el panel.
 
 #### Scenario: Escribir una salida
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C2, en modo nota
-- **WHEN** la persona usuaria escribe "C1" en la salida del primer par y sale
+- **GIVEN** una caja "Mapear" con el mapa C3 → C3, en modo nota
+- **WHEN** la persona usuaria escribe "C2" en la salida del primer par y sale
   del campo
-- **THEN** la caja queda con el mapa C2 → C1
+- **THEN** la caja queda con el mapa C3 → C2
 
 #### Scenario: Escribir en otro modo
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1, en modo nota
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2, en modo nota
 - **WHEN** la persona usuaria escribe 50 en la entrada del primer par y sale
   del campo
 - **THEN** la caja queda con el mapa 50 → 36, el mapa pasa a modo decimal, y
@@ -514,24 +514,24 @@ hacia abajo, y se recorre desplazando el panel.
 
 #### Scenario: Escribir algo que no es un número
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2
 - **WHEN** la persona usuaria escribe "mucho" en la salida del primer par y
   sale del campo
-- **THEN** la caja sigue con el mapa C2 → C1, y el campo vuelve a mostrar
-  "C1"
+- **THEN** la caja sigue con el mapa C3 → C2, y el campo vuelve a mostrar
+  "C2"
 
 #### Scenario: Agregar un par
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1 y C#2 → D1
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2 y C#3 → D2
 - **WHEN** la persona usuaria activa "Agregar un par"
-- **THEN** la caja queda con el mapa C2 → C1, C#2 → D1 y D2 → D2, y el foco
+- **THEN** la caja queda con el mapa C3 → C2, C#3 → D2 y D3 → D3, y el foco
   está en el campo "Entrada 3"
 
 #### Scenario: Agregar saltea las entradas que ya están
 
-- **GIVEN** una caja "Mapear" con el mapa D2 → F#1, C2 → C1 y C#2 → D1
+- **GIVEN** una caja "Mapear" con el mapa D3 → F#2, C3 → C2 y C#3 → D2
 - **WHEN** la persona usuaria activa "Agregar un par"
-- **THEN** el par nuevo es D#2 → D#2, porque D2 ya es una entrada
+- **THEN** el par nuevo es D#3 → D#3, porque D3 ya es una entrada
 
 #### Scenario: Agregar después del máximo
 
@@ -549,14 +549,14 @@ hacia abajo, y se recorre desplazando el panel.
 
 #### Scenario: Quitar un par
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1, C#2 → D1 y D2 → F#1
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2, C#3 → D2 y D3 → F#2
 - **WHEN** la persona usuaria activa "Quitar el par 2"
-- **THEN** la caja queda con el mapa C2 → C1 y D2 → F#1, y el foco está en
-  "Quitar el par 2", que ahora es el de D2
+- **THEN** la caja queda con el mapa C3 → C2 y D3 → F#2, y el foco está en
+  "Quitar el par 2", que ahora es el de D3
 
 #### Scenario: Quitar el último par
 
-- **GIVEN** una caja "Mapear" con el mapa C2 → C1
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2
 - **WHEN** la persona usuaria activa "Quitar el par 1"
 - **THEN** la caja queda con el mapa vacío, sin error, se ve el texto "Sin
   pares: todo pasa sin cambios." y el foco está en "Agregar un par"
@@ -572,7 +572,7 @@ hacia abajo, y se recorre desplazando el panel.
 #### Scenario: El lector de pantalla anuncia el campo
 
 - **GIVEN** una persona que usa lector de pantalla y una caja "Mapear"
-  seleccionada, con el mapa C2 → C1 y C#2 → D1
+  seleccionada, con el mapa C3 → C2 y C#3 → D2
 - **WHEN** llega con Tab al campo de la salida del segundo par
 - **THEN** el lector lo anuncia como "Salida 2" del grupo "Mapa", con su
-  valor, D1
+  valor, D2
