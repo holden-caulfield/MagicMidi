@@ -116,7 +116,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       igual, salvo la barra de herramientas, que suma el botón de Mapear
       después de Interpolar y corre los que siguen, y el globo de la caja
       lineal, que dice "Interpolar"
-- [ ] 5.3 En `npm run tauri dev`, con dos buses del IAC Driver y `midi.sh`
+- [x] 5.3 En `npm run tauri dev`, con dos buses del IAC Driver y `midi.sh`
       escuchando la salida: un mapa de pads a batería cambia cada nota y su
       Nota Off; con un Filtrar de solo Nota On, el apareo apaga la nota
       cambiada; con Canal, un mapa 1 → 10 cambia el canal sin cambiar el tipo;
