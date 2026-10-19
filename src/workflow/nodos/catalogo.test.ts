@@ -83,7 +83,7 @@ test("Emitir, Descartar y Pánico cierran el flujo; las demás cajas quedan en e
   expect(etapaDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.fijar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.alternar)).toBe("intermedia");
-  expect(etapaDelTipo(TIPOS_DE_NODO.mapear)).toBe("intermedia");
+  expect(etapaDelTipo(TIPOS_DE_NODO.interpolar)).toBe("intermedia");
 });
 
 test.each(Object.entries(TIPOS_DE_NODO))("la etapa de %s coincide con su salida", (_, tipo) => {

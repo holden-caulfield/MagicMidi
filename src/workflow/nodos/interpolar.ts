@@ -6,7 +6,7 @@ import { rango } from "../parametros/rango";
 import type { TipoDeNodo } from "../tipos";
 
 export default {
-  nombre: "Mapear",
+  nombre: "Interpolar",
   icono: AlignCenterHorizontal,
   // Los extremos van de 0 a 127, como un byte de datos: así el resultado,
   // que siempre queda entre los extremos de salida, también lo es. Los dos

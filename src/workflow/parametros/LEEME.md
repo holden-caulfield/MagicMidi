@@ -27,7 +27,7 @@ campo dibujar, con qué datos.
   [Los modos de los números](#los-modos-de-los-números)).
 - `interruptor`: una casilla, para prender o apagar algo.
 - `lista`: una sola opción de una lista cerrada, con un desplegable. Sirve
-  para pocas opciones (en Mapear, qué byte se mapea).
+  para pocas opciones (en Interpolar, qué byte se interpola).
 - `opciones`: varias opciones de una lista cerrada, todas a la vista como
   píldoras que se encienden y se apagan. Sirve para pocas opciones de texto
   corto (en Filtrar, los canales).
@@ -37,9 +37,10 @@ campo dibujar, con qué datos.
   y puede declarar un `textoDeAyuda` para cuando no hay ninguna elegida.
 - `rango`: dos extremos enteros, "desde" y "hasta", entre un `minimo` y un
   `maximo`, con una barra de dos perillas y un campo a cada lado. Con
-  `invertible: true`, "desde" puede quedar mayor que "hasta" (en Mapear, para
-  dar vuelta un sentido); si no, las perillas se frenan al tocarse (en
-  Filtrar). El valor es `{ desde, hasta }`. Como el entero, tiene modos.
+  `invertible: true`, "desde" puede quedar mayor que "hasta" (en
+  Interpolar, para dar vuelta un sentido); si no, las perillas se frenan al
+  tocarse (en Filtrar). El valor es `{ desde, hasta }`. Como el entero,
+  tiene modos.
 - `secuencia`: una lista de números enteros en orden, que se pueden repetir,
   entre un `minimo` y un `maximo`, con un valor por fila. Cada fila tiene
   botones para subir, bajar y quitar su valor, y al final hay uno para

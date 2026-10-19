@@ -745,16 +745,16 @@ test("una caja mal configurada a la que no llega el mensaje no afecta", () => {
       [
         { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
         {
-          id: "mapear",
-          tipo: "mapear",
+          id: "interpolar",
+          tipo: "interpolar",
           parametros: { byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
       [
         { desde: "trigger", hacia: "notas" },
-        { desde: "notas", hacia: "mapear" },
-        { desde: "mapear", hacia: "emitir" },
+        { desde: "notas", hacia: "interpolar" },
+        { desde: "interpolar", hacia: "emitir" },
       ],
     ),
   });
@@ -794,16 +794,16 @@ test("comprimir la velocidad solo en las notas no convierte un Nota Off en Nota 
       [
         { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
         {
-          id: "mapear",
-          tipo: "mapear",
+          id: "interpolar",
+          tipo: "interpolar",
           parametros: { byte: 2, entrada: { desde: 0, hasta: 127 }, salida: { desde: 40, hasta: 110 } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
       [
         { desde: "trigger", hacia: "notas" },
-        { desde: "notas", hacia: "mapear" },
-        { desde: "mapear", hacia: "emitir" },
+        { desde: "notas", hacia: "interpolar" },
+        { desde: "interpolar", hacia: "emitir" },
       ],
     ),
   });
