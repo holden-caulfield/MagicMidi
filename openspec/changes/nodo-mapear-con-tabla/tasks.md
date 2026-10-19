@@ -125,7 +125,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 6. Al cerrar el cambio
 
-- [ ] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
+- [x] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
       cambios del roadmap: marcar "Remapear notas con una tabla" como hecha y
       renombrar la idea hecha "Mapear rango" con el nombre nuevo
 - [ ] 6.2 Al archivar, reescribir a mano el propósito de
