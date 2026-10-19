@@ -7,7 +7,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 1. Mapear pasa a llamarse Interpolar
 
-- [ ] 1.1 Con `git mv`, pasar `src/workflow/nodos/mapear.ts` y
+- [x] 1.1 Con `git mv`, pasar `src/workflow/nodos/mapear.ts` y
       `mapear.test.ts` a `interpolar.ts` e `interpolar.test.ts`; cambiar
       `nombre` a "Interpolar" y lo que nombre a la caja en el test; en
       `nodos/catalogo.ts`, importar `interpolar` y ponerlo donde estaba
@@ -16,27 +16,27 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       cambia el archivo, el nombre y el identificador"); verificar con
       `npx tsc --noEmit` y con que `npm test` pasa con los mismos casos que
       antes
-- [ ] 1.2 Pasar a Interpolar los ejemplos de la caja lineal en
+- [x] 1.2 Pasar a Interpolar los ejemplos de la caja lineal en
       `src/workflow/nodos/LEEME.md` (la lista del catálogo, la regla de
       `validar` y su test, la nota sobre la velocidad) y en
       `src/workflow/parametros/LEEME.md` (el rango invertible), y en
       `README.md` cambiar Mapear por Interpolar en las cajas disponibles;
       verificar con `grep -rn "Mapear" README.md src/` que lo que queda nombra
       solo lo que sigue siendo cierto de una caja que elige un byte
-- [ ] 1.3 Commitear el renombre solo, antes de crear el `mapear.ts` nuevo;
+- [x] 1.3 Commitear el renombre solo, antes de crear el `mapear.ts` nuevo;
       verificar con `git log --follow src/workflow/nodos/interpolar.ts` que
       la historia de la caja lineal sigue al archivo nuevo
 
 ## 2. El tipo de parámetro `mapa`
 
-- [ ] 2.1 Crear `src/componentes/campo-mapa.ts` con los tipos `Par` y `Mapa`,
+- [x] 2.1 Crear `src/componentes/campo-mapa.ts` con los tipos `Par` y `Mapa`,
       y la función pura `siguienteEntrada(mapa, minimo, maximo)` (design.md,
       "El campo del mapa"); y `campo-mapa.test.ts` al lado, con los casos de
       la spec `tipos-de-parametro` ("El control de mapa"): la siguiente
       después del último par, saltear las que ya están, seguir desde el mínimo
       después del máximo, el mapa vacío y `null` cuando no queda ninguna;
       verificar con `npm test`
-- [ ] 2.2 Crear `src/workflow/parametros/mapa.ts`: la función
+- [x] 2.2 Crear `src/workflow/parametros/mapa.ts`: la función
       `mapa({ clave, etiqueta, inicial, minimo, maximo, modos?, textoDeAyuda? })`,
       con los modos ya resueltos, y su `validar` con los tres errores en orden
       (no es una lista de pares de enteros, el primer valor fuera de rango y la
@@ -45,7 +45,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       que no se repita una entrada"); y `mapa.test.ts` al lado, con los
       escenarios de esa spec y un caso por cada error, incluido que una
       salida repetida sirve; verificar con `npx tsc --noEmit` y `npm test`
-- [ ] 2.3 Completar `<campo-mapa>`, que extiende `Campo<Mapa>` con
+- [x] 2.3 Completar `<campo-mapa>`, que extiende `Campo<Mapa>` con
       `esGrupo = true` y un solo `ModoNumerico`: una fila por par, dibujada
       por posición, con el campo de la entrada, la flecha decorativa, el
       campo de la salida y el botón de quitar; el texto de ayuda con el mapa
@@ -56,7 +56,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       quitar y de agregar, puesto en `updated()` (spec `tipos-de-parametro`,
       "El control de mapa"); que `mapa.ts` lo dibuje; verificar con
       `npx tsc --noEmit`
-- [ ] 2.4 En `src/workflow/parametros/LEEME.md`, sumar el mapa a "Los que
+- [x] 2.4 En `src/workflow/parametros/LEEME.md`, sumar el mapa a "Los que
       hay", y `campo-mapa` a la lista de campos y a "Los modos de los
       números"; en `nodos/catalogo.test.ts`, que el comentario de los modos
       deje de decir que los numéricos son "el entero y el rango"; verificar
@@ -64,7 +64,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 3. La caja Mapear
 
-- [ ] 3.1 Crear `src/workflow/nodos/mapear.ts`, con el ícono
+- [x] 3.1 Crear `src/workflow/nodos/mapear.ts`, con el ícono
       `TableProperties`, los parámetros "Byte" (Canal, datos 1 y datos 2,
       inicial datos 1) y "Mapa" (de 0 a 127, inicial vacío, modos nota,
       decimal y hexadecimal, con el texto de ayuda "Sin pares: todo pasa sin
@@ -74,7 +74,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       sumarlo a las intermedias del test de etapas de `catalogo.test.ts`;
       verificar con `npx tsc --noEmit` y con que `catalogo.test.ts` pasa con
       `npm test`
-- [ ] 3.2 Crear `src/workflow/nodos/mapear.test.ts` con el estilo de
+- [x] 3.2 Crear `src/workflow/nodos/mapear.test.ts` con el estilo de
       `desplazar.test.ts` (un `test` por comportamiento, bytes literales, sin
       helpers), con los escenarios de la spec `nodo-mapear` que dependen solo
       de la caja: los pads al mapa de batería GM, cambiar de canal,
@@ -83,7 +83,7 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
       casos de `validar` (con Canal, de 1 a 16 bien, el 0 y el 17 mal,
       nombrando el primero que falla, y con datos 1 el 0 bien); verificar con
       `npm test`
-- [ ] 3.3 Sumar a `workflow/ejecutar.test.ts` los escenarios de `nodo-mapear`
+- [x] 3.3 Sumar a `workflow/ejecutar.test.ts` los escenarios de `nodo-mapear`
       que necesitan el flujo: un controlador por otro solo en los Cambios de
       Control, el Nota Off que pasa por el mapa, y solo los Nota On con el
       apareo; verificar con `npm test`
@@ -101,14 +101,14 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 
 ## 4. Documentación
 
-- [ ] 4.1 En `README.md`, sumar Mapear a las cajas disponibles, después de
+- [x] 4.1 En `README.md`, sumar Mapear a las cajas disponibles, después de
       Interpolar, con el ejemplo de los pads llevados al mapa de batería GM y
       que, para cambiar solo las notas, va un Filtrar antes; verificar
       releyéndolo
 
 ## 5. Verificación
 
-- [ ] 5.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`, y desde
+- [x] 5.1 Correr `npx tsc --noEmit`, `npm test` y `npm run build`, y desde
       `src-tauri/` `cargo check`, `cargo test`, `cargo fmt --check` y
       `cargo clippy --all-targets -- -D warnings`; todo tiene que pasar
 - [ ] 5.2 Comparar la huella de la interfaz con la de `main`

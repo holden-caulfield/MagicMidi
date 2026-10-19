@@ -8,6 +8,7 @@ import emitir from "./emitir";
 import filtrar from "./filtrar";
 import fijar from "./fijar";
 import interpolar from "./interpolar";
+import mapear from "./mapear";
 import panico from "./panico";
 import type { TipoDeNodo } from "../tipos";
 
@@ -20,6 +21,7 @@ const tipos = {
   alternar,
   desplazar,
   interpolar,
+  mapear,
   emitir,
   descartar,
   panico,

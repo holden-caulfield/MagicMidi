@@ -47,6 +47,14 @@ campo dibujar, con qué datos.
   agregar (en Alternar, los valores que va tomando el byte). El valor es la
   lista, por ejemplo `[127, 80, 80, 80]`, y vacía es un error. Como el
   entero, tiene modos, y todos los valores comparten el mismo.
+- `mapa`: una lista de pares entrada → salida, de números enteros entre un
+  `minimo` y un `maximo`. Cada fila tiene el campo de la entrada, una flecha,
+  el de la salida y un botón para quitar el par, y al final hay uno para
+  agregar (en Mapear, qué nota reemplaza a cada una). Una entrada no puede
+  estar en dos pares, porque lleva a una sola salida; una salida sí. El valor
+  es la lista, por ejemplo `[{ entrada: 48, salida: 36 }]`, y vacía también
+  vale: puede declarar un `textoDeAyuda` que se muestra en su lugar. Como el
+  entero, tiene modos, y todos los valores comparten el mismo.
 
 En `opciones` y `autocompletar` el valor es una lista con los valores
 elegidos, en el orden de las opciones, y no elegir ninguna también vale.
@@ -107,8 +115,9 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
     `import "@/componentes/campo-numero";`):
     - `campo-numero` (un número entero escrito), `campo-interruptor` (una
       casilla), `campo-lista` (un desplegable), `campo-opciones` (píldoras),
-      `campo-autocompletar` (buscar y elegir varias) o `campo-rango` (dos
-      perillas). Cada uno recibe `etiqueta`, `.valor` y `.error`, más lo
+      `campo-autocompletar` (buscar y elegir varias), `campo-rango` (dos
+      perillas), `campo-secuencia` (una lista de números) o `campo-mapa`
+      (pares entrada → salida). Cada uno recibe `etiqueta`, `.valor` y `.error`, más lo
       propio, que sale de la declaración: por ejemplo, `.opciones`, o los
       `.modos`, el `.minimo` y el `.maximo` de los numéricos;
     - `error` es lo que devolvió `validar` (o una regla del tipo de nodo): se
@@ -161,9 +170,9 @@ va con comillas, como siempre.
 
 ### Los modos de los números
 
-`campo-numero`, `campo-rango` y `campo-secuencia` muestran sus números en
-**modos**: decimal ("60"), nota ("C4", con el Do central 60 como C4) y
-hexadecimal ("3C"). Todo lo de los modos lo hace el campo (con
+`campo-numero`, `campo-rango`, `campo-secuencia` y `campo-mapa` muestran sus
+números en **modos**: decimal ("60"), nota ("C4", con el Do central 60 como
+C4) y hexadecimal ("3C"). Todo lo de los modos lo hace el campo (con
 `ModoNumerico`, en `src/componentes/`): un tipo numérico solo le pasa qué
 modos ofrece, sus límites y su `estado`.
 
