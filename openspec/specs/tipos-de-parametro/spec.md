@@ -396,7 +396,7 @@ ancho.
 
 #### Scenario: Las perillas se cruzan
 
-- **GIVEN** una caja "Mapear" con salida de 0 a 127
+- **GIVEN** una caja "Interpolar" con salida de 0 a 127
 - **WHEN** la persona usuaria arrastra la perilla "desde" de Salida hasta el
   extremo derecho y la perilla "hasta" hasta el extremo izquierdo
 - **THEN** la caja queda con salida de 127 a 0, y las marcas del tramo
@@ -404,7 +404,7 @@ ancho.
 
 #### Scenario: Con el teclado
 
-- **GIVEN** una caja "Mapear" con entrada de 0 a 127 y el foco en la perilla
+- **GIVEN** una caja "Interpolar" con entrada de 0 a 127 y el foco en la perilla
   "hasta" de Entrada
 - **WHEN** la persona usuaria aprieta la flecha izquierda y después
   Mayúsculas y la flecha izquierda
@@ -427,7 +427,7 @@ ancho.
 
 #### Scenario: La perilla en hexadecimal
 
-- **GIVEN** una caja "Mapear" con salida de 0 a 127, en modo hexadecimal, y el
+- **GIVEN** una caja "Interpolar" con salida de 0 a 127, en modo hexadecimal, y el
   foco en la perilla "hasta" de Salida
 - **WHEN** la persona usuaria aprieta Mayúsculas y la flecha izquierda
 - **THEN** la caja queda con salida de 0 a 111, y los campos muestran "00" y
@@ -467,8 +467,8 @@ ancho.
 
 ### Requirement: Los parámetros numéricos se muestran en un modo
 
-Un parámetro **entero**, un parámetro **rango** y un parámetro **secuencia**
-SHALL mostrar sus números en uno de estos modos:
+Un parámetro **entero**, un parámetro **rango**, un parámetro **secuencia** y
+un parámetro **mapa** SHALL mostrar sus números en uno de estos modos:
 
 - **decimal**: el número tal cual ("60", "-12");
 - **nota**: el nombre de la nota en notación científica, con el Do central 60
@@ -477,8 +477,8 @@ SHALL mostrar sus números en uno de estos modos:
   nota del parámetro con bemol: entonces van con bemoles ("Db4"), hasta que
   escriba una con sostenido. Escribir una nota natural no cambia esa
   elección, y rotar de modo o usar las flechas tampoco. En un rango, los dos
-  extremos la comparten, y en una secuencia, todos sus valores. El log sigue
-  nombrando las notas con sostenidos;
+  extremos la comparten; en una secuencia, todos sus valores, y en un mapa,
+  todas sus entradas y salidas. El log sigue nombrando las notas con sostenidos;
 - **hexadecimal**: en base 16, en mayúsculas, con al menos dos cifras y sin
   prefijo ("3C", "0A", "7F").
 
@@ -498,8 +498,8 @@ por defecto, pero arranca en nota. Un parámetro que ofrece el modo nota SHALL
 tener mínimo y máximo dentro de 0 a 127, y uno que ofrece hexadecimal SHALL
 tener un mínimo de 0 o más. Que todos los parámetros de todos los tipos de
 nodo cumplan esto SHALL revisarlo un test. En un rango, los dos extremos
-SHALL compartir el modo, y en una secuencia, todos sus valores: el modo es del
-campo, no de cada número.
+SHALL compartir el modo; en una secuencia, todos sus valores, y en un mapa,
+todas sus entradas y salidas: el modo es del campo, no de cada número.
 
 Si el parámetro ofrece más de un modo, en la fila de su etiqueta SHALL haber
 un botón de modo que muestra el modo actual en forma abreviada ("DEC", "♪" o
@@ -547,6 +547,13 @@ a mostrarse en el modo nuevo, y el valor de la caja no SHALL cambiar.
   67, en modo decimal
 - **WHEN** la persona usuaria activa el botón de modo de "Valores"
 - **THEN** los tres campos muestran "C4", "E4" y "G4"
+
+#### Scenario: Un solo botón para el mapa
+
+- **GIVEN** una caja "Mapear" con el mapa 48 → 36, en modo hexadecimal (los
+  campos muestran "30" y "24")
+- **WHEN** la persona usuaria activa el botón de modo de "Mapa"
+- **THEN** el mapa pasa a modo nota, y los campos muestran "C3" y "C2"
 
 #### Scenario: El modo queda con la caja
 
@@ -713,6 +720,11 @@ cada valor ya tiene sus botones (ver "El control de secuencia"), pero las
 flechas del teclado SHALL sumarle o restarle a ese valor como en el campo de
 un entero, sin pasar del mínimo ni del máximo del parámetro.
 
+En los campos de un mapa tampoco SHALL haber flechas propias, para que cada
+par entre en una fila, pero las flechas del teclado SHALL sumarle o restarle a
+ese valor como en el campo de un entero, sin pasar del mínimo ni del máximo
+del parámetro.
+
 #### Scenario: Subir con la flecha
 
 - **GIVEN** una caja "Fijar" con valor 100
@@ -781,6 +793,15 @@ un entero, sin pasar del mínimo ni del máximo del parámetro.
   después pasa al campo del primer valor y aprieta la flecha arriba
 - **THEN** la caja queda con valores 127 y 10, y el foco sigue en el campo
   del primer valor
+
+#### Scenario: Con el teclado en un mapa
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2, en modo nota, y el foco en
+  el campo de la salida
+- **WHEN** la persona usuaria aprieta la flecha arriba, y después Mayúsculas
+  y la flecha arriba
+- **THEN** la caja queda con el mapa C3 → C#3, el campo muestra "C#3" y el
+  foco sigue en él
 
 ### Requirement: Un tipo de parámetro es un archivo que arma sus parámetros
 
@@ -903,23 +924,6 @@ dependen de él.
   nota, que ese parámetro no ofrece
 - **WHEN** la persona usuaria la selecciona
 - **THEN** el desplazamiento se muestra en decimal, sin botón de modo
-
-### Requirement: Los tipos de parámetro disponibles
-
-Los tipos de parámetro disponibles SHALL ser número entero, sí/no, lista (una
-sola opción de una lista cerrada), dos para elegir varias opciones de una
-lista cerrada (opciones y autocompletar), rango (dos extremos enteros) y
-secuencia (una lista de enteros en orden). En los de lista, cada opción tiene
-un valor y un texto visible. Cada uno SHALL estar definido en su propio
-archivo, con la misma forma que cualquier tipo nuevo, sin recibir un trato
-especial fuera de él.
-
-#### Scenario: Los siete tipos en su carpeta
-
-- **WHEN** se revisa la carpeta de tipos de parámetro
-- **THEN** entero, sí/no, lista, opciones, autocompletar, rango y secuencia
-  están definidos cada uno en su propio archivo, que exporta su función, y el
-  panel de configuración no nombra a ninguno
 
 ### Requirement: El parámetro secuencia
 
@@ -1059,3 +1063,199 @@ panel.
 - **WHEN** llega con Tab al campo del segundo valor
 - **THEN** el lector lo anuncia como "Valor 2" del grupo "Valores", con su
   valor, 0
+
+### Requirement: Los tipos de parámetro disponibles incluyen el mapa
+
+Los tipos de parámetro disponibles SHALL ser número entero, sí/no, lista (una
+sola opción de una lista cerrada), dos para elegir varias opciones de una
+lista cerrada (opciones y autocompletar), rango (dos extremos enteros),
+secuencia (una lista de enteros en orden) y mapa (una lista de pares entrada →
+salida). En los de lista, cada opción tiene un valor y un texto visible. Cada
+uno SHALL estar definido en su propio archivo, con la misma forma que
+cualquier tipo nuevo, sin recibir un trato especial fuera de él.
+
+#### Scenario: Los ocho tipos en su carpeta
+
+- **WHEN** se revisa la carpeta de tipos de parámetro
+- **THEN** entero, sí/no, lista, opciones, autocompletar, rango, secuencia y
+  mapa están definidos cada uno en su propio archivo, que exporta su función,
+  y el panel de configuración no nombra a ninguno
+
+### Requirement: El parámetro mapa
+
+Un parámetro **mapa** SHALL declarar un mínimo y un máximo enteros, y puede
+declarar los modos que ofrece, como un entero, y un texto de ayuda para cuando
+está vacío. Su valor SHALL ser una lista de
+pares, cada uno con una entrada y una salida enteras, en el orden en que se
+agregaron. Un mapa vacío SHALL ser un valor válido.
+
+Un valor SHALL no servirle al parámetro, con estos errores, revisados en este
+orden:
+
+- si no es una lista, o alguno de sus elementos no es un par con una entrada
+  y una salida enteras: "Tiene que ser una lista de pares de números
+  enteros";
+- si alguna entrada o salida queda fuera del mínimo y el máximo: "Los valores
+  tienen que ir de <mínimo> a <máximo>, y hay un <valor>", con el primero que
+  queda afuera, recorriendo los pares en orden y, en cada par, primero la
+  entrada (por ejemplo, "Los valores tienen que ir de 0 a 127, y hay un
+  200"). Los tres números van marcados como valores, así el panel los escribe
+  en el modo del campo;
+- si una entrada está en más de un par: "La entrada <valor> está más de una
+  vez", con la primera que se repite, marcada como valor. En un mapa, una
+  entrada lleva a una sola salida.
+
+Una salida repetida SHALL ser válida: varias entradas pueden llevar a la
+misma salida.
+
+#### Scenario: Varias entradas a la misma salida
+
+- **WHEN** se revisa el mapa 48 → 36, 49 → 36 de un mapa de 0 a 127
+- **THEN** no tiene error
+
+#### Scenario: Mapa vacío
+
+- **WHEN** se revisa un mapa vacío de 0 a 127
+- **THEN** no tiene error
+
+#### Scenario: Un valor fuera de rango
+
+- **WHEN** se revisa el mapa 48 → 200, 300 → 36 de un mapa de 0 a 127
+- **THEN** tiene el error "Los valores tienen que ir de 0 a 127, y hay un
+  200"
+
+#### Scenario: Una entrada repetida
+
+- **WHEN** se revisa el mapa 48 → 36, 49 → 38, 48 → 42 de un mapa de 0 a 127
+- **THEN** tiene el error "La entrada 48 está más de una vez"
+
+#### Scenario: La entrada repetida en modo nota
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2 y C3 → D2, en modo nota
+- **WHEN** la persona usuaria la selecciona
+- **THEN** debajo de "Mapa" se lee "La entrada C3 está más de una vez", y la
+  caja se ve con borde rojo
+
+### Requirement: El control de mapa
+
+El control de un parámetro **mapa** SHALL mostrar un par por fila, en el
+orden de la lista: un campo de texto para la entrada, una flecha que va de la
+entrada a la salida, un campo de texto para la salida y un botón para quitar
+el par. Los dos campos SHALL mostrar su valor en el modo del parámetro. No
+SHALL haber títulos de columna: la flecha dice cuál es la entrada y cuál la
+salida. Tampoco SHALL haber botones para subir ni bajar un par, porque el
+orden no cambia el resultado.
+
+Con el mapa vacío, en lugar de los pares SHALL verse el texto de ayuda de la
+declaración, si lo tiene. Es de quien declara el parámetro, porque lo que
+significa un mapa vacío depende de la caja.
+
+Después de la última fila SHALL haber un botón para agregar un par al final.
+Como entrada, agrega el primer valor que no está como entrada en ningún par,
+buscando desde el que sigue a la entrada del último par hasta el máximo, y
+después desde el mínimo; como salida, ese mismo valor. Así el par nuevo no
+repite una entrada ni cambia ningún mensaje hasta que se lo edita. Con el
+mapa vacío, agrega el mínimo como entrada y como salida. Si todos los valores
+del mínimo al máximo ya son entradas, el botón SHALL verse deshabilitado.
+
+Cada valor SHALL poder cambiarse escribiendo en su campo: lo escrito se lee
+como en el parámetro entero, al salir del campo, en los modos que ofrece el
+parámetro, y si se lee en otro modo, todo el mapa pasa a ese modo (ver "Lo
+escrito en un parámetro numérico elige el modo"). Lo que no se puede leer no
+SHALL cambiar la caja, y el campo vuelve a mostrar su valor. Las flechas del
+teclado también cambian el valor (ver "Las flechas del campo numérico").
+
+Todo SHALL poder hacerse con el teclado: los campos y los botones se recorren
+con Tab, par por par, y después el botón de agregar. Después de quitar un
+par, el foco SHALL ir al botón de quitar del par que quedó en su lugar, o al
+del anterior si era el último, o al botón de agregar si no queda ninguno.
+Después de agregar, el foco SHALL ir al campo de la entrada del par nuevo.
+
+La etiqueta del parámetro SHALL nombrar al grupo. Cada campo SHALL anunciarse
+a los lectores de pantalla con su lado y la posición del par ("Entrada 2",
+"Salida 2"), y cada botón, con su acción ("Quitar el par 2" y "Agregar un
+par"). La flecha es decorativa y no SHALL anunciarse. Un error del parámetro
+SHALL mostrarse debajo del control, como en cualquier parámetro, y nombra el
+valor que falla. El control, con su botón de modo, SHALL caber en el ancho
+del panel de configuración sin desplazarlo a lo ancho; con muchos pares crece
+hacia abajo, y se recorre desplazando el panel.
+
+#### Scenario: Escribir una salida
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C3, en modo nota
+- **WHEN** la persona usuaria escribe "C2" en la salida del primer par y sale
+  del campo
+- **THEN** la caja queda con el mapa C3 → C2
+
+#### Scenario: Escribir en otro modo
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2, en modo nota
+- **WHEN** la persona usuaria escribe 50 en la entrada del primer par y sale
+  del campo
+- **THEN** la caja queda con el mapa 50 → 36, el mapa pasa a modo decimal, y
+  los campos muestran 50 y 36
+
+#### Scenario: Escribir algo que no es un número
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2
+- **WHEN** la persona usuaria escribe "mucho" en la salida del primer par y
+  sale del campo
+- **THEN** la caja sigue con el mapa C3 → C2, y el campo vuelve a mostrar
+  "C2"
+
+#### Scenario: Agregar un par
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2 y C#3 → D2
+- **WHEN** la persona usuaria activa "Agregar un par"
+- **THEN** la caja queda con el mapa C3 → C2, C#3 → D2 y D3 → D3, y el foco
+  está en el campo "Entrada 3"
+
+#### Scenario: Agregar saltea las entradas que ya están
+
+- **GIVEN** una caja "Mapear" con el mapa D3 → F#2, C3 → C2 y C#3 → D2
+- **WHEN** la persona usuaria activa "Agregar un par"
+- **THEN** el par nuevo es D#3 → D#3, porque D3 ya es una entrada
+
+#### Scenario: Agregar después del máximo
+
+- **GIVEN** una caja "Mapear" con el mapa 0 → 10 y 127 → 20, en modo decimal
+- **WHEN** la persona usuaria activa "Agregar un par"
+- **THEN** el par nuevo es 1 → 1, porque después de 127 la búsqueda sigue
+  desde el mínimo, y el 0 ya es una entrada
+
+#### Scenario: Agregar al mapa vacío
+
+- **GIVEN** una caja "Mapear" recién agregada
+- **WHEN** la persona usuaria activa "Agregar un par"
+- **THEN** la caja queda con el mapa C-1 → C-1, sin error, y deja de verse el
+  texto "Sin pares: todo pasa sin cambios."
+
+#### Scenario: Quitar un par
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2, C#3 → D2 y D3 → F#2
+- **WHEN** la persona usuaria activa "Quitar el par 2"
+- **THEN** la caja queda con el mapa C3 → C2 y D3 → F#2, y el foco está en
+  "Quitar el par 2", que ahora es el de D3
+
+#### Scenario: Quitar el último par
+
+- **GIVEN** una caja "Mapear" con el mapa C3 → C2
+- **WHEN** la persona usuaria activa "Quitar el par 1"
+- **THEN** la caja queda con el mapa vacío, sin error, se ve el texto "Sin
+  pares: todo pasa sin cambios." y el foco está en "Agregar un par"
+
+#### Scenario: El par entra en el panel
+
+- **GIVEN** el panel de configuración con su ancho de siempre
+- **WHEN** la persona usuaria selecciona una caja "Mapear" con el mapa D#-1 →
+  F#9, en modo nota
+- **THEN** los dos campos, la flecha y el botón de quitar se ven en una sola
+  fila, y el panel no se desplaza a lo ancho
+
+#### Scenario: El lector de pantalla anuncia el campo
+
+- **GIVEN** una persona que usa lector de pantalla y una caja "Mapear"
+  seleccionada, con el mapa C3 → C2 y C#3 → D2
+- **WHEN** llega con Tab al campo de la salida del segundo par
+- **THEN** el lector lo anuncia como "Salida 2" del grupo "Mapa", con su
+  valor, D2

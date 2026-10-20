@@ -21,7 +21,7 @@ con la caja, otro con su test, y agregar una línea en el catálogo.
      convertir,
      fijar,
      desplazar,
-     mapear,
+     interpolar,
      notaOffReal,
      emitir,
      descartar,
@@ -113,8 +113,9 @@ Un tipo de nodo es un objeto con estos campos:
   poné `parametros: []`.
 - **`validar(parametros)`**: opcional. Solo hace falta si algún valor depende
   de otro, o si dentro de un parámetro hay una regla que el tipo no conoce:
-  por ejemplo, en Mapear, los dos extremos del rango de entrada no pueden ser
-  iguales. Ver [Reglas entre parámetros](#reglas-entre-parámetros-validar).
+  por ejemplo, en Interpolar, los dos extremos del rango de entrada no
+  pueden ser iguales. Ver
+  [Reglas entre parámetros](#reglas-entre-parámetros-validar).
 - **`procesar(mensaje, parametros)`**: la función donde la caja hace su trabajo.
   Si la caja tiene que recordar algo de un mensaje al siguiente, recibe
   además su memoria: `procesar(mensaje, parametros, memoria)` (ver
@@ -192,7 +193,7 @@ que arma el mensaje nuevo con la cantidad de bytes que corresponde.
 
 Lo mismo con la velocidad: en MIDI, un Nota On con velocidad 0 es un Nota Off.
 Si cambiás la velocidad de un mensaje así (como hacen Desplazar, Fijar o
-Mapear sobre el tercer byte), se convierte en un Nota On de verdad y la nota
+Interpolar sobre el tercer byte), se convierte en un Nota On de verdad y la nota
 queda sonando. Las cajas que vienen con la aplicación tocan bytes sin mirar el
 tipo de mensaje; para usarlas sobre la velocidad, se pone antes un **Filtrar**
 con solo "Nota On", que no deja pasar un Nota On con velocidad 0 porque su
@@ -397,9 +398,9 @@ test("deja pasar sin cambios los mensajes que no son notas", () => {
 Cada parámetro ya revisa lo suyo: un entero declarado con `minimo: 0, maximo:
 127` marca un 200 como error, y un rango que no se puede invertir marca un
 "desde" mayor que "hasta". Pero a veces hay una regla que solo conoce la caja.
-En Mapear, por ejemplo, los dos extremos de la entrada pueden valer cualquier
-cosa de 0 a 127, pero no lo mismo los dos: con un solo valor de entrada no hay
-cómo repartir. Para eso está `validar`:
+En Interpolar, por ejemplo, los dos extremos de la entrada pueden valer
+cualquier cosa de 0 a 127, pero no lo mismo los dos: con un solo valor de
+entrada no hay cómo repartir. Para eso está `validar`:
 
 ```ts
 validar(parametros) {
@@ -433,7 +434,7 @@ validar(parametros) {
   },
   ```
 
-  Si no nombra valores, como en Mapear, alcanza con comillas.
+  Si no nombra valores, como en Interpolar, alcanza con comillas.
 - La aplicación guarda igual el valor con error, lo muestra debajo del campo y
   marca la caja con un borde rojo. Si llega un mensaje a una caja así, la caja
   falla (como si `procesar` tirara un error) y nunca se llama a `procesar`: por
@@ -445,7 +446,7 @@ valores:
 ```ts
 test("una entrada de un solo valor es un error", () => {
   expect(
-    mapear.validar({ byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } }),
+    interpolar.validar({ byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } }),
   ).toEqual([{ clave: "entrada", mensaje: "Desde tiene que ser distinto de hasta" }]);
 });
 ```

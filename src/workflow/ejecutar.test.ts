@@ -745,16 +745,16 @@ test("una caja mal configurada a la que no llega el mensaje no afecta", () => {
       [
         { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
         {
-          id: "mapear",
-          tipo: "mapear",
+          id: "interpolar",
+          tipo: "interpolar",
           parametros: { byte: 2, entrada: { desde: 64, hasta: 64 }, salida: { desde: 0, hasta: 127 } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
       [
         { desde: "trigger", hacia: "notas" },
-        { desde: "notas", hacia: "mapear" },
-        { desde: "mapear", hacia: "emitir" },
+        { desde: "notas", hacia: "interpolar" },
+        { desde: "interpolar", hacia: "emitir" },
       ],
     ),
   });
@@ -794,16 +794,16 @@ test("comprimir la velocidad solo en las notas no convierte un Nota Off en Nota 
       [
         { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
         {
-          id: "mapear",
-          tipo: "mapear",
+          id: "interpolar",
+          tipo: "interpolar",
           parametros: { byte: 2, entrada: { desde: 0, hasta: 127 }, salida: { desde: 40, hasta: 110 } },
         },
         { id: "emitir", tipo: "emitir", parametros: {} },
       ],
       [
         { desde: "trigger", hacia: "notas" },
-        { desde: "notas", hacia: "mapear" },
-        { desde: "mapear", hacia: "emitir" },
+        { desde: "notas", hacia: "interpolar" },
+        { desde: "interpolar", hacia: "emitir" },
       ],
     ),
   });
@@ -1645,4 +1645,83 @@ test("una caja Alternar mal configurada no avanza su ciclo", () => {
     flujo: soloAlternar(alternarDatos2("alternar", { byte: 0, valores: [1, 2], cicloPor: [] })),
   });
   expect(procesarMensaje(PEDAL_ABAJO).salidas).toEqual([m(0xb1, 64, 127)]);
+});
+
+// Mapear cambia un valor por otro con un mapa. Como el resultado depende solo
+// del valor que llega, el Nota Off de una tecla cae en la misma nota que su
+// Nota On.
+
+test("Mapear cambia un controlador por otro solo en los Cambios de Control", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "controles", tipo: "filtrar", parametros: soloTipos("cambio-de-control") },
+        {
+          id: "mapear",
+          tipo: "mapear",
+          parametros: { byte: 1, mapa: [{ entrada: 1, salida: 11 }] },
+        },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "controles" },
+        { desde: "controles", hacia: "mapear" },
+        { desde: "mapear", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  // La modulación (CC 1) pasa a ser expresión (CC 11); el Nota On en la nota
+  // 1 no pasa el Filtrar y sale tal como llegó.
+  expect(procesarMensaje(m(0xb0, 1, 64)).salidas).toEqual([m(0xb0, 11, 64)]);
+  expect(procesarMensaje(m(0x90, 1, 100)).salidas).toEqual([m(0x90, 1, 100)]);
+});
+
+// C3 (48) pasa a C2 (36): un pad llevado al bombo del mapa GM.
+const C3_A_C2 = { byte: 1, mapa: [{ entrada: 48, salida: 36 }] };
+
+test("el Nota Off que pasa por Mapear apaga la nota cambiada", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "mapear", tipo: "mapear", parametros: C3_A_C2 },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "mapear" },
+        { desde: "mapear", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x99, 48, 100)).salidas).toEqual([m(0x99, 36, 100)]);
+  expect(procesarMensaje(m(0x89, 48, 64))).toEqual({
+    salidas: [m(0x89, 36, 64)],
+    error: null,
+    apareado: false,
+  });
+});
+
+test("con solo los Nota On por Mapear, el apareo apaga la nota cambiada", () => {
+  actualizar({
+    flujo: flujo(
+      [
+        { id: "notas", tipo: "filtrar", parametros: soloTipos("nota-on") },
+        { id: "mapear", tipo: "mapear", parametros: C3_A_C2 },
+        { id: "emitir", tipo: "emitir", parametros: {} },
+      ],
+      [
+        { desde: "trigger", hacia: "notas" },
+        { desde: "notas", hacia: "mapear" },
+        { desde: "mapear", hacia: "emitir" },
+      ],
+    ),
+  });
+
+  expect(procesarMensaje(m(0x99, 48, 100)).salidas).toEqual([m(0x99, 36, 100)]);
+  expect(procesarMensaje(m(0x89, 48, 64))).toEqual({
+    salidas: [m(0x89, 36, 64)],
+    error: null,
+    apareado: true,
+  });
 });

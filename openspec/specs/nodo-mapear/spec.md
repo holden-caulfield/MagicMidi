@@ -1,125 +1,152 @@
 # nodo-mapear Specification
 
 ## Purpose
-Define el nodo Mapear, que lleva linealmente un rango de valores de un byte de
-datos a otro rango. Es la base de arreglos como invertir un pedal de
-expresión, comprimir la velocidad o limitar el recorrido de un controlador.
+Define el nodo Mapear, que cambia el canal o un byte de datos según un mapa de
+pares entrada → salida, y deja como están los valores que no figuran en él. Es
+la base de arreglos como llevar los pads de un controlador al mapa de batería
+GM, cambiar un controlador por otro o pasar un canal a otro.
 
 ## Requirements
 
-### Requirement: Parámetros del nodo Mapear
+### Requirement: Los parámetros de Mapear son el byte y el mapa
 
-Una caja **Mapear** SHALL tener entrada y salida, y tres parámetros:
+Una caja **Mapear** SHALL tener entrada y salida, y dos parámetros:
 
-- **Byte**: qué byte de datos mapea. Las opciones son "2.º (datos 1)" y "3.º
-  (datos 2)". El status no se ofrece.
-- **Entrada**: el rango de entrada, de 0 a 127, que se puede invertir.
-- **Salida**: el rango de salida, de 0 a 127, que se puede invertir.
+- **Byte**: qué byte cambia. Las opciones son "Canal", "2.º (datos 1)" y
+  "3.º (datos 2)". El status entero no se ofrece: de él, solo el canal.
+- **Mapa**: los pares entrada → salida, de 0 a 127 (ver la spec
+  `tipos-de-parametro`, "El parámetro mapa"). Ofrece los modos nota, decimal y
+  hexadecimal, en ese orden: arranca en nota, porque el caso principal es
+  cambiar unas notas por otras. Vacío, muestra el texto de ayuda "Sin pares:
+  todo pasa sin cambios."
 
-Un extremo fuera de 0 a 127 SHALL ser un error de configuración de la caja,
-asociado al rango de ese extremo (el error del tipo de parámetro rango, ver la
-spec `tipos-de-parametro`). Una entrada con "desde" igual a "hasta" SHALL ser
-un error de configuración asociado a "Entrada", con el texto "Desde tiene que
-ser distinto de hasta": con un solo valor de entrada no hay forma de repartir
-los valores (ver la spec `editor-de-workflow`, "Los errores de configuración
-se ven en el panel y en el lienzo"). En la salida, un solo valor sí sirve:
-lleva todo a ese valor.
+Con "Canal", cada entrada y cada salida del mapa SHALL ir de 1 a 16, como el
+canal que se ve en el log. Un valor fuera de ese rango SHALL ser un error de
+configuración asociado a "Mapa", con el texto "Con Canal, los valores tienen
+que ir de 1 a 16, y hay un <valor>", con el primero que queda afuera. Los tres
+números van marcados como valores, así el panel los escribe en el modo del
+campo.
 
-Una caja nueva SHALL arrancar con byte "3.º (datos 2)", entrada de 0 a 127 y
-salida de 0 a 127, sin errores. Con esos valores deja pasar los mensajes sin
-cambios.
+Una caja nueva SHALL arrancar con byte "2.º (datos 1)" y el mapa vacío, sin
+errores. Con esos valores deja pasar los mensajes sin cambios.
 
 #### Scenario: Configuración inicial
 
 - **WHEN** la persona usuaria agrega una caja "Mapear" y la selecciona
-- **THEN** el panel muestra byte "3.º (datos 2)", y los rangos "Entrada" y
-  "Salida", los dos de 0 a 127, sin errores
+- **THEN** el panel muestra byte "2.º (datos 1)" y el mapa vacío, con el
+  texto "Sin pares: todo pasa sin cambios." y el botón de modo en "♪", sin
+  errores
 
-#### Scenario: Rango de entrada de un solo valor
+#### Scenario: Con Canal, un valor fuera de 1 a 16
 
-- **GIVEN** una caja "Mapear" con entrada de 0 a 127
-- **WHEN** la persona usuaria escribe 0 en el campo de la derecha de
-  "Entrada" y sale del campo
-- **THEN** el panel muestra debajo de "Entrada" que desde tiene que ser
-  distinto de hasta, y la caja se ve con borde rojo
+- **GIVEN** una caja "Mapear" con byte "Canal" y el mapa 1 → 10, en modo
+  decimal
+- **WHEN** la persona usuaria escribe 17 en la salida del primer par y sale
+  del campo
+- **THEN** el panel muestra debajo de "Mapa" que, con Canal, los valores
+  tienen que ir de 1 a 16, y hay un 17, y la caja se ve con borde rojo
 
-#### Scenario: Extremo fuera de rango
+#### Scenario: El error depende del byte
 
-- **WHEN** la persona usuaria escribe 200 en el campo de la derecha de
-  "Salida" y sale del campo
-- **THEN** el panel muestra debajo de "Salida" que tiene que ir de 0 a 127, y
-  la caja se ve con borde rojo
+- **GIVEN** una caja "Mapear" con byte "2.º (datos 1)" y el mapa 0 → 100,
+  sin errores
+- **WHEN** la persona usuaria elige el byte "Canal"
+- **THEN** aparece el error debajo de "Mapa", que no se tocó, y nombra el 0
 
-#### Scenario: Invertir con las perillas
+### Requirement: Cambia el valor del byte elegido por su salida en el mapa
 
-- **GIVEN** una caja "Mapear" con salida de 0 a 127
-- **WHEN** la persona usuaria cruza las perillas de "Salida" hasta dejarla de
-  127 a 0
-- **THEN** la caja no tiene errores y las marcas del tramo de "Salida" apuntan
-  hacia la izquierda
+Si el valor del byte elegido es la entrada de un par del mapa, la caja SHALL
+producir un mensaje igual al recibido, salvo por ese byte, que pasa a valer
+la salida del par. Con "Canal", el valor es el canal, de 1 a 16, y cambiarlo
+no SHALL cambiar el tipo de mensaje. Los demás bytes, y la cantidad de bytes,
+SHALL quedar igual.
 
-### Requirement: Mapea linealmente el byte elegido
+Cada mensaje SHALL cambiarse una sola vez: la salida de un par no se vuelve a
+buscar como entrada de otro. Así se pueden intercambiar dos valores.
 
-La caja SHALL producir un mensaje igual al recibido, salvo por el byte elegido,
-que pasa a valer el punto del rango de salida que corresponde, en la misma
-proporción, al valor original dentro del rango de entrada: el "desde" de la
-entrada va al "desde" de la salida, el "hasta" de la entrada al "hasta" de la
-salida, y los valores intermedios se reparten parejo entre los dos,
-redondeados al entero más cercano. Los demás bytes, y la cantidad de bytes,
-SHALL quedar igual. Como los extremos de salida van de 0 a 127, el leading bit
-del byte de datos SHALL seguir en 0.
+#### Scenario: Pads al mapa de batería GM
 
-El "desde" de un rango SHALL poder ser mayor que su "hasta": un rango de salida
-de 127 a 0 invierte el sentido.
+- **GIVEN** byte "2.º (datos 1)" y el mapa C3 → C2, C#3 → D2, D3 → F#2 y
+  D#3 → A#2
+- **WHEN** recibe `99 30 64`, `99 31 50` y `99 32 7F` (Nota On en el canal
+  10, en C3, C#3 y D3)
+- **THEN** emite `99 24 64`, `99 26 50` y `99 2A 7F` (C2, D2 y F#2, con la
+  misma velocidad)
 
-#### Scenario: Comprimir la velocidad
+#### Scenario: Cambiar de canal
 
-- **GIVEN** byte "3.º (datos 2)", entrada de 0 a 127, salida de 40 a 110
-- **WHEN** recibe `90 3C 7F`, `90 3C 64` y `90 3C 01` (velocidades 127, 100 y 1)
-- **THEN** emite `90 3C 6E`, `90 3C 5F` y `90 3C 29` (velocidades 110, 95 y 41)
+- **GIVEN** byte "Canal" y el mapa 1 → 10
+- **WHEN** recibe `90 3C 64` (canal 1) y `91 3C 64` (canal 2)
+- **THEN** emite `99 3C 64` y `91 3C 64`
 
-#### Scenario: Invertir un pedal de expresión
+#### Scenario: Intercambiar dos notas
 
-- **GIVEN** byte "3.º (datos 2)", entrada de 0 a 127, salida de 127 a 0
-- **WHEN** recibe `B0 0B 00`, `B0 0B 7F` y `B0 0B 64` (expresión en 0, 127 y
-  100)
-- **THEN** emite `B0 0B 7F`, `B0 0B 00` y `B0 0B 1B` (127, 0 y 27)
+- **GIVEN** byte "2.º (datos 1)" y el mapa C2 → D2 y D2 → C2
+- **WHEN** recibe `99 24 64` y `99 26 64` (C2 y D2)
+- **THEN** emite `99 26 64` y `99 24 64` (D2 y C2)
 
-#### Scenario: Limitar la rueda de modulación
+#### Scenario: Un controlador por otro, solo en los Cambios de Control
 
-- **GIVEN** byte "3.º (datos 2)", entrada de 0 a 127, salida de 0 a 64
-- **WHEN** recibe `B0 01 7F` y `B0 01 40` (modulación en 127 y 64)
-- **THEN** emite `B0 01 40` y `B0 01 20` (64 y 32)
+- **GIVEN** trigger → "Filtrar" (solo "Cambio de Control") → "Mapear" (byte
+  "2.º (datos 1)", mapa 1 → 11) → "Emitir"
+- **WHEN** llegan `B0 01 40` (modulación) y `90 01 64` (un Nota On en la nota
+  1)
+- **THEN** sale `B0 0B 40` (expresión), y `90 01 64` sale tal como llegó
 
-#### Scenario: Comprimir la velocidad solo en las notas
+### Requirement: Un valor que no está en el mapa pasa sin cambios
 
-- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Mapear" (datos 2, entrada
-  de 0 a 127, salida de 40 a 110) → "Emitir"
-- **WHEN** llega `90 3C 00` (un Nota Off)
-- **THEN** sale `90 3C 00` tal como llegó, y no un Nota On con velocidad 40
+Si el valor del byte elegido no es la entrada de ningún par del mapa, la caja
+SHALL pasar el mensaje tal cual, sin descartarlo. Con el mapa vacío, ningún
+mensaje cambia.
 
-### Requirement: Un valor fuera del rango de entrada va al extremo más cercano
+#### Scenario: Una nota que no está en el mapa
 
-Un valor menor que el menor extremo del rango de entrada SHALL tratarse como
-ese extremo, y uno mayor que el mayor extremo, como ese otro: así el resultado
-nunca se sale del rango de salida.
+- **GIVEN** byte "2.º (datos 1)" y el mapa C3 → C2
+- **WHEN** recibe `90 3C 64` (C4)
+- **THEN** emite `90 3C 64`
 
-#### Scenario: Calibrar un pedal que no llega a los extremos
+#### Scenario: Mapa vacío
 
-- **GIVEN** byte "3.º (datos 2)", entrada de 10 a 120, salida de 0 a 127
-- **WHEN** recibe `B0 0B 05`, `B0 0B 0A`, `B0 0B 78` y `B0 0B 7D` (5, 10, 120
-  y 125)
-- **THEN** emite `B0 0B 00`, `B0 0B 00`, `B0 0B 7F` y `B0 0B 7F` (0, 0, 127 y
-  127)
+- **GIVEN** una caja "Mapear" recién agregada
+- **WHEN** recibe `90 3C 64`
+- **THEN** emite `90 3C 64`
 
 ### Requirement: Un mensaje sin el byte elegido pasa sin cambios
 
-Si el mensaje recibido no tiene el byte elegido, la caja no SHALL alterarlo:
-SHALL pasarlo tal cual a las cajas siguientes, sin descartarlo y sin agregarle
-bytes.
+Si el mensaje recibido no tiene el byte elegido (un mensaje de dos bytes no
+tiene datos 2, y uno de sistema no tiene canal), la caja no SHALL alterarlo:
+SHALL pasarlo tal cual a las cajas siguientes, sin descartarlo y sin
+agregarle bytes.
 
 #### Scenario: Presión de Canal y tercer byte
 
-- **GIVEN** byte "3.º (datos 2)", entrada de 0 a 127, salida de 127 a 0
+- **GIVEN** byte "3.º (datos 2)" y el mapa 64 → 0
 - **WHEN** recibe `D0 40` (Presión de Canal, que tiene dos bytes)
 - **THEN** emite `D0 40`
+
+#### Scenario: Un mensaje de sistema y el canal
+
+- **GIVEN** byte "Canal" y el mapa 1 → 10
+- **WHEN** recibe `F2 00 10` (Posición de Canción, que no tiene canal)
+- **THEN** emite `F2 00 10`
+
+### Requirement: El Nota Off apaga la nota que prendió el Nota On
+
+Como el resultado depende solo del valor que llega, el Nota Off de una tecla
+SHALL cambiarse igual que su Nota On, y apagar la nota que este prendió. Si
+el Nota Off no llega a la caja porque un Filtrar deja pasar solo los Nota On,
+SHALL apagarla el apareo (ver la spec `apareo-de-nota-off`).
+
+#### Scenario: El Nota Off pasa por el mapa
+
+- **GIVEN** trigger → "Mapear" (byte "2.º (datos 1)", mapa C3 → C2) →
+  "Emitir"
+- **WHEN** llegan `99 30 64` y después `89 30 40`
+- **THEN** salen `99 24 64` y después `89 24 40`
+
+#### Scenario: Solo los Nota On, con el apareo
+
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Mapear" (byte "2.º
+  (datos 1)", mapa C3 → C2) → "Emitir"
+- **WHEN** llegan `99 30 64` y después `89 30 40`
+- **THEN** salen `99 24 64` y después `89 24 40`

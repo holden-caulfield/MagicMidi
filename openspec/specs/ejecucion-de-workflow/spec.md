@@ -317,8 +317,8 @@ no SHALL afectar al flujo.
 
 #### Scenario: Una caja mal configurada en una rama que no se recorre
 
-- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Mapear" (entrada de 64 a
-  64) → "Emitir"
+- **GIVEN** trigger → "Filtrar" (solo "Nota On") → "Interpolar" (entrada de
+  64 a 64) → "Emitir"
 - **WHEN** llega `B0 07 64`
 - **THEN** sale `B0 07 64` tal como llegó, sin error, porque el Filtrar no lo
   dejó llegar a la caja mal configurada

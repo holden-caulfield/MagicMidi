@@ -1,71 +1,89 @@
-import { AlignCenterHorizontal } from "lucide";
+import { TableProperties } from "lucide";
 
-import type { Rango } from "@/componentes/campo-rango";
+import type { Mapa } from "@/componentes/campo-mapa";
+import { formato } from "@/formato";
+import type { MensajeMidi } from "@/midi/mensaje";
 import { lista } from "../parametros/lista";
-import { rango } from "../parametros/rango";
+import { mapa } from "../parametros/mapa";
 import type { TipoDeNodo } from "../tipos";
+
+// En el status, los 4 bits de arriba son el tipo de mensaje (con el leading
+// bit) y los 4 de abajo, el canal menos 1.
+const TIPO = 0b1111_0000;
+
+// La opción "Canal" usa la posición del status (0), porque es ahí donde está
+// el canal; los datos, la suya (1 y 2).
+const BYTE_CANAL = 0;
+
+/** El canal, o el byte de datos de esa posición; `null` si el mensaje no lo tiene. */
+function leer(mensaje: MensajeMidi, posicion: number): number | null {
+  if (posicion === BYTE_CANAL) {
+    return mensaje.canal;
+  }
+  return posicion < mensaje.bytes.length ? mensaje.bytes[posicion] : null;
+}
 
 export default {
   nombre: "Mapear",
-  icono: AlignCenterHorizontal,
-  // Los extremos van de 0 a 127, como un byte de datos: así el resultado,
-  // que siempre queda entre los extremos de salida, también lo es. Los dos
-  // rangos se pueden invertir: una salida de 127 a 0 da vuelta el sentido.
+  icono: TableProperties,
   parametros: [
     lista({
       clave: "byte",
       etiqueta: "Byte",
-      inicial: 2,
+      inicial: 1,
       opciones: [
+        { valor: BYTE_CANAL, texto: "Canal" },
         { valor: 1, texto: "2.º (datos 1)" },
         { valor: 2, texto: "3.º (datos 2)" },
       ],
     }),
-    rango({
-      clave: "entrada",
-      etiqueta: "Entrada",
-      inicial: { desde: 0, hasta: 127 },
+    // De 0 a 127: un byte de datos con el leading bit en 0. Con Canal, de 1
+    // a 16 (lo revisa `validar`). Arranca en modo nota porque arranca en datos
+    // 1, y lo más común es cambiar unas notas por otras.
+    mapa({
+      clave: "mapa",
+      etiqueta: "Mapa",
+      inicial: [],
       minimo: 0,
       maximo: 127,
-      invertible: true,
-    }),
-    rango({
-      clave: "salida",
-      etiqueta: "Salida",
-      inicial: { desde: 0, hasta: 127 },
-      minimo: 0,
-      maximo: 127,
-      invertible: true,
+      modos: ["nota", "decimal", "hexadecimal"],
+      textoDeAyuda: "Sin pares: todo pasa sin cambios.",
     }),
   ],
   validar(parametros) {
-    // Con un solo valor de entrada no hay cómo repartir: dividiría por cero.
-    const entrada = parametros.entrada as Rango;
-    if (entrada.desde === entrada.hasta) {
-      return [{ clave: "entrada", mensaje: "Desde tiene que ser distinto de hasta" }];
+    const fuera = (parametros.mapa as Mapa)
+      .flatMap((par) => [par.entrada, par.salida])
+      .find((valor) => valor < 1 || valor > 16);
+    if (Number(parametros.byte) === BYTE_CANAL && fuera !== undefined) {
+      // Los números van marcados como valores: el campo los escribe como
+      // muestra los suyos.
+      return [
+        {
+          clave: "mapa",
+          mensaje: formato`Con Canal, los valores tienen que ir de ${1} a ${16}, y hay un ${fuera}`,
+        },
+      ];
     }
     return [];
   },
   procesar(mensaje, parametros) {
-    const bytes = mensaje.bytes;
     const posicion = Number(parametros.byte);
-    if (posicion >= bytes.length) {
+    const valor = leer(mensaje, posicion);
+
+    // Se busca una sola vez: la salida de un par no se vuelve a buscar como
+    // entrada de otro, y así se pueden intercambiar dos valores. Lo que no
+    // está en el mapa, o un mensaje sin el byte elegido, pasa sin cambios.
+    const par = (parametros.mapa as Mapa).find((candidato) => candidato.entrada === valor);
+    if (par === undefined) {
       return mensaje;
     }
 
-    const entrada = parametros.entrada as Rango;
-    const salida = parametros.salida as Rango;
-
-    // Lo que queda fuera del rango de entrada se toma como el extremo más
-    // cercano. Los rangos pueden estar al revés (desde > hasta).
-    const menor = Math.min(entrada.desde, entrada.hasta);
-    const mayor = Math.max(entrada.desde, entrada.hasta);
-    const valor = Math.min(Math.max(bytes[posicion], menor), mayor);
-
-    // Qué parte del rango de entrada recorrió el valor (de 0 a 1), y el punto
-    // que está en esa misma parte del rango de salida.
-    const proporcion = (valor - entrada.desde) / (entrada.hasta - entrada.desde);
-    bytes[posicion] = Math.round(salida.desde + proporcion * (salida.hasta - salida.desde));
+    if (posicion === BYTE_CANAL) {
+      // El canal 1 va como 0 en el byte, y el 16 como 15.
+      mensaje.bytes[0] = (mensaje.bytes[0] & TIPO) | (par.salida - 1);
+    } else {
+      mensaje.bytes[posicion] = par.salida;
+    }
     return mensaje;
   },
 } satisfies TipoDeNodo;

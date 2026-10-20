@@ -355,7 +355,10 @@ El editor de flujos y su ejecución viven en `src/workflow/`.
   valor que es una lista se avisa siempre como una lista nueva, en el orden
   de las opciones. Un control de varias partes pone `esGrupo = true`: la
   etiqueta nombra al grupo (`role="group"` + `aria-labelledby`), porque un
-  `<label for>` apunta a un solo control.
+  `<label for>` apunta a un solo control. Un texto que depende de la caja,
+  como qué significa un valor vacío, lo declara el tipo de nodo
+  (`textoDeAyuda`) y no el tipo de parámetro: el mismo tipo puede significar
+  otra cosa en otra caja.
 - Lo que flota sobre los parámetros siguientes (la lista del autocompletar
   y la de `campo-lista`) va con `position: absolute` y un `z-index` en el
   `:host` del control: los parámetros son hermanos en la raíz del panel, y

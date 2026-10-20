@@ -27,7 +27,7 @@ describe.each(Object.entries(TIPOS_DE_NODO))("el tipo de nodo %s", (id, tipo) =>
 
   // Una nota va de 0 a 127, y el hexadecimal no tiene negativos: un parámetro
   // numérico solo puede ofrecer esos modos si sus límites entran ahí. Los
-  // numéricos (el entero y el rango) son los que llevan sus modos.
+  // numéricos son los que llevan sus modos.
   test("sus parámetros numéricos ofrecen solo modos que les entran", () => {
     for (const parametro of tipo.parametros) {
       if (!("modos" in parametro)) continue;
@@ -83,6 +83,7 @@ test("Emitir, Descartar y Pánico cierran el flujo; las demás cajas quedan en e
   expect(etapaDelTipo(TIPOS_DE_NODO.desplazar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.fijar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.alternar)).toBe("intermedia");
+  expect(etapaDelTipo(TIPOS_DE_NODO.interpolar)).toBe("intermedia");
   expect(etapaDelTipo(TIPOS_DE_NODO.mapear)).toBe("intermedia");
 });
 

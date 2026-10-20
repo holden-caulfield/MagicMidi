@@ -27,7 +27,7 @@ campo dibujar, con qué datos.
   [Los modos de los números](#los-modos-de-los-números)).
 - `interruptor`: una casilla, para prender o apagar algo.
 - `lista`: una sola opción de una lista cerrada, con un desplegable. Sirve
-  para pocas opciones (en Mapear, qué byte se mapea).
+  para pocas opciones (en Interpolar, qué byte se interpola).
 - `opciones`: varias opciones de una lista cerrada, todas a la vista como
   píldoras que se encienden y se apagan. Sirve para pocas opciones de texto
   corto (en Filtrar, los canales).
@@ -37,14 +37,23 @@ campo dibujar, con qué datos.
   y puede declarar un `textoDeAyuda` para cuando no hay ninguna elegida.
 - `rango`: dos extremos enteros, "desde" y "hasta", entre un `minimo` y un
   `maximo`, con una barra de dos perillas y un campo a cada lado. Con
-  `invertible: true`, "desde" puede quedar mayor que "hasta" (en Mapear, para
-  dar vuelta un sentido); si no, las perillas se frenan al tocarse (en
-  Filtrar). El valor es `{ desde, hasta }`. Como el entero, tiene modos.
+  `invertible: true`, "desde" puede quedar mayor que "hasta" (en
+  Interpolar, para dar vuelta un sentido); si no, las perillas se frenan al
+  tocarse (en Filtrar). El valor es `{ desde, hasta }`. Como el entero,
+  tiene modos.
 - `secuencia`: una lista de números enteros en orden, que se pueden repetir,
   entre un `minimo` y un `maximo`, con un valor por fila. Cada fila tiene
   botones para subir, bajar y quitar su valor, y al final hay uno para
   agregar (en Alternar, los valores que va tomando el byte). El valor es la
   lista, por ejemplo `[127, 80, 80, 80]`, y vacía es un error. Como el
+  entero, tiene modos, y todos los valores comparten el mismo.
+- `mapa`: una lista de pares entrada → salida, de números enteros entre un
+  `minimo` y un `maximo`. Cada fila tiene el campo de la entrada, una flecha,
+  el de la salida y un botón para quitar el par, y al final hay uno para
+  agregar (en Mapear, qué nota reemplaza a cada una). Una entrada no puede
+  estar en dos pares, porque lleva a una sola salida; una salida sí. El valor
+  es la lista, por ejemplo `[{ entrada: 48, salida: 36 }]`, y vacía también
+  vale: puede declarar un `textoDeAyuda` que se muestra en su lugar. Como el
   entero, tiene modos, y todos los valores comparten el mismo.
 
 En `opciones` y `autocompletar` el valor es una lista con los valores
@@ -106,8 +115,9 @@ elegidos, en el orden de las opciones, y no elegir ninguna también vale.
     `import "@/componentes/campo-numero";`):
     - `campo-numero` (un número entero escrito), `campo-interruptor` (una
       casilla), `campo-lista` (un desplegable), `campo-opciones` (píldoras),
-      `campo-autocompletar` (buscar y elegir varias) o `campo-rango` (dos
-      perillas). Cada uno recibe `etiqueta`, `.valor` y `.error`, más lo
+      `campo-autocompletar` (buscar y elegir varias), `campo-rango` (dos
+      perillas), `campo-secuencia` (una lista de números) o `campo-mapa`
+      (pares entrada → salida). Cada uno recibe `etiqueta`, `.valor` y `.error`, más lo
       propio, que sale de la declaración: por ejemplo, `.opciones`, o los
       `.modos`, el `.minimo` y el `.maximo` de los numéricos;
     - `error` es lo que devolvió `validar` (o una regla del tipo de nodo): se
@@ -160,9 +170,9 @@ va con comillas, como siempre.
 
 ### Los modos de los números
 
-`campo-numero`, `campo-rango` y `campo-secuencia` muestran sus números en
-**modos**: decimal ("60"), nota ("C4", con el Do central 60 como C4) y
-hexadecimal ("3C"). Todo lo de los modos lo hace el campo (con
+`campo-numero`, `campo-rango`, `campo-secuencia` y `campo-mapa` muestran sus
+números en **modos**: decimal ("60"), nota ("C4", con el Do central 60 como
+C4) y hexadecimal ("3C"). Todo lo de los modos lo hace el campo (con
 `ModoNumerico`, en `src/componentes/`): un tipo numérico solo le pasa qué
 modos ofrece, sus límites y su `estado`.
 

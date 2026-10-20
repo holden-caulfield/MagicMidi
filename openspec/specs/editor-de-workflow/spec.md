@@ -99,9 +99,10 @@ no SHALL poder agregarse otro: la barra de herramientas no lo ofrece.
 
 ### Requirement: La barra de herramientas agrega cajas al lienzo
 
-La barra de herramientas SHALL ofrecer, en esta versión, exactamente ocho
-cajas, en este orden: **Filtrar**, **Convertir**, **Fijar**, **Desplazar**,
-**Mapear**, **Emitir**, **Descartar** y **Pánico**. Una caja SHALL poder
+La barra de herramientas SHALL ofrecer, en esta versión, exactamente diez
+cajas, en este orden: **Filtrar**, **Convertir**, **Fijar**, **Alternar**,
+**Desplazar**, **Interpolar**, **Mapear**, **Emitir**, **Descartar** y
+**Pánico**. Una caja SHALL poder
 agregarse arrastrándola desde la barra hasta un punto del lienzo, y queda
 ubicada donde se soltó. SHALL poder agregarse también activando su control en
 la barra, con el mouse o con el teclado, y en ese caso queda en un lugar
@@ -111,8 +112,8 @@ tipo. Cada caja nueva arranca con la configuración inicial de su tipo.
 #### Scenario: Cajas disponibles
 
 - **WHEN** la persona usuaria mira la barra de herramientas
-- **THEN** ve "Filtrar", "Convertir", "Fijar", "Desplazar", "Mapear",
-  "Emitir", "Descartar" y "Pánico", en ese orden
+- **THEN** ve "Filtrar", "Convertir", "Fijar", "Alternar", "Desplazar",
+  "Interpolar", "Mapear", "Emitir", "Descartar" y "Pánico", en ese orden
 
 #### Scenario: Arrastrar al lienzo
 
@@ -143,6 +144,12 @@ tipo. Cada caja nueva arranca con la configuración inicial de su tipo.
 - **WHEN** la persona usuaria agrega una caja "Fijar" y una "Mapear"
 - **THEN** las dos tienen conector de entrada y de salida, y el mismo color
   neutro que "Desplazar"
+
+#### Scenario: Interpolar queda en el medio del flujo
+
+- **WHEN** la persona usuaria agrega una caja "Interpolar"
+- **THEN** tiene conector de entrada y de salida, y el mismo color neutro que
+  "Desplazar"
 
 #### Scenario: Convertir queda en el medio del flujo
 
@@ -436,14 +443,14 @@ La caja SHALL dejar de verse en rojo apenas se corrigen todos sus errores.
 
 #### Scenario: Caja con error seleccionada
 
-- **GIVEN** una caja "Mapear" con entrada de 64 a 64
+- **GIVEN** una caja "Interpolar" con entrada de 64 a 64
 - **WHEN** la persona usuaria la selecciona y después selecciona otra caja
 - **THEN** mientras está seleccionada se ve con el anillo de selección y con
   borde rojo, y al seleccionar otra sigue con borde rojo
 
 #### Scenario: Corregir todos los errores
 
-- **GIVEN** una caja "Mapear" con entrada de 64 a 64, y salida de 0 a 200
+- **GIVEN** una caja "Interpolar" con entrada de 64 a 64, y salida de 0 a 200
 - **WHEN** la persona usuaria cambia el "hasta" de la entrada a 127
 - **THEN** sigue con borde rojo y con el error en "Salida"; al cambiar el
   "hasta" de la salida a 127, el borde rojo desaparece

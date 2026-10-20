@@ -72,8 +72,15 @@ protocolo MIDI.
   pasar los Nota On: cada Nota Off apaga su nota en el canal donde se prendió.
 - **Desplazar**: suma o resta un valor al canal o a un byte de datos, por ejemplo
   para transponer.
-- **Mapear**: lleva un rango de valores de un byte de datos a otro, por ejemplo para
-  invertir un pedal o comprimir la velocidad.
+- **Interpolar**: lleva un rango de valores de un byte de datos a otro, por
+  ejemplo para invertir un pedal o comprimir la velocidad.
+- **Mapear**: cambia el canal o un byte de datos según un mapa de pares
+  entrada → salida, y deja como están los valores que no figuran en el mapa.
+  Por ejemplo, para llevar los pads de un controlador al mapa de batería GM:
+  Mapear (datos 1: C3 → C2, C#3 → D2, D3 → F#2) convierte el pad que manda C3
+  en bombo, el de C#3 en redoblante y el de D3 en hi-hat cerrado. No mira el
+  tipo de mensaje: para cambiar solo las notas, va antes un Filtrar. Cada
+  Nota Off cae en la misma nota que su Nota On.
 - **Emitir**: manda el mensaje a la salida.
 - **Descartar**: hace que no salga.
 - **Pánico**: manda lo mismo que el botón de pánico, para dispararlo desde

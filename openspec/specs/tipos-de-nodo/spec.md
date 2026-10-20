@@ -57,14 +57,20 @@ arranque.
 
 - **WHEN** se revisa la carpeta de tipos de nodo
 - **THEN** "Filtrar", "Convertir", "Fijar", "Alternar", "Desplazar",
-  "Mapear", "Emitir", "Descartar" y "Pánico" están definidos cada uno en su
-  propio archivo con la misma forma, y ninguno recibe un trato especial fuera
-  de él
+  "Interpolar", "Mapear", "Emitir", "Descartar" y "Pánico" están definidos
+  cada uno en su propio archivo con la misma forma, y ninguno recibe un trato
+  especial fuera de él
 
 #### Scenario: Alternar va después de Fijar
 
 - **WHEN** la persona usuaria mira la barra de herramientas
 - **THEN** "Alternar" está justo después de "Fijar" y antes de "Desplazar"
+
+#### Scenario: Mapear va después de Interpolar
+
+- **WHEN** la persona usuaria mira la barra de herramientas
+- **THEN** "Interpolar" está justo después de "Desplazar", y "Mapear" está
+  justo después de "Interpolar" y antes de "Emitir"
 
 ### Requirement: Qué declara un tipo de nodo
 
@@ -271,7 +277,7 @@ ignorar la memoria, sin declarar nada.
 #### Scenario: Los tipos que no recuerdan nada no cambian
 
 - **WHEN** se revisan los archivos de "Filtrar", "Convertir", "Fijar",
-  "Desplazar", "Mapear", "Emitir", "Descartar" y "Pánico"
+  "Desplazar", "Interpolar", "Mapear", "Emitir", "Descartar" y "Pánico"
 - **THEN** su función no usa la memoria de su caja, ni declara nada sobre
   ella
 
