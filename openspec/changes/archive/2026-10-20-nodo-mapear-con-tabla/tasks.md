@@ -128,11 +128,11 @@ antes de dar por terminada una tarea"). El flujo MIDI completo se prueba con
 - [x] 6.1 Proponer a la persona usuaria, sin hacerlo por cuenta propia, los
       cambios del roadmap: marcar "Remapear notas con una tabla" como hecha y
       renombrar la idea hecha "Mapear rango" con el nombre nuevo
-- [ ] 6.2 Al archivar, reescribir a mano el propósito de
+- [x] 6.2 Al archivar, reescribir a mano el propósito de
       `openspec/specs/nodo-mapear/spec.md` (los deltas no lo cambian) para
       que describa la caja que cambia valores con un mapa; verificar con
       `npx openspec validate --specs --strict`
-- [ ] 6.3 Al archivar, revisar si el tipo `mapa` o su campo dejan una regla
+- [x] 6.3 Al archivar, revisar si el tipo `mapa` o su campo dejan una regla
       que cruce módulos para AGENTS.md ("Devolver el conocimiento a este
       archivo"), por ejemplo, que un texto que depende de la caja lo declara
       quien usa el parámetro; si deja alguna, proponer el diff y esperar
